@@ -4,24 +4,24 @@ import numpy as np
 import time
 import random
 
-
-COLUMNS = 10
-ROWS = 10
+COLUMNS = 54
+ROWS = 54
 # This sets the margin between each cell
-MARGIN = 3
+MARGIN = 2
 # This sets the WIDTH and HEIGHT of each grid location
-CELL_WIDTH = 20
-CELL_HEIGHT = 20
+CELL_WIDTH = 15
+CELL_HEIGHT = 15
 # Set the HEIGHT and WIDTH of the screen
 WINDOW_WIDTH = COLUMNS * (CELL_WIDTH + MARGIN) + MARGIN
 WINDOW_HEIGHT = ROWS * (CELL_HEIGHT + MARGIN) + MARGIN
 screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 # Define some colors
 COLOR_BLACK = (0,0,0)
-COLOR_GRAY = (50,50,50)
-COLOR_GREEN = (0,255,0)
+COLOR_WHITE = (255,255,255)
+COLOR_BROWN = (139,69,19)
 
 agent_list, agent_locs = dict(),dict()
+wall_list = list()
 all_bids = dict()
 colors = list()
 unvisited_cells = list()
@@ -34,6 +34,7 @@ class Box:
         self.column = column
         self.agent = False          # is the cell already visited or not visited (mark it as either False or True)
         self.agent_id = None        # which agent is placed on a selected cell
+        self.wall = False          # is the cell already visited or not visited (mark it as either False or True)
         
     def draw(self, win, color):
         pygame.draw.rect(win,
@@ -214,39 +215,55 @@ def main():
 
     # -------- Main Program Loop -----------
     while True:
-        # time.sleep(0.05)
+        time.sleep(0.05)
         for event in pygame.event.get():  # User did something
+            
+        
+            
+            
+            
+            
+            
+            
             
             if event.type == pygame.QUIT:  # If user clicked close
                 pygame.quit()   # we are done so we exit this loop
                 sys.exit()
 
             elif event.type == pygame.MOUSEBUTTONDOWN:
-                index = index + 1
-                # User clicks the mouse. Get the position
+                if(event.button==1):
+                    index = index + 1
+                    pos = pygame.mouse.get_pos()
+                    column = pos[0] // (CELL_WIDTH + MARGIN)
+                    row = pos[1] // (CELL_HEIGHT + MARGIN)
+                    grid[row][column].agent = True
+                    grid[row][column].agent_id = index
+                    col = random_color()
+                    colors.append(col)
+                    agent_list[index] = agent(row,column)
+                    agent_list[index].agent_id = index
+                    agent_locs[(agent_list[index].row,agent_list[index].column)] = agent_list[index].agent_id
+                    current_matrix_state()
+                    print("Agent",index,"'s energy is:", agent_list[index].start_energy)
+
+            elif event.type == pygame.MOUSEMOTION:
                 pos = pygame.mouse.get_pos()
-                # Change the x/y screen coordinates to grid coordinates
                 column = pos[0] // (CELL_WIDTH + MARGIN)
                 row = pos[1] // (CELL_HEIGHT + MARGIN)
-                # Set that location to one
-                grid[row][column].agent = True
-                grid[row][column].agent_id = index
-                # create random colors for each mouse pressed
-                # and assign these colors to each agent
-                col = random_color()
-                colors.append(col)
+                if event.buttons[2]:
+                    grid[row][column].wall = True
+                    # if((row,column) not in wall_list):
+                    #     wall_list.append((row,column))
+                    # print(wall_list)
                 
-                agent_list[index] = agent(row,column)
-                agent_list[index].agent_id = index
-                # print("Agent list", index, "row and column:",agent_list[index].row,agent_list[index].column)
+                    
 
-                # collect all agents locations into one specific set object that will be used for subtraction
-                # can we achieve the same thing without this?
-                agent_locs[(agent_list[index].row,agent_list[index].column)] = agent_list[index].agent_id
-                current_matrix_state()
-                print("Agent",index,"'s energy is:", agent_list[index].start_energy)
+
 
             if event.type == pygame.KEYDOWN:
+                
+                
+                
                 if event.key == pygame.K_a:
                     agent_count =10
                     list_of_locs = list()
@@ -260,9 +277,6 @@ def main():
                         elif(tuple_loc in list_of_locs):
                             print("following duble item detected:", tuple_loc, "and prevented to have double.")
                     # print(list_of_locs)
-                    
-                    
-                    
                     for i in range(len(list_of_locs)):
                         # print(i)
                         row = list_of_locs[i][0]
@@ -284,7 +298,7 @@ def main():
                 if event.key == pygame.K_n:
                     start = time.time()
                     step_counter = 0
-                    pygame.image.save(screen, "start.png")
+                    # pygame.image.save(screen, "start.png")
                     
                     while step_counter < 500:
                         empty_dic_counter = 0
@@ -453,7 +467,10 @@ def main():
                 box = grid[row][column]
                 
                 if grid[row][column].agent_id == None:
-                    box.draw(screen, COLOR_GRAY)
+                    box.draw(screen, COLOR_WHITE)
+                
+                if grid[row][column].wall == True:
+                    box.draw(screen, COLOR_BROWN)
 
                 # problem
                 # below parameter in range function should be assigned globally
