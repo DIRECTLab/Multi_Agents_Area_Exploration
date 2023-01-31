@@ -4,8 +4,8 @@ import numpy as np
 import time
 import random
 
-COLUMNS = 54
-ROWS = 54
+COLUMNS = 55
+ROWS = 55
 # This sets the margin between each cell
 MARGIN = 2
 # This sets the WIDTH and HEIGHT of each grid location
@@ -215,7 +215,7 @@ def main():
 
     # -------- Main Program Loop -----------
     while True:
-        time.sleep(0.05)
+        # time.sleep(0.05)
         for event in pygame.event.get():  # User did something
             
         
@@ -418,7 +418,7 @@ def main():
                                 # print("2here")
                                 # print("dic is empty for agent",i)
                                 # print(empty_dic_counter)
-                                if(empty_dic_counter == index+1):
+                                if(empty_dic_counter == index + 1):
                                     # print("HELLO")
                                     all_dics_are_empty = True
 
@@ -449,9 +449,9 @@ def main():
                         step_counter = step_counter+1
                     # pygame.image.save(screen, "final.png")
                 
-                if event.key == pygame.K_t:
-                    print(end - start)
-                    pygame.image.save(screen, "final.png")
+                # if event.key == pygame.K_t:
+                #     print(end - start)
+                #     pygame.image.save(screen, "final.png")
 
 
                 
@@ -463,20 +463,17 @@ def main():
         # Draw the grid
         for row in range(ROWS):
             for column in range(COLUMNS):
-                
                 box = grid[row][column]
+                box.draw(screen, COLOR_WHITE)
                 
-                if grid[row][column].agent_id == None:
-                    box.draw(screen, COLOR_WHITE)
-                
-                if grid[row][column].wall == True:
+                if box.wall:
                     box.draw(screen, COLOR_BROWN)
 
-                # problem
-                # below parameter in range function should be assigned globally
-                for i in range(100):
-                    if grid[row][column].agent_id == i:
-                        box.draw(screen, colors[i])
+                
+                # for i in range(100):
+                
+                if box.agent_id == i:
+                    box.draw(screen, colors[i])
 
         # Go ahead and update the screen with what we've drawn.
         pygame.display.flip()
