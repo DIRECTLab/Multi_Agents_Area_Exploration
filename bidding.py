@@ -454,9 +454,6 @@ def main():
                 #     pygame.image.save(screen, "final.png")
 
 
-                
-
-
         # Set the screen background
         screen.fill(COLOR_BLACK)
 
@@ -469,11 +466,14 @@ def main():
                 if box.wall:
                     box.draw(screen, COLOR_BROWN)
 
+                # if box.agent_id == index:
+                #     box.draw(screen, colors[index])
+
+                for i in range(index+1):
+                    if box.agent_id == i:
+                        box.draw(screen, colors[i])
                 
-                # for i in range(100):
                 
-                if box.agent_id == i:
-                    box.draw(screen, colors[i])
 
         # Go ahead and update the screen with what we've drawn.
         pygame.display.flip()
