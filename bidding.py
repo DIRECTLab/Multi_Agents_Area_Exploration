@@ -4,8 +4,8 @@ import numpy as np
 import time
 import random
 
-COLUMNS = 55
-ROWS = 55
+COLUMNS = 5
+ROWS = 5
 # This sets the margin between each cell
 MARGIN = 2
 # This sets the WIDTH and HEIGHT of each grid location
@@ -250,11 +250,12 @@ def main():
                 pos = pygame.mouse.get_pos()
                 column = pos[0] // (CELL_WIDTH + MARGIN)
                 row = pos[1] // (CELL_HEIGHT + MARGIN)
-                if event.buttons[2]:
+                # print("row,column:", row, column)
+                if event.buttons[2] and row < ROWS and column < COLUMNS:
                     grid[row][column].wall = True
-                    # if((row,column) not in wall_list):
-                    #     wall_list.append((row,column))
-                    # print(wall_list)
+                    if((row,column) not in wall_list):
+                        wall_list.append((row,column))
+                    print(wall_list)
                 
                     
 
