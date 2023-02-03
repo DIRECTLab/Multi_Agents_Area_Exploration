@@ -140,21 +140,15 @@ class agent(Box):
                             row_c,column_c = i[0],i[1]
                             self.distance_matrix[row_c][column_c] = None
                         
-                        # print("self.distance_matrix", self.distance_matrix)
                         # if the distance matrix if full of "nan" values, then "all_areas_explored" flag will turn to TRUE
                         if(np.isnan(self.distance_matrix).all()):
-                            # print("YESSS")
                             all_areas_explored = True
                             break
 
+                        # below two lines are getting the min value from unvisited cells and assign them into the surrounded agent
+                        # min_value_among_unv_cells = np.unravel_index(np.nanargmin(self.distance_matrix, axis=None), self.distance_matrix.shape)
+                        # self.neighbors[min_value_among_unv_cells] = [np.nanmin(self.distance_matrix), ((1/self.start_energy) * ((1 / np.nanmin(self.distance_matrix)) + 1))]
                         
-                        # print("Min value for the distance matrix", np.nanmin(self.distance_matrix), "at location", np.nanargmin(self.distance_matrix))
-                        min_value_among_unv_cells = np.unravel_index(np.nanargmin(self.distance_matrix, axis=None), self.distance_matrix.shape)
-                        # add the most valuable cell to the neighbor list of the agent
-                        self.neighbors[min_value_among_unv_cells] = [np.nanmin(self.distance_matrix), ((1/self.start_energy) * ((1 / np.nanmin(self.distance_matrix)) + 1))]
-                        # print("New neighbors for the agent",self.agent_id,"is as follows:", self.neighbors)
-                        # print("*** 555 ***")
-                        # print("Agent",self.agent_id, "is going to offer for the neighbor",np.nanmin(self.distance_matrix),"with the bid:",[(1/self.start_energy) *(((1 / np.nanmin(self.distance_matrix)) + 1))])
                 # if the neighbor is previously not visited, then offer something higher
                 elif(grid[key[0]][key[1]].agent == False):
                     # print("*** 444 ***")
