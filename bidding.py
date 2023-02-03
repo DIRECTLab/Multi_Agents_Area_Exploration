@@ -4,8 +4,8 @@ import numpy as np
 import time
 import random
 
-COLUMNS = 5
-ROWS = 5
+COLUMNS = 10
+ROWS = 10
 # This sets the margin between each cell
 MARGIN = 2
 # This sets the WIDTH and HEIGHT of each grid location
@@ -24,7 +24,7 @@ agent_list, agent_locs = dict(),dict()
 wall_list = list()
 all_bids = dict()
 colors = list()
-unvisited_cells = list()
+visited_cells_list = list()
 all_areas_explored = False
 all_dics_are_empty = False
 
@@ -32,9 +32,9 @@ class Box:
     def __init__(self, row, column):
         self.row = row
         self.column = column
-        self.agent = False          # is the cell already visited or not visited (mark it as either False or True)
-        self.agent_id = None        # which agent is placed on a selected cell
-        self.wall = False          # is the cell already visited or not visited (mark it as either False or True)
+        self.agent = False              # is the cell already visited or not visited (mark it as either False or True)
+        self.agent_id = None            # which agent is placed on a selected cell
+        self.wall = False               # is the cell already visited or not visited (mark it as either False or True)
         
     def draw(self, win, color):
         pygame.draw.rect(win,
@@ -76,10 +76,15 @@ class agent(Box):
         return distance_of_movement
 
     # calculate the movable cells for an agent by removing agent_locations from the full neighbor list
-    def movable_cells(self, all_agent_locations):
+    def movable_cells(self, all_agent_locations, wall_locs):
         # subtract for each agent
         # all_movable_neighbor_options - all_agent_locations
-        subtract_res = {k:[v] for k,v in self.neighbors.items() if k not in all_agent_locations}
+        # print("Here are the wall locs", wall_locs)
+        # print("Here are the agent locs", all_agent_locations)
+        # print("self.neighbors.items()", self.neighbors.items())
+        subtract_res = {k:[v] for k,v in self.neighbors.items() if(k not in all_agent_locations and k not in wall_locs)}
+        
+
         # print("self.neighbors2",self.neighbors)
         self.neighbors.clear()
         self.neighbors = subtract_res
@@ -104,7 +109,7 @@ class agent(Box):
             # use the following count variable for the following purpose:
             # check one by one each neighbors, if the selected neighbor is previously visited, increase the counter
             # if all neighbors are previously visited, then that agent should send a bid to the most profitable unexplored cell
-            count=0
+            count = 0
             # copy the self.neighbors dictionary to prevent runtime error since we are adding new elements to the neighbors dictionary during the iteration
             neighbors_copy = tuple(self.neighbors.items())
 
@@ -189,10 +194,10 @@ def bring_all_visited_locations():
     for row in range(ROWS):
         print()
         for column in range(COLUMNS):
-            if grid[row][column].agent == True:
+            if(grid[row][column].agent == True or grid[row][column].wall == True):
                 # print("There is either an agent or visited cell at this locatio:",row,column)
-                unvisited_cells.append((row,column))
-    return unvisited_cells
+                visited_cells_list.append((row,column))
+    return visited_cells_list
                 
 
 # Create a 2 dimensional array. A two dimensional array is simply a list of lists.
@@ -219,11 +224,6 @@ def main():
         for event in pygame.event.get():  # User did something
             
         
-            
-            
-            
-            
-            
             
             
             if event.type == pygame.QUIT:  # If user clicked close
@@ -255,7 +255,7 @@ def main():
                     grid[row][column].wall = True
                     if((row,column) not in wall_list):
                         wall_list.append((row,column))
-                    print(wall_list)
+                    # print(wall_list)
                 
                     
 
@@ -297,11 +297,11 @@ def main():
                 #     pygame.image.save(screen, "start.jpg")
                 
                 if event.key == pygame.K_n:
-                    start = time.time()
-                    step_counter = 0
+                    # start = time.time()
+                    # step_counter = 0
                     # pygame.image.save(screen, "start.png")
                     
-                    while step_counter < 500:
+                    # while step_counter < 500:
                         empty_dic_counter = 0
                         # for i in range(index+1):
                     
@@ -311,16 +311,16 @@ def main():
                             # print("Agent", i, "th location is:", agent_list[i].row, agent_list[i].column, "Now adding this agent's neighbours into coming_set...")
                             # print("Agent", i, "th neigbors are:", neighbours(agent_list[i].row, agent_list[i].column))
                             neighbor_list = find_neighbours(agent_list[i].row, agent_list[i].column)
-                            # print("###Full neighbor cells before subtracting the agent locs for agent",i,": ",neighbor_list)
+                            print("###Full neighbor cells before subtracting the agent locs for agent",i,": ",neighbor_list)
                             # DELETE - why we have this?
                             # grid[agent_list[i].row][agent_list[i].column].agent_id = i
 
                             agent_list[i].calc_neighbor_distance(neighbor_list)
                             # print("###agent_list[i].neighbors",agent_list[i].neighbors)
-                            agent_list[i].movable_cells(agent_locs)
+                            agent_list[i].movable_cells(agent_locs, wall_list)
                             # update neighbors with the movable cells instead
                             # print("###agent_list[i].neighbors",agent_list[i].neighbors)
-                            # print("Movable options for agent",i,"is:",agent_list[i].neighbors)
+                            print("Movable options for agent",i,"is:",agent_list[i].neighbors)
                             # # check if there is a place to move in movable neighbors
                             # # if there is no place to move, then send bids to all other not visited cells
                         # each agent submit their bids to its movable neighbors
@@ -447,7 +447,7 @@ def main():
                             # pygame.quit()   # we are done so we exit this loop
                             # sys.exit()
                         
-                        step_counter = step_counter+1
+                        # step_counter = step_counter+1
                     # pygame.image.save(screen, "final.png")
                 
                 # if event.key == pygame.K_t:
