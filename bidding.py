@@ -50,20 +50,34 @@ class agent(Box):
         self.distance_matrix = None
         self.start_energy = random.randint(10, 100)
 
-    # calculate the distance matrix for each agent based on the agent's location
+    def find_my_neighbours(self, all_agent_locations, wall_locs):
+        self.neighbors.clear()
+        pn = [(self.row-1, self.column), (self.row+1, self.column), (self.row-1, self.column-1), (self.row, self.column-1),
+            (self.row+1, self.column-1), (self.row-1, self.column+1), (self.row, self.column+1), (self.row+1, self.column+1)]
+        
+        for i, t in enumerate(pn):
+            if t[0] < 0 or t[1] < 0 or t[0] >= ROWS or t[1] >= COLUMNS:
+                pn[i] = None
+            else:
+                dist = np.sqrt((self.row - t[0])**2 + (self.column - t[1])**2)
+                self.neighbors[(t[0], t[1])] = dist
+        
+        # calculate the movable cells for an agent by removing "agent_locations and wall_locs" from the full neighbor list
+        subtract_res = {k:[v] for k,v in self.neighbors.items() if(k not in all_agent_locations and k not in wall_locs)}
+        self.neighbors.clear()
+        self.neighbors = subtract_res
+        
+        
+        
+
+
+    
+    # calculate the distance matrix(full grid) for each agent based on the agent's location
     def calc_distance_matrices(self):
         x_arr, y_arr = np.mgrid[0:ROWS, 0:COLUMNS]
         cell = (self.row, self.column)
         dists = np.sqrt((x_arr - cell[0])**2 + (y_arr - cell[1])**2)
         return dists
-
-    # calculate the neighbor distances for an agent
-    def calc_neighbor_distance(self, neighbor_locs):
-        agent_loc = (self.row, self.column)
-        self.neighbors.clear()
-        for i in neighbor_locs:
-            dists = np.sqrt((agent_loc[0] - i[0])**2 + (agent_loc[1] - i[1])**2)
-            self.neighbors[(i[0], i[1])] = dists
     
     # calculate the distance from the agent to the won cell
     def calc_won_distance(self, row, column):
@@ -71,32 +85,17 @@ class agent(Box):
         distance_of_movement = np.sqrt((agent_loc[0] - row)**2 + (agent_loc[1] - column)**2)
         return distance_of_movement
 
-    # calculate the movable cells for an agent by removing agent_locations from the full neighbor list
-    def movable_cells(self, all_agent_locations, wall_locs):
-        # subtract for each agent
-        # all_movable_neighbor_options - all_agent_locations
-        # print("Here are the wall locs", wall_locs)
-        # print("Here are the agent locs", all_agent_locations)
-        # print("self.neighbors.items()", self.neighbors.items())
-        subtract_res = {k:[v] for k,v in self.neighbors.items() if(k not in all_agent_locations and k not in wall_locs)}
-        # print("self.neighbors2",self.neighbors)
-        self.neighbors.clear()
-        self.neighbors = subtract_res
-
     # each agent send bids to its neighbors in each iteration
     def send_bid(self):
         global all_areas_explored
+        
         # If the agent only has one neighbor, offer a bid based on the neighbor is visited or not
         if(len(self.neighbors)==1):
             for key, value in self.neighbors.items():
                 if(grid[key[0]][key[1]].agent == True):
-                    # print("*** 111 ***")
                     self.neighbors[key].append(0)
-                    # print("Agent",self.agent_id, "bids:", 0)
                 else:
-                    # print("*** 222 ***")
                     self.neighbors[key].append((1/self.start_energy) * (1 / (0.5 * value[0])))
-                    # print("Agent",self.agent_id, "bids:", [(1/self.start_energy) * (1 / (0.5 * value[0]))])
 
         # If an agent has more than one neighbor, offer a bid for each neighbors based on the neighbors are visited or not
         else:
@@ -155,24 +154,6 @@ class agent(Box):
             self.neighbors[key].append(0)
             # print("Agent",self.agent_id, "bids:", 0, "since it does not have any enery left.")
 
-def find_neighbours(x, y):
-    pn = [(x-1, y), (x+1, y), (x-1, y-1), (x, y-1),
-          (x+1, y-1), (x-1, y+1), (x, y+1), (x+1, y+1)]
-    for i, t in enumerate(pn):
-        if t[0] < 0 or t[1] < 0 or t[0] >= ROWS or t[1] >= COLUMNS:
-            pn[i] = None
-    return [c for c in pn if c is not None]
-
-def current_matrix_state_in_terminal():
-    # print("\n\nhere is the current matrix state:")
-    for row in range(ROWS):
-        print()
-        for column in range(COLUMNS):
-            if grid[row][column].agent == True:
-                print(1, end = ' ')
-            else:
-                print(0, end = ' ')
-
 def bring_all_visited_locations():
     # print("\n\nwhere are the zeros:")
     for row in range(ROWS):
@@ -182,7 +163,17 @@ def bring_all_visited_locations():
                 # print("There is either an agent or visited cell at this locatio:",row,column)
                 visited_cells_list.append((row,column))
     return visited_cells_list
-                
+
+# def current_matrix_state_in_terminal():
+#     # print("\n\nhere is the current matrix state:")
+#     for row in range(ROWS):
+#         print()
+#         for column in range(COLUMNS):
+#             if grid[row][column].agent == True:
+#                 print(1, end = ' ')
+#             else:
+#                 print(0, end = ' ')
+
 
 # Create a 2 dimensional array. A two dimensional array is simply a list of lists.
 grid = []
@@ -210,6 +201,7 @@ def main():
                 pygame.quit()   # we are done so we exit this loop
                 sys.exit()
 
+            # if there is a mouse left button click, place an agent
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 if(event.button==1):
                     index = index + 1
@@ -221,62 +213,47 @@ def main():
                     box.agent_id = index
                     random_color = list(np.random.choice(range(256), size=3))
                     colors.append(random_color)
+                    # agent_list = {([0], agent_obj_0), ([1], agent_obj_1), ...}
                     agent_list[index] = agent(row,column)
                     agent_list[index].agent_id = index
-                    agent_locs[(agent_list[index].row,agent_list[index].column)] = index
-                    # print("Agent",index,"'s energy is:", agent_list[index].start_energy)
+                    # agent_locs = {([row,column], agent_id)}
+                    agent_locs[(row, column)] = index
+                    print("Agent",index,"'s energy is:", agent_list[index].start_energy)
 
+            # if there is a mouse right button click constantly, draw the wall onto grid
             elif event.type == pygame.MOUSEMOTION:
                 pos = pygame.mouse.get_pos()
                 column = pos[0] // (CELL_WIDTH + MARGIN)
                 row = pos[1] // (CELL_HEIGHT + MARGIN)
                 
-                
+                # if right click mouse is TRUE within the grid size, then run followings
                 if event.buttons[2] and row < ROWS and column < COLUMNS:
                     grid[row][column].wall = True
                     if((row,column) not in wall_list):
                         wall_list.append((row,column))
-                    # print(wall_list)
-                
-                    
-
-
-
+            
+            # based on the entered keyboard key, run different things
             if event.type == pygame.KEYDOWN:
                 
+                # if the user clicks n, run followings
                 if event.key == pygame.K_n:
-                    # while step_counter < 500:
+                        # what is it for: if an agent does not win any cell, increase empty_dic_counter
+                        # if nobody wins anything, then it is one of the condition to end the program
                         empty_dic_counter = 0
-                        # for i in range(index+1):
-                    
-                        # index keeps the number of agents (ex: index is 1(0 and 1) when 2 agent is selected)
-                        for i in range(index+1):
-                        # for i in range(len(list_of_locs)):
-                            # print("Agent", i, "th location is:", agent_list[i].row, agent_list[i].column, "Now adding this agent's neighbours into coming_set...")
-                            # print("Agent", i, "th neigbors are:", neighbours(agent_list[i].row, agent_list[i].column))
-                            neighbor_list = find_neighbours(agent_list[i].row, agent_list[i].column)
-                            print("###Full neighbor cells before subtracting the agent locs for agent",i,": ",neighbor_list)
-                            # DELETE - why we have this?
-                            # grid[agent_list[i].row][agent_list[i].column].agent_id = i
 
-                            agent_list[i].calc_neighbor_distance(neighbor_list)
-                            # print("###agent_list[i].neighbors",agent_list[i].neighbors)
-                            agent_list[i].movable_cells(agent_locs, wall_list)
-                            # update neighbors with the movable cells instead
-                            # print("###agent_list[i].neighbors",agent_list[i].neighbors)
-                            print("Movable options for agent",i,"is:",agent_list[i].neighbors)
-                            # # check if there is a place to move in movable neighbors
-                            # # if there is no place to move, then send bids to all other not visited cells
-                        # each agent submit their bids to its movable neighbors
+                        # for each agent in agent_list: find its neighbors, calculate distance to each neighbor, remove the wall & agent locs from total_neighbor_list
                         for i in agent_list:
+                            agent_list[i].find_my_neighbours(agent_locs, wall_list)
+                            # print("agent_list[i].neighbors", agent_list[i].neighbors)
                             if(agent_list[i].start_energy > 0):
                                 agent_list[i].send_bid()
                             else:
                                 # print("You are negative. You cannot bid.")
                                 agent_list[i].zero_bid()
-                        # print("*****AGENT BID OFFERS FOR EACH NEIGHBOR CELLS*****")
-                        # for i in agent_list:
-                        #     print("Agent",i,"bids:", agent_list[i].neighbors)
+                        
+                            
+                            
+                        
 
                         
 
@@ -358,17 +335,12 @@ def main():
                                     agent_locs[(agent_list[i].row,agent_list[i].column)] = agent_list[i].agent_id
                                     agent_list[i].start_energy = 0
 
+                            # else, for each agent that does not have a win cell, increase empty_dic_counter
                             else:
                                 empty_dic_counter = empty_dic_counter + 1
-                                # print("2here")
-                                # print("dic is empty for agent",i)
-                                # print(empty_dic_counter)
                                 if(empty_dic_counter == index + 1):
-                                    # print("HELLO")
                                     all_dics_are_empty = True
-
                             # print("After the iteration, the energies are as follows for agent",i,":::",agent_list[i].start_energy)
-                        # current_matrix_state_in_terminal()
 
                         
                         
@@ -399,26 +371,26 @@ def main():
                 #     pygame.image.save(screen, "final.png")
 
 
+
+
         # Set the screen background
         screen.fill(COLOR_BLACK)
-
         # Draw the grid
         for row in range(ROWS):
             for column in range(COLUMNS):
+                
                 box = grid[row][column]
                 box.draw(screen, COLOR_WHITE)
                 
+                # if there is a wall is drawn into canvas, color it with black
                 if box.wall:
                     box.draw(screen, COLOR_BLACK)
-
-                # if box.agent_id == index:
-                #     box.draw(screen, colors[index])
-
+                
+                # if there is an agent is drawn onto canvas, color it based on the "agent_id"
                 for i in range(index+1):
                     if box.agent_id == i:
                         box.draw(screen, colors[i])
                 
         # Go ahead and update the screen with what we've drawn.
         pygame.display.flip()
-
 main()
