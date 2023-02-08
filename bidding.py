@@ -18,13 +18,9 @@ screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 # Define some colors
 COLOR_BLACK = (0,0,0)
 COLOR_WHITE = (255,255,255)
-COLOR_BROWN = (139,69,19)
 
-agent_list, agent_locs = dict(),dict()
-wall_list = list()
-all_bids = dict()
-colors = list()
-visited_cells_list = list()
+agent_list, agent_locs, all_bids = dict(), dict(), dict()
+wall_list, colors, visited_cells_list = list(), list(), list()
 all_areas_explored = False
 all_dics_are_empty = False
 
@@ -52,7 +48,7 @@ class agent(Box):
         self.neighbors = {}
         self.win_cells = {}
         self.distance_matrix = None
-        self.start_energy = random.randint(50, 200)
+        self.start_energy = random.randint(10, 100)
 
     # calculate the distance matrix for each agent based on the agent's location
     def calc_distance_matrices(self):
@@ -83,8 +79,6 @@ class agent(Box):
         # print("Here are the agent locs", all_agent_locations)
         # print("self.neighbors.items()", self.neighbors.items())
         subtract_res = {k:[v] for k,v in self.neighbors.items() if(k not in all_agent_locations and k not in wall_locs)}
-        
-
         # print("self.neighbors2",self.neighbors)
         self.neighbors.clear()
         self.neighbors = subtract_res
@@ -161,10 +155,6 @@ class agent(Box):
             self.neighbors[key].append(0)
             # print("Agent",self.agent_id, "bids:", 0, "since it does not have any enery left.")
 
-def random_color():
-    color = list(np.random.choice(range(256), size=3))
-    return color
-
 def find_neighbours(x, y):
     pn = [(x-1, y), (x+1, y), (x-1, y-1), (x, y-1),
           (x+1, y-1), (x-1, y+1), (x, y+1), (x+1, y+1)]
@@ -173,7 +163,7 @@ def find_neighbours(x, y):
             pn[i] = None
     return [c for c in pn if c is not None]
 
-def current_matrix_state():
+def current_matrix_state_in_terminal():
     # print("\n\nhere is the current matrix state:")
     for row in range(ROWS):
         print()
@@ -210,15 +200,11 @@ def main():
     global grid
     global all_dics_are_empty
     index = -1
-    # print("\n****************************************\n")
 
     # -------- Main Program Loop -----------
     while True:
         # time.sleep(0.05)
         for event in pygame.event.get():  # User did something
-            
-        
-            
             
             if event.type == pygame.QUIT:  # If user clicked close
                 pygame.quit()   # we are done so we exit this loop
@@ -230,21 +216,22 @@ def main():
                     pos = pygame.mouse.get_pos()
                     column = pos[0] // (CELL_WIDTH + MARGIN)
                     row = pos[1] // (CELL_HEIGHT + MARGIN)
-                    grid[row][column].agent = True
-                    grid[row][column].agent_id = index
-                    col = random_color()
-                    colors.append(col)
+                    box = grid[row][column]
+                    box.agent = True
+                    box.agent_id = index
+                    random_color = list(np.random.choice(range(256), size=3))
+                    colors.append(random_color)
                     agent_list[index] = agent(row,column)
                     agent_list[index].agent_id = index
-                    agent_locs[(agent_list[index].row,agent_list[index].column)] = agent_list[index].agent_id
-                    current_matrix_state()
-                    print("Agent",index,"'s energy is:", agent_list[index].start_energy)
+                    agent_locs[(agent_list[index].row,agent_list[index].column)] = index
+                    # print("Agent",index,"'s energy is:", agent_list[index].start_energy)
 
             elif event.type == pygame.MOUSEMOTION:
                 pos = pygame.mouse.get_pos()
                 column = pos[0] // (CELL_WIDTH + MARGIN)
                 row = pos[1] // (CELL_HEIGHT + MARGIN)
-                # print("row,column:", row, column)
+                
+                
                 if event.buttons[2] and row < ROWS and column < COLUMNS:
                     grid[row][column].wall = True
                     if((row,column) not in wall_list):
@@ -257,44 +244,7 @@ def main():
 
             if event.type == pygame.KEYDOWN:
                 
-                
-                
-                if event.key == pygame.K_a:
-                    agent_count =10
-                    list_of_locs = list()
-                    while(len(list_of_locs) < agent_count):
-                        row_x = random.randint(0, ROWS-1)
-                        column_x = random.randint(0, COLUMNS-1)
-                        tuple_loc = (row_x, column_x)
-                        if(tuple_loc not in list_of_locs):
-                            # print("appending...", tuple_loc)
-                            list_of_locs.append(tuple_loc)
-                        elif(tuple_loc in list_of_locs):
-                            print("following duble item detected:", tuple_loc, "and prevented to have double.")
-                    # print(list_of_locs)
-                    for i in range(len(list_of_locs)):
-                        # print(i)
-                        row = list_of_locs[i][0]
-                        column = list_of_locs[i][1]
-                        grid[row][column].agent = True
-                        grid[row][column].agent_id = i
-                        # create random colors and assign these colors to each agent
-                        col = random_color()
-                        colors.append(col)
-                        agent_list[i] = agent(row,column)
-                        agent_list[i].agent_id = i
-                        agent_locs[(agent_list[i].row,agent_list[i].column)] = agent_list[i].agent_id
-                        # current_matrix_state()
-                        print("Agent",i,"'s energy is:", agent_list[i].start_energy)
-
-                # if event.key == pygame.K_b:
-                #     pygame.image.save(screen, "start.jpg")
-                
                 if event.key == pygame.K_n:
-                    # start = time.time()
-                    # step_counter = 0
-                    # pygame.image.save(screen, "start.png")
-                    
                     # while step_counter < 500:
                         empty_dic_counter = 0
                         # for i in range(index+1):
@@ -418,7 +368,7 @@ def main():
                                     all_dics_are_empty = True
 
                             # print("After the iteration, the energies are as follows for agent",i,":::",agent_list[i].start_energy)
-                        # current_matrix_state()
+                        # current_matrix_state_in_terminal()
 
                         
                         
@@ -432,7 +382,7 @@ def main():
                         # pygame.image.save(screen, "final.jpg")
                         if(all_areas_explored | all_dics_are_empty):
                             # which one is true
-                            end = time.time()
+                            # end = time.time()
                             print("all_areas_explored",all_areas_explored)
                             print("all_dics_are_empty",all_dics_are_empty)
                             # print("Testing2")
@@ -459,7 +409,7 @@ def main():
                 box.draw(screen, COLOR_WHITE)
                 
                 if box.wall:
-                    box.draw(screen, COLOR_BROWN)
+                    box.draw(screen, COLOR_BLACK)
 
                 # if box.agent_id == index:
                 #     box.draw(screen, colors[index])
@@ -468,8 +418,6 @@ def main():
                     if box.agent_id == i:
                         box.draw(screen, colors[i])
                 
-                
-
         # Go ahead and update the screen with what we've drawn.
         pygame.display.flip()
 
