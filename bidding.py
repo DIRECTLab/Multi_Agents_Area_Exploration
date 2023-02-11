@@ -3,14 +3,17 @@ import sys
 import numpy as np
 import time
 import random
+from itertools import product
 
-COLUMNS = 10
 ROWS = 10
+COLUMNS = 10
+GRID_SIZE = [ROWS,COLUMNS]
 # This sets the margin between each cell
 MARGIN = 2
 # This sets the WIDTH and HEIGHT of each grid location
 CELL_WIDTH = 15
 CELL_HEIGHT = 15
+HORIZON = 1
 # Set the HEIGHT and WIDTH of the screen
 WINDOW_WIDTH = COLUMNS * (CELL_WIDTH + MARGIN) + MARGIN
 WINDOW_HEIGHT = ROWS * (CELL_HEIGHT + MARGIN) + MARGIN
@@ -41,6 +44,8 @@ class Box:
                         CELL_HEIGHT])
 
 class agent(Box):
+    
+
     def __init__(self, row, column):
         self.row = row
         self.column = column
@@ -51,25 +56,22 @@ class agent(Box):
         self.start_energy = random.randint(10, 100)
 
     def find_my_neighbours(self, all_agent_locations, wall_locs):
+        cell = (self.row,self.column)
         self.neighbors.clear()
-        pn = [(self.row-1, self.column), (self.row+1, self.column), (self.row-1, self.column-1), (self.row, self.column-1),
-            (self.row+1, self.column-1), (self.row-1, self.column+1), (self.row, self.column+1), (self.row+1, self.column+1)]
-        
-        for i, t in enumerate(pn):
-            if t[0] < 0 or t[1] < 0 or t[0] >= ROWS or t[1] >= COLUMNS:
-                pn[i] = None
-            else:
-                # if the neighbor within the grid, then calculate distance towards those agents
-                dist = np.sqrt((self.row - t[0])**2 + (self.column - t[1])**2)
-                # and generate the neighbors for each agent(key:value --> (row,column):distance)
-                self.neighbors[(t[0], t[1])] = dist
+        # https://stackoverflow.com/questions/1620940/determining-neighbours-of-cell-two-dimensional-list
+        for c in product(*(range(n-HORIZON, n+HORIZON+1) for n in cell)):
+            if (c != cell and all(0 <= i < bound for i, bound in zip(c, GRID_SIZE))):
+                # print(type(c))
+                # print(c[0], c[1])
+                # yield c
+                dist = np.sqrt((self.row - c[0])**2 + (self.column - c[1])**2)
+                self.neighbors[(c[0], c[1])] = dist
         
         # calculate the movable cells for an agent by removing "agent_locations and wall_locs" from the full neighbor list
         subtract_res = {k:[v] for k,v in self.neighbors.items() if(k not in all_agent_locations and k not in wall_locs)}
         self.neighbors.clear()
         # new neighbors for the agents now is subtract_res
         self.neighbors = subtract_res
-        
         
         
     # calculate the distance matrix(full grid) for each agent based on the agent's location
