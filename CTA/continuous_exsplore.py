@@ -2,11 +2,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
+from matplotlib.ticker import (AutoMinorLocator, MultipleLocator)
+
 # pip install python-maze-generator
 from python_maze_generator import multithreaded_maze
 import cv2
 
 import random
+import time 
 # set seed
 random.seed(0)
 
@@ -30,8 +33,12 @@ def create_maze(n,it,thre, scaleUP=10):
     solution_path =[]
     solution_path_scaled = []
     scale_shit = img.shape[0]/len(maze.m)
+    img12 = np.zeros(np.array(maze.m).shape, 3, dtype=np.uint8)
+    img12.fill(255)
+    # any location with maze.filled_wall
+    img12 = np.where(maze.m == maze.filled_wall, OBSTACLE, img12)
 
-    # Draw scaled up path
+    # Draw scaled up path 
     for i,row in enumerate(maze.m[:]):
         for j,col_item in enumerate(row):
             print(col_item, end=' ')
@@ -58,24 +65,24 @@ def create_maze(n,it,thre, scaleUP=10):
 
 
 class Agent:
-    def __init__(self, img, startPose, ax, lidar_sample=20, lidarRange =20):
+    def __init__(self, img, startPose_rc, ax, grid_width, lidarRange):
         self.org_img = img.copy()
-        self.pose_rc = startPose
+        self.pose_rc = startPose_rc
         
         # lidar range
         self.world_ax = ax[0]
         self.agent_map_ax = ax[1]
 
-        self._body_size = lidar_sample // 5
+        self._body_size =int(grid_width)
 
-        self.lidar_sweep_res = lidar_sample
         self.lidarRange = lidarRange
-        self.lidar_step_res = self._body_size//5
+        self.lidar_sweep_res = np.arctan2(self._body_size, self.lidarRange)%np.pi
+        self.lidar_step_res = self._body_size
         self.lidar_points = []
 
         # truncated occupancy grid integers
         self.ocupency_grid = np.zeros((img.shape[0]//self._body_size, img.shape[1]//self._body_size,3)).astype(np.uint8) +100
-        self.ocu_scale = self._body_size
+        self.ocu_pose_rc = [int(self.pose_rc[0]//self._body_size), int(self.pose_rc[1]//self._body_size)]
 
         self.drawSelf()
 
@@ -86,64 +93,68 @@ class Agent:
             self.world_ax.imshow(new_img, cmap=plt.gray())
         else:
             self.world_ax.imshow(self.org_img, cmap=plt.gray())
+            # draw gid lines at _body_size
+            
+            self.world_ax.xaxis.set_major_locator(MultipleLocator(self._body_size*5))
+            self.world_ax.yaxis.set_major_locator(MultipleLocator(self._body_size*5))
+            self.world_ax.xaxis.set_minor_locator(AutoMinorLocator(self._body_size))
+            self.world_ax.yaxis.set_minor_locator(AutoMinorLocator(self._body_size))
+            self.world_ax.grid(which='major', color='#CCCCCC', linestyle='--')
+            self.world_ax.grid(which='minor', color='#CCCCCC', linestyle=':')
+            # move the grid under the points
+            self.world_ax.set_axisbelow(True)
+
 
     def drawSelf(self):
         # draw an orange circle
         self.draw_fresh_map()
 
-        self.drawLidar()
-        self.world_ax.add_patch(plt.Circle((self.pose_rc[1], self.pose_rc[0]), self._body_size, color='green'))
+        self.drawLidar_angle()
+        # self.drawLidar_grid()
+        # self.world_ax.add_patch(plt.Circle((self.pose_rc[1], self.pose_rc[0]), self._body_size, color='green'))
         # self.agent_map_ax.add_patch(plt.Circle((self.pose_rc[1], self.pose_rc[0]), self._body_size, color='green'))
         
+    
+    def drawLidar_angle(self):
 
-    def drawLidar(self):
-
-        
         # draw lidar
         self.world_ax.add_patch(plt.Circle((self.pose_rc[1], self.pose_rc[0]), self.lidarRange, color='blue', fill=False))
         # draw lidar points
         # sample the map to get lidar points
         # sweep the lidar 360 degrees and 
-        for ray in np.arange(0,2*np.pi,2*np.pi/self.lidar_sweep_res):
-            # ray trace to the 1st intersection
-            # draw a line for this ray
-            line = np.array([self.pose_rc[1], self.pose_rc[0], self.pose_rc[1] + self.lidarRange*np.cos(ray), self.pose_rc[0] + self.lidarRange*np.sin(ray)])
-            self.world_ax.plot(line[[0,2]], line[[1,3]], color='blue', alpha=0.25)
+        for i, angle in enumerate(np.arange(0, 2*np.pi, self.lidar_sweep_res)):
+
 
             ray_cast_samples = np.arange(0,self.lidarRange, self.lidar_step_res)
-            for i, r in enumerate(ray_cast_samples):
-                self.world_ax.add_patch(plt.Circle((self.pose_rc[1], self.pose_rc[0]), r, color='pink', fill=False))
+            for j, r in enumerate(ray_cast_samples):
+                # self.world_ax.add_patch(plt.Circle((self.pose_rc[1], self.pose_rc[0]), r, color='pink', fill=False))
 
                 # get the point
-                x = self.pose_rc[1] + r*np.cos(ray)
-                y = self.pose_rc[0] + r*np.sin(ray)
+                x = self.pose_rc[1] + r*np.cos(angle)
+                y = self.pose_rc[0] + r*np.sin(angle)
+                line = np.array([self.pose_rc[1], self.pose_rc[0], x, y])
                 y_ocu, x_ocu = [int(y)//self._body_size-1,int(x)//self._body_size-1]
-
-                if self.ocupency_grid[y_ocu,x_ocu].all() == OBSTACLE.all():
+                if x < 0 or x >= img.shape[1] or y < 0 or y >= img.shape[0]:
+                    break
+                sampled_point= self.org_img[int(y), int(x)]
+                smapled_point_ocu = self.ocupency_grid[y_ocu, x_ocu]
+                if sampled_point == 0:# obstacle
+                    self.world_ax.add_patch(plt.Circle((x, y), self._body_size/2, color='red'))
+                    self.lidar_points.append([x,y])
+                    self.ocupency_grid[y_ocu, x_ocu] = OBSTACLE
+                    break
+                if r == self.lidarRange-1:# frontier
+                    self.world_ax.add_patch(plt.Circle((x, y), self._body_size/2, color='pink'))
+                    self.lidar_points.append([x,y])
+                    self.ocupency_grid[y_ocu, x_ocu] = FRONTIER
+                    break
+                if sampled_point == 255:# free space
+                    self.world_ax.add_patch(plt.Circle((x, y), self._body_size/2, color='green'))
+                    self.lidar_points.append([x,y])
+                    self.ocupency_grid[y_ocu, x_ocu] = KNOW
                     break
 
-                # check if the point is in the map
-                if x < 0 or x > img.shape[1] or y < 0 or y > img.shape[0]:
-                    break
-                if img[int(y),int(x)] == 0:
-                    # draw the point
-                    self.lidar_points.append([y,x])
-                    # draw on agent map
-                    self.world_ax.scatter(x, y, color='r', s=10)
-                    # update the ocupency grid
-                    # self.ocupency_grid[int(y),int(x)] = 0
-                    self.ocupency_grid[y_ocu,x_ocu] = OBSTACLE
-                    break
 
-
-                # if at the end of the ray, then add the end point
-                if i >= len(ray_cast_samples)-2:
-                    self.ocupency_grid[y_ocu,x_ocu] = FRONTIER
-                    break
-                elif self.ocupency_grid[y_ocu,x_ocu].all() != UNKNOWN.all():
-                #     self.ocupency_grid[y_ocu,x_ocu] = KNOW
-                #     break
-                self.ocupency_grid[y_ocu,x_ocu] = KNOW
 
         # draw ocupency grid color
         # cover to rgb image
@@ -152,30 +163,88 @@ class Agent:
         
         self.agent_map_ax.imshow(rgb_img)
         return "done"
+
+
+    def drawLidar_grid(self):
+
+        
+        # draw lidar
+        self.world_ax.add_patch(plt.Circle((self.pose_rc[1], self.pose_rc[0]), self.lidarRange, color='blue', fill=False))
+
+        # Spiraling Square lidar around the current pose at increments of the grid size
+        for i in range(1, int(self.lidarRange),int( self.lidar_step_res)):
+            # draw a square
+            self.world_ax.add_patch(plt.Rectangle((self.pose_rc[1]-i, self.pose_rc[0]-i), 2*i, 2*i, color='red', fill=False))
+            # sample the rectangle and draw the lidar points
+            for j in range(1, 2*i +1, int(self.lidar_step_res)):
+                # sample the top and bottom
+                # sample the left and right
+                for x,y in [(self.pose_rc[1]-i+j, self.pose_rc[0]-i), 
+                            (self.pose_rc[1]-i+j, self.pose_rc[0]+i), 
+                            (self.pose_rc[1]-i, self.pose_rc[0]-i+j), 
+                            (self.pose_rc[1]+i, self.pose_rc[0]-i+j)]:
+                    # check if the point is in the map
+                    if x < 0 or x > img.shape[1] or y < 0 or y > img.shape[0]:
+                        continue
+                    ocu_x, ocu_y = [int(x)//self._body_size-1,int(y)//self._body_size-1]
+                    if self.ocupency_grid[ocu_y,ocu_x].all() == OBSTACLE.all():
+                        continue
+                    if img[int(y),int(x)] == 0:
+                        # draw the point
+                        self.lidar_points.append([y,x])
+                        # draw on agent map
+                        self.world_ax.scatter(x, y, color='r', s=10)
+                        # update the ocupency grid
+                        # self.ocupency_grid[int(y),int(x)] = 0
+                        self.ocupency_grid[ocu_y,ocu_x] = OBSTACLE
+                        continue
+                    if self.ocupency_grid[ocu_y,ocu_x].all() != UNKNOWN.all():
+                        # pass
+                        self.ocupency_grid[ocu_y,ocu_x] = KNOW
+                        continue
+                    self.ocupency_grid[ocu_y,ocu_x] = KNOW
+                    self.world_ax.scatter(x, y, color='g', s=10)
+
+
+
+        rgb_img = cv2.cvtColor(self.ocupency_grid, cv2.COLOR_RGB2BGR)
+        
+        self.agent_map_ax.imshow(rgb_img)
+        return "done"
     
     def move(self):
-        # action = np.random.randint(-1,1,2)
-        action = [-10,-10]
+        action = np.random.randint(-1,1,2)
+        # action = [-1,-1]
         # check if the action is valid
-        if self.pose_rc[0] + action[0] < 0 or \
-            self.pose_rc[0] + action[0] > img.shape[0] or \
-            self.pose_rc[1] + action[1] < 0 or \
-            self.pose_rc[1] + action[1] > img.shape[1]:
+        if self.ocu_pose_rc[0] + action[0] < 0 or \
+            self.ocu_pose_rc[0] + action[0] > self.ocupency_grid.shape[0] or \
+            self.ocu_pose_rc[1] + action[1] < 0 or \
+            self.ocu_pose_rc[1] + action[1] > self.ocupency_grid.shape[1]:
             print("invalid action")
             return
-        # action is a tuple of (x,y)
-        # move the agent
-        self.pose_rc[0] += action[0]
-        self.pose_rc[1] += action[1]
+        # check collision
+        if self.ocupency_grid[self.ocu_pose_rc[0] + action[0], self.ocu_pose_rc[1] + action[1]].all() == OBSTACLE.all():
+            print("collision")
+            return self.move()
+        else:
+            # action is a tuple of (x,y)
+            # move the agent
+            self.ocu_pose_rc = [self.ocu_pose_rc[0] + action[0], self.ocu_pose_rc[1] + action[1]]
+            self.pose_rc = [self.pose_rc[0] + action[0]*self._body_size, self.pose_rc[1] + action[1]*self._body_size]
+
         # draw the agent
         self.lidar_points = []
+        # clears the entire current figure with all its axes
+        self.world_ax.clear()
+        self.agent_map_ax.clear()
         self.drawSelf()
         # return the lidar points
         return self.lidar_points
 
+
 if __name__ == '__main__':
-    n = 5
-    maze, img, solution_path, solution_path_scaled, scale_shit = create_maze(n,it = 10, thre = 4, scaleUP=2)
+    n = 2#10
+    maze, img, solution_path, solution_path_scaled, grid_width = create_maze(n,it = 10, thre = 4, scaleUP=1)
 
 
     fig, ax = plt.subplots(1,2,figsize=(10, 5))
@@ -185,31 +254,41 @@ if __name__ == '__main__':
     ax[0].xaxis.tick_top()
     ax[1].xaxis.tick_top()
 
+
     # add a title
     ax[0].set_title('World')
     ax[1].set_title('Agent View')
 
     # bot1 = Agent(img, solution_path_scaled[0], ax, lidar_sample=100, lidarRange=2*scale_shit)
-    bot1 = Agent(img,\
-                [scale_shit*(len(maze.m)-1),scale_shit*(len(maze.m)-1)],\
-                ax,\
-                lidar_sample=100, \
-                lidarRange=2*scale_shit)
+    bot_liat = []
+    bot_n =2
+    for i in range(bot_n):
+        random_pose = [grid_width*(len(maze.m)-1),grid_width*(len(maze.m)-1)]
+        # random_pose = [random.randint(0, len(maze.m)-1),random.randint(0, len(maze.m)-1)]
+        bot1 = Agent(img,\
+                    random_pose,\
+                    ax,\
+                    grid_width= grid_width/2,\
+                    lidarRange=grid_width/2 * 5)
+        bot_liat.append(bot1)
 
-    # # take the average of the lidar points
-    # for i in range(100):
-
-    #     # move the bot  
-    #     bot1.move()
-    # plt.show()
     number_of_frames = 100
+
+    for i in range(number_of_frames):
+            bot_liat[0].move()
+            # time.sleep(0.2)
+            plt.show()
 
 
 
     def update_plot(n):
-        bot1.move()
+        for bot in bot_liat:
+            bot.move()
+        # sleep
+        time.sleep(0.2)
+    
+    # ani = animation.FuncAnimation(fig, update_plot, frames=number_of_frames, repeat=False )
 
-    ani = animation.FuncAnimation(fig, update_plot, frames=number_of_frames, repeat=False )
     plt.show()
 
 
