@@ -33,10 +33,10 @@ def create_maze(n,it,thre, scaleUP=10):
     solution_path =[]
     solution_path_scaled = []
     scale_shit = img.shape[0]/len(maze.m)
-    img12 = np.zeros(np.array(maze.m).shape, 3, dtype=np.uint8)
-    img12.fill(255)
+    # img12 = np.zeros(np.array(maze.m).shape, 3, dtype=np.uint8)
+    # img12.fill(255)
     # any location with maze.filled_wall
-    img12 = np.where(maze.m == maze.filled_wall, OBSTACLE, img12)
+    # img12 = np.where(maze.m == maze.filled_wall, OBSTACLE, img12)
 
     # Draw scaled up path 
     for i,row in enumerate(maze.m[:]):
@@ -243,7 +243,7 @@ class Agent:
 
 
 if __name__ == '__main__':
-    n = 2#10
+    n = 10
     maze, img, solution_path, solution_path_scaled, grid_width = create_maze(n,it = 10, thre = 4, scaleUP=1)
 
 

@@ -7,8 +7,8 @@ import matplotlib.patches as patches
 import numpy as np
 
 # Define the size of the screen
-SCREEN_WIDTH = 800
-SCREEN_HEIGHT = 600
+SCREEN_WIDTH = 500
+SCREEN_HEIGHT = 500
 
 # Define the colors to be used in the drawing
 BACKGROUND_COLOR = (255, 255, 255)
@@ -19,11 +19,11 @@ BLUE = (0, 0, 255)
 
 
 # Define the size of the walls
-WALL_THICKNESS = 8
+WALL_THICKNESS = 10
 
 # Define the minimum and maximum sizes for the rooms
-MIN_ROOM_SIZE = 50
-MAX_ROOM_SIZE = 300
+MIN_ROOM_SIZE =100#50
+MAX_ROOM_SIZE = 200
 
 
 
@@ -46,6 +46,11 @@ class World:
         self.doors = []
         self.rooms = []
         self.room_count = 0
+
+        # create col list
+        self.col_list = np.linspace(0, SCREEN_WIDTH, SCREEN_WIDTH // WALL_THICKNESS + 1)
+        self.row_list = np.linspace(0, SCREEN_HEIGHT, SCREEN_HEIGHT // WALL_THICKNESS + 1)
+        self.map = None
 
 
     # Define a function to draw a wall
@@ -71,18 +76,26 @@ class World:
             cur_room = Room(rect.x, rect.y, rect.w, rect.h)
             # add doors randomly to the sides of the room
             # the door is a square of WALL_THICKNESS
-            cur_room.doors.append((rect.x, random.randint(rect.y, rect.y + rect.h - WALL_THICKNESS)))
+            cur_room.doors.append((rect.x, random.randint(rect.y-WALL_THICKNESS, rect.y + rect.h - WALL_THICKNESS)))
             # add door on the top side
-            cur_room.doors.append((random.randint(rect.x, rect.x + rect.w - WALL_THICKNESS), rect.y))
+            cur_room.doors.append((random.randint(rect.x-WALL_THICKNESS, rect.x + rect.w - WALL_THICKNESS), rect.y))
                
             return [cur_room]
 
         if rect.w > rect.h:
-            split_pos = random.randint(rect.x + min_size, rect.x + rect.w - min_size)
+            # ensure that the split is in the gid using self.col_list and np.random.choice
+            # cliped range
+            choose_range = np.clip(self.col_list, rect.x + min_size, rect.x + rect.w - min_size)
+            split_pos = np.random.choice(choose_range)
+            # split_pos = random.randint(rect.x + min_size, rect.x + rect.w - min_size)
             rooms += self.split_rect(pygame.Rect(rect.x, rect.y, split_pos - rect.x, rect.h), min_size)
             rooms += self.split_rect(pygame.Rect(split_pos, rect.y, rect.x + rect.w - split_pos, rect.h), min_size)
         else:
-            split_pos = random.randint(rect.y + min_size, rect.y + rect.h - min_size)
+            # ensure that the split is in the gid using self.row_list and np.random.choice
+            # cliped range
+            choose_range = np.clip(self.row_list, rect.y + min_size, rect.y + rect.h - min_size)
+            split_pos = np.random.choice(choose_range)
+            # split_pos = random.randint(rect.y + min_size, rect.y + rect.h - min_size)
             rooms += self.split_rect(pygame.Rect(rect.x, rect.y, rect.w, split_pos - rect.y), min_size)
             rooms += self.split_rect(pygame.Rect(rect.x, split_pos, rect.w, rect.y + rect.h - split_pos), min_size)
 
@@ -90,9 +103,6 @@ class World:
 
     # Define a function to generate a random floor plan
     def generate_floor_plan(self):
-        # Generate the walls of the outer boundary of the floor plan
-        pygame.draw.rect(self.screen, WALL_COLOR, (0, 0, SCREEN_WIDTH, SCREEN_HEIGHT), WALL_THICKNESS)
-
         # Generate the rooms
         rooms = self.split_rect(pygame.Rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT ), MIN_ROOM_SIZE)
 
@@ -110,7 +120,13 @@ class World:
                 else:
                     self.draw_door(x, y, x + WALL_THICKNESS*2, y )
 
-    def draw_grid(self, color):
+        # Generate the walls of the outer boundary of the floor plan
+        pygame.draw.rect(self.screen, WALL_COLOR, (0, 0, SCREEN_WIDTH, SCREEN_HEIGHT), WALL_THICKNESS)
+        self.draw_grid()
+        self.map = self.get_grid()
+        return self.map.copy()
+
+    def draw_grid(self, color=( 150, 150, 150)):
         # draw a thin grid 
         for x in range(0, SCREEN_WIDTH, 10):
             pygame.draw.line(self.screen, color, (x, 0), (x, SCREEN_HEIGHT))
@@ -120,8 +136,6 @@ class World:
 
     def get_grid(self, show_grid=False):
         # show the floor plan in matplotlib
-        fig, ax = plt.subplots()
-        
         world_grid = np.zeros((SCREEN_HEIGHT, SCREEN_WIDTH)).astype(bool)
         world_grid.fill(True)
         
@@ -149,6 +163,10 @@ class World:
         world_grid[:, 0] = 0
         world_grid[:, -1] = 0
 
-        ax.imshow(world_grid, cmap='gray')
-        plt.show()
+        if show_grid:
+            fig, ax = plt.subplots()
+            ax.imshow(world_grid, cmap='gray')
+            plt.show()
+            return world_grid, ax
+
         return world_grid

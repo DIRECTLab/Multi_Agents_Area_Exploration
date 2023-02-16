@@ -4,52 +4,40 @@ import random
 import pygame
 import numpy as np
 
-class Agent:
-    def __init__(self,screen, body_size, lidar_range, empty_map):
+from astar import AStarPlanner
+
+
+class Agent(AStarPlanner):
+    def __init__(self, body_size, lidar_range, empty_map, position=(100, 100) ):
         self.body_size = body_size
         self.lidar_range = lidar_range
         self.map = empty_map.copy()
-        self.position = (0, 0)
-        self.cur_color = (random.randint(0, 255), random.randint(0, 255), random.randint(0, 255))
-        
-    def draw(self, ):    
+        self.position = position
+        self.cur_color = (random.randint(0, 255), random.randint(0, 255), 0)
+
+        # randomize the 
+        self.dx= np.random.rand()/10
+        self.dy= np.random.rand()/10
+        AStarPlanner.__init__(self, self.map, self.body_size)
+
+    def draw(self, screen):    
         # draw the agent
-        pygame.draw.circle(screen, color= cur_color, center=(0, 0), radius=body_size)
+        pygame.draw.circle(screen, color= self.cur_color, center=self.position, radius=self.body_size)
 
-    def move(self, dx, dy):
+    def move(self, ):
         # Update the agent's position
-        self.position = (self.position[0] + dx, self.position[1] + dy)
+        new_position = (self.position[0] + self.dx, self.position[1] + self.dy)
+        if new_position[0] < 0 or new_position[0] >= self.map.shape[0]:
+            return 
+        if new_position[1] < 0 or new_position[1] >= self.map.shape[1]:
+            return
+        
+        self.position = new_position
 
-        # TODO: Implement agent movement
-        pass
+    def scan(self, ):
+        # send out scan to update local map
 
-    def sense(self, walls, openings):
-        # Update the map based on the agent's position
-        px, py = self.position
-        x_min = max(0, int((px - self.lidar_range) / self.map_resolution))
-        x_max = min(self.map_width - 1, int((px + self.lidar_range) / self.map_resolution))
-        y_min = max(0, int((py - self.lidar_range) / self.map_resolution))
-        y_max = min(self.map_height - 1, int((py + self.lidar_range) / self.map_resolution))
-
-        for x in range(x_min, x_max + 1):
-            for y in range(y_min, y_max + 1):
-                # Calculate the distance from the agent to the current cell
-                cell_center = ((x + 0.5) * self.map_resolution, (y + 0.5) * self.map_resolution)
-                dist = np.sqrt((px - cell_center[0]) ** 2 + (py - cell_center[1]) ** 2)
-
-                # Check if there is a wall or opening in the way
-                obstructed = False
-                for wall in walls:
-                    if wall.collidepoint(cell_center):
-                        obstructed = True
-                        break
-                for opening in openings:
-                    if opening.collidepoint(cell_center):
-                        obstructed = False
-                        break
-
-                # Update the map based on the LIDAR reading
-                if not obstructed and dist <= self.lidar_range:
-                    self.map[y][x] = 1
-                else:
-                    self.map[y][x] = 0
+    def update(self, map):
+        # Update the agent's position
+        self.move()
+        
