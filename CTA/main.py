@@ -1,11 +1,12 @@
 import random
 import pygame
 import numpy as np
+import threading
 
 import world
 import agent
 
-seed = 42
+seed = 4
 random.seed(seed)
 np.random.seed(seed)
 
@@ -17,18 +18,20 @@ cur_world = world.World()
 map = cur_world.generate_floor_plan()
 # get current screen
 map_screen = cur_world.screen.copy()
-n_bots = 2
+n_bots = 4
 bots = []
 for i in range(n_bots):
     bots.append(agent.Agent(body_size= 3,
                             grid_size= world.WALL_THICKNESS,
                             lidar_range=world.SCREEN_WIDTH//3,
-                            full_map = map))
+                            full_map = map,
+                            position=(np.random.randint(0, world.SCREEN_WIDTH), 
+                                      np.random.randint(0, world.SCREEN_HEIGHT))))
 
 # Display the floor plan on the screen
 pygame.display.update()
 
-debug = True
+debug = False
 if debug:
     test_bot = agent.Agent(body_size= 3,
                            grid_size= world.WALL_THICKNESS,
@@ -36,17 +39,24 @@ if debug:
                            full_map = map,
                             position=(50, 50))
 
-    FPS = 60
-    clock = pygame.time.Clock()
+FPS = 160
+clock = pygame.time.Clock()
 
 # Wait for the user to close the window
 while True:
 
     cur_map = np.zeros((world.SCREEN_HEIGHT, world.SCREEN_WIDTH)).astype(int)
+    theads = []
     for bot in bots:
-        bot.update(map, cur_world.screen)
-        cur_map += bot.built_map
+        # place each bot in a different thread
+        t = threading.Thread(target=bot.update, args=(map, cur_world.screen))
+        t.start()
+        theads.append(t)
+        # bot.update(map, cur_world.screen)
+        # cur_map += bot.built_map
             
+    for t in theads:
+        t.join()
     # assign the map screen to the current screen
     # cur_world.screen = map_screen.copy()
     if debug:
@@ -77,9 +87,9 @@ while True:
 
         test_bot.update(map, cur_world.screen)
                 # set the frame rate
-        clock.tick(FPS)
-        # print the frame rate
-        print("clock.get_fps()",clock.get_fps(), end='\r')
+    clock.tick(FPS)
+    # print the frame rate
+    print("clock.get_fps()",clock.get_fps(), end='\r')
 
     pygame.display.update()
     # clear the screen

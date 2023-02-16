@@ -38,10 +38,33 @@ class Agent(AStarPlanner):
     def move(self, ):
         # Update the agent's position
         new_position = (self.position[0] + self.dx, self.position[1] + self.dy)
-        if new_position[0] < 0 or new_position[0] >= self.built_map.shape[0]:
-            return 
-        if new_position[1] < 0 or new_position[1] >= self.built_map.shape[1]:
+        x = int(custom_round(self.position[0], base=self.grid_size))
+        y = int(custom_round(self.position[1], base=self.grid_size))
+        if x < 0:
+            self.dx *= -1
+            self.position = (self.grid_size*2,self.position[1])
             return
+        if x >= self.built_map.shape[0]:
+            self.dx *= -1
+            self.position = (self.built_map.shape[0]-self.grid_size*2,self.position[1])
+            return 
+        if y < 0:
+            self.dy *= -1
+            self.position = (self.position[0],self.grid_size*2)
+            return
+        if y >= self.built_map.shape[1]:
+            self.dy *= -1
+            self.position = (self.position[0],self.built_map.shape[1]-self.grid_size*2)
+            return
+        
+        # sampeld_point = self.full_map[y, x]
+        # if sampeld_point == False:# obstacle
+        #     # move in the direction from sampeld_point to position
+        #     self.dx *= -1
+        #     self.dy *= -1
+
+        #     self.position =  self.position - sampeld_point
+        #     return
         
         self.position = new_position
 
