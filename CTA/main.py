@@ -22,7 +22,7 @@ bots = []
 for i in range(n_bots):
     bots.append(agent.Agent(body_size= 3,
                             grid_size= world.WALL_THICKNESS,
-                            lidar_range=50,
+                            lidar_range=world.SCREEN_WIDTH//3,
                             full_map = map))
 
 # Display the floor plan on the screen
@@ -32,9 +32,9 @@ debug = True
 if debug:
     test_bot = agent.Agent(body_size= 3,
                            grid_size= world.WALL_THICKNESS,
-                           lidar_range=50,
+                           lidar_range=world.SCREEN_WIDTH//3,
                            full_map = map,
-                            position=(10, 10))
+                            position=(50, 50))
 
     FPS = 60
     clock = pygame.time.Clock()
@@ -42,9 +42,11 @@ if debug:
 # Wait for the user to close the window
 while True:
 
+    cur_map = np.zeros((world.SCREEN_HEIGHT, world.SCREEN_WIDTH)).astype(int)
     for bot in bots:
         bot.update(map, cur_world.screen)
-
+        cur_map += bot.built_map
+            
     # assign the map screen to the current screen
     # cur_world.screen = map_screen.copy()
     if debug:
