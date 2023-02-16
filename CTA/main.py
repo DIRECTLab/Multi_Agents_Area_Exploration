@@ -21,17 +21,19 @@ n_bots = 2
 bots = []
 for i in range(n_bots):
     bots.append(agent.Agent(body_size= 3,
-                            lidar_range=10,
-                            empty_map =np.zeros((map.shape[0], map.shape[1])).astype(bool)))
+                            grid_size= world.WALL_THICKNESS,
+                            lidar_range=50,
+                            full_map = map))
 
 # Display the floor plan on the screen
 pygame.display.update()
 
-debug = False
+debug = True
 if debug:
     test_bot = agent.Agent(body_size= 3,
-                        lidar_range=10,
-                        empty_map =np.zeros((map.shape[0], map.shape[1])).astype(bool),
+                           grid_size= world.WALL_THICKNESS,
+                           lidar_range=50,
+                           full_map = map,
                             position=(10, 10))
 
     FPS = 60
@@ -41,8 +43,7 @@ if debug:
 while True:
 
     for bot in bots:
-        bot.update(map)
-        bot.draw(cur_world.screen)
+        bot.update(map, cur_world.screen)
 
     # assign the map screen to the current screen
     # cur_world.screen = map_screen.copy()
@@ -67,14 +68,22 @@ while True:
                 if event.key == pygame.K_DOWN:
                     test_bot.dy += 0.1
 
-        test_bot.update(map)
-        test_bot.draw(cur_world.screen)
+                # space bar
+                if event.key == pygame.K_SPACE:
+                    test_bot.dy = 0
+                    test_bot.dx = 0
+
+        test_bot.update(map, cur_world.screen)
                 # set the frame rate
         clock.tick(FPS)
         # print the frame rate
         print("clock.get_fps()",clock.get_fps(), end='\r')
 
     pygame.display.update()
+    # clear the screen
+    cur_world.screen.fill((0, 0, 0))
+    # update the scrren
+    cur_world.screen.blit(map_screen, (0, 0))
 
 
 
