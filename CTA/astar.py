@@ -1,9 +1,8 @@
 import heapq
 
 class AStarPlanner:
-    def __init__(self, map, resolution):
+    def __init__(self, map,):
         self.map = map
-        self.resolution = resolution
         self.neighbors = [(0, 1), (0, -1), (1, 0), (-1, 0), (1, 1), (-1, -1), (1, -1), (-1, 1)]
 
     def heuristic(self, a, b):
@@ -28,6 +27,7 @@ class AStarPlanner:
             for dx, dy in self.neighbors:
                 next = (current[0] + dx, current[1] + dy)
 
+                # Check if the node is valid
                 if not self.is_valid(next):
                     continue
 
@@ -52,6 +52,8 @@ class AStarPlanner:
 
     def is_valid(self, node):
         x, y = node
-        if x < 0 or x >= len(self.map[0]) or y < 0 or y >= len(self.map):
+        if x < 0 or x >= self.map.shape[0]:
+            return False
+        elif x >= len(self.map[0]) or y >= len(self.map):
             return False
         return self.map[y][x] == 0

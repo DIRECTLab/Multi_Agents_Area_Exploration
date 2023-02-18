@@ -1,12 +1,13 @@
 import random
 import pygame
 import numpy as np
+import matplotlib.pyplot as plt
 import threading
 
 import world
 import agent
 
-seed = 4
+seed = 10
 random.seed(seed)
 np.random.seed(seed)
 
@@ -16,77 +17,77 @@ pygame.init()
 cur_world = world.World()
     # Generate the floor plan
 map = cur_world.generate_floor_plan()
+# cur_world.get_map(show_grid=True)
+
 # get current screen
 map_screen = cur_world.screen.copy()
-n_bots = 4
+n_bots = 2
 bots = []
 for i in range(n_bots):
     bots.append(agent.Agent(body_size= 3,
-                            grid_size= world.WALL_THICKNESS,
-                            lidar_range=world.SCREEN_WIDTH//3,
+                            grid_size= world.GRID_THICKNESS,
+                            lidar_range=map.shape[0]//3,
                             full_map = map,
-                            position=(np.random.randint(0, world.SCREEN_WIDTH), 
-                                      np.random.randint(0, world.SCREEN_HEIGHT))))
+                            position=(np.random.randint(0, map.shape[0]), 
+                                      np.random.randint(0, map.shape[0]))))
 
 # Display the floor plan on the screen
 pygame.display.update()
 
-debug = False
-if debug:
-    test_bot = agent.Agent(body_size= 3,
-                           grid_size= world.WALL_THICKNESS,
-                           lidar_range=world.SCREEN_WIDTH//3,
-                           full_map = map,
-                            position=(50, 50))
 
+
+useTheads = False
 FPS = 160
 clock = pygame.time.Clock()
 
+# create a separate plt plot window that updates every frame
+fig, ax = plt.subplots( n_bots, figsize=(10, 10))
+plt.ion
 # Wait for the user to close the window
+frame_count = 0
 while True:
 
-    cur_map = np.zeros((world.SCREEN_HEIGHT, world.SCREEN_WIDTH)).astype(int)
-    theads = []
-    for bot in bots:
-        # place each bot in a different thread
-        t = threading.Thread(target=bot.update, args=(map, cur_world.screen))
-        t.start()
-        theads.append(t)
-        # bot.update(map, cur_world.screen)
-        # cur_map += bot.built_map
-            
-    for t in theads:
-        t.join()
-    # assign the map screen to the current screen
-    # cur_world.screen = map_screen.copy()
-    if debug:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+    cur_map = np.zeros((map.shape[0], map.shape[1])).astype(int)
+    if useTheads:
+        theads = []
+        for bot in bots:
+            # place each bot in a different thread
+            t = threading.Thread(target=bot.update, args=(map, cur_world.screen))
+            t.start()
+            theads.append(t)
+            # take the and of the maps
+
+            # cur_map = np.logical_and(cur_map, bot.built_map)
+            cur_map *= bot.built_map
+            cur_map += bot.built_map
+
+                
+        for i, (t, bot)  in enumerate(zip(theads,bots)):
+            t.join()
+            ax[i].matshow(bot.built_map)
+
+    else:
+        for i, bot in enumerate(bots):
+            bot.update(map, cur_world.screen)
+            cur_map *= bot.built_map
+            cur_map += bot.built_map
+            # ax[i].clear()
+            ax[i].matshow(bot.built_map)
+        
+
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            pygame.quit()
+            quit()
+        # arrow keys
+        if event.type == pygame.KEYDOWN:
+            # quit the game if q is pressed
+            if event.key == pygame.K_q:
                 pygame.quit()
                 quit()
-            # arrow keys
-            if event.type == pygame.KEYDOWN:
-                # quit the game if q is pressed
-                if event.key == pygame.K_q:
-                    pygame.quit()
-                    quit()
 
-                if event.key == pygame.K_LEFT:
-                    test_bot.dx += -0.1
-                if event.key == pygame.K_RIGHT:
-                    test_bot.dx += 0.1
-                if event.key == pygame.K_UP:
-                    test_bot.dy += -0.1
-                if event.key == pygame.K_DOWN:
-                    test_bot.dy += 0.1
-
-                # space bar
-                if event.key == pygame.K_SPACE:
-                    test_bot.dy = 0
-                    test_bot.dx = 0
-
-        test_bot.update(map, cur_world.screen)
-                # set the frame rate
+    # set the frame rate
     clock.tick(FPS)
     # print the frame rate
     print("clock.get_fps()",clock.get_fps(), end='\r')
@@ -96,6 +97,12 @@ while True:
     cur_world.screen.fill((0, 0, 0))
     # update the scrren
     cur_world.screen.blit(map_screen, (0, 0))
+    
+    # update the map but continue 
+    # wait to update plt at FPS of 10
+    if frame_count % 100 == 0:
+        plt.pause(0.0001)
+        plt.draw()
 
 
-
+    frame_count += 1
