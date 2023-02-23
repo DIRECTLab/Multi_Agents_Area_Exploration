@@ -10,8 +10,8 @@ import numpy as np
 GRID_THICKNESS = 10
 
 # Define the size of the screen
-SCREEN_WIDTH = 50 * GRID_THICKNESS
-SCREEN_HEIGHT = 50 * GRID_THICKNESS
+SCREEN_WIDTH = 100 * GRID_THICKNESS
+SCREEN_HEIGHT = 100 * GRID_THICKNESS
 
 # Define the colors to be used in the drawing
 BACKGROUND_COLOR = (255, 255, 255)
@@ -23,7 +23,7 @@ BLUE = (0, 0, 255)
 
 
 # Define the minimum and maximum sizes for the rooms
-MIN_ROOM_SIZE =10 * GRID_THICKNESS
+MIN_ROOM_SIZE = 10 * GRID_THICKNESS
 MAX_ROOM_SIZE = 20 * GRID_THICKNESS
 
 
@@ -170,7 +170,7 @@ class World:
         if show_grid:
             fig, ax = plt.subplots()
             ax.imshow(world_grid, cmap='gray')
-            plt.show()
+            plt.show(block=False)
             return world_grid, ax
 
         return world_grid

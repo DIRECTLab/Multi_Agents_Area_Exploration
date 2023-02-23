@@ -11,7 +11,7 @@ import cv2
 import random
 import time 
 # set seed
-random.seed(0)
+# random.seed(0)
 
 UNKNOWN = np.array([100, 100, 100], dtype=np.uint8)
 FRONTIER = np.array([100, 100, 200], dtype=np.uint8)
@@ -243,53 +243,65 @@ class Agent:
 
 
 if __name__ == '__main__':
-    n = 10
-    maze, img, solution_path, solution_path_scaled, grid_width = create_maze(n,it = 10, thre = 4, scaleUP=1)
+    n = 100
+    for i in range(4):
+        maze, img, solution_path, solution_path_scaled, grid_width = create_maze(n,it = 10, thre = 8, scaleUP=1)
+        plt.clf()
+        plt.imshow(img, cmap='gray')
+        # place a star at the start and end
+        plt.scatter(solution_path_scaled[0][1], solution_path_scaled[0][0], color='r', s=100, marker='o')
+        
+        plt.scatter(solution_path_scaled[-1][1], solution_path_scaled[-1][0], color='g', s=50, marker='x', linewidth=5)
+        # make the layout tight
+        plt.tight_layout()
+        # save the image
+        plt.savefig(f'maze_{i}.png')
+        # clear the figure
+
+    # fig, ax = plt.subplots(1,2,figsize=(10, 5))
+    # # ax flip y axis
+    # ax[1].invert_yaxis()
+    # # make the ax ready for image plotting
+    # ax[0].xaxis.tick_top()
+    # ax[1].xaxis.tick_top()
 
 
-    fig, ax = plt.subplots(1,2,figsize=(10, 5))
-    # ax flip y axis
-    ax[1].invert_yaxis()
-    # make the ax ready for image plotting
-    ax[0].xaxis.tick_top()
-    ax[1].xaxis.tick_top()
+    # # add a title
+    # ax[0].set_title('World')
+    # ax[1].set_title('Agent View')
 
+    # # bot1 = Agent(img, solution_path_scaled[0], ax, lidar_sample=100, lidarRange=2*scale_shit)
+    # bot_liat = []
+    # bot_n =2
+    # for i in range(bot_n):
+    #     random_pose = [grid_width*(len(maze.m)-1),grid_width*(len(maze.m)-1)]
+    #     # random_pose = [random.randint(0, len(maze.m)-1),random.randint(0, len(maze.m)-1)]
+    #     bot1 = Agent(img,\
+    #                 random_pose,\
+    #                 ax,\
+    #                 grid_width= grid_width/2,\
+    #                 lidarRange=grid_width/2 * 5)
+    #     bot_liat.append(bot1)
 
-    # add a title
-    ax[0].set_title('World')
-    ax[1].set_title('Agent View')
+    # number_of_frames = 100
 
-    # bot1 = Agent(img, solution_path_scaled[0], ax, lidar_sample=100, lidarRange=2*scale_shit)
-    bot_liat = []
-    bot_n =2
-    for i in range(bot_n):
-        random_pose = [grid_width*(len(maze.m)-1),grid_width*(len(maze.m)-1)]
-        # random_pose = [random.randint(0, len(maze.m)-1),random.randint(0, len(maze.m)-1)]
-        bot1 = Agent(img,\
-                    random_pose,\
-                    ax,\
-                    grid_width= grid_width/2,\
-                    lidarRange=grid_width/2 * 5)
-        bot_liat.append(bot1)
-
-    number_of_frames = 100
-
-    for i in range(number_of_frames):
-            bot_liat[0].move()
-            # time.sleep(0.2)
-            plt.show()
+    # for i in range(number_of_frames):
+    #         bot_liat[0].move()
+    #         # time.sleep(0.2)
+    #         plt.show()
 
 
 
-    def update_plot(n):
-        for bot in bot_liat:
-            bot.move()
-        # sleep
-        time.sleep(0.2)
+    # def update_plot(n):
+    #     for bot in bot_liat:
+    #         bot.move()
+    #     # sleep
+    #     time.sleep(0.2)
     
-    # ani = animation.FuncAnimation(fig, update_plot, frames=number_of_frames, repeat=False )
+    # # ani = animation.FuncAnimation(fig, update_plot, frames=number_of_frames, repeat=False )
 
     plt.show()
+    print("done")
 
 
 
