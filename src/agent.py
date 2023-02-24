@@ -5,7 +5,8 @@ import pygame
 import numpy as np
 import matplotlib.pyplot as plt
 
-# from src.astar import AStarPlanner
+from src.planners.astar import astar
+from src.config import *
 
 # https://stackoverflow.com/a/40372261/9555123
 def custom_round(x, base=5):
@@ -49,7 +50,7 @@ class Agent():
 
 
 
-        self.plan = astar(list(np.where(self.built_map == 1, 0, 1)), 
+        self.plan = astar(list(np.where(self.agent_map == 1, 0, 1)), 
                             self.grid_position, 
                             self.goal)
 
@@ -85,31 +86,30 @@ class Agent():
         cur_x = self.grid_position[0]
         cur_y = self.grid_position[1]
 
-        next_path_point = self.plan[0]
-
-        if (int(np.round(cur_x)), int(np.round(cur_y))) == (next_path_point[0], next_path_point[1]):
-            # get the next point
-            self.plan.pop(0)
-            next_path_point = self.plan[0]
+        # next_path_point = self.plan[0]
+        # if (int(np.round(cur_x)), int(np.round(cur_y))) == (next_path_point[0], next_path_point[1]):
+        #     # get the next point
+        #     self.plan.pop(0)
+        #     next_path_point = self.plan[0]
 
         if (int(np.round(cur_x)), int(np.round(cur_y))) == (self.goal[0], self.goal[1]):
             # get the next point
             self.goal = self.get_random_goal()
-            self.plan = astar(list(np.where(self.built_map == 1, 0, 1)),
-                                self.grid_position,
-                                self.goal)
+            # self.plan = astar(list(np.where(self.built_map == 1, 0, 1)),
+            #                     self.grid_position,
+            #                     self.goal)
             return
         else:
             # get the direction from current position to next point
             #  scale such that the sum of the squares of the components is velocity
             velocity = 1
-            # self.dx = velocity * (self.goal[0] - cur_x) / np.sqrt((self.goal[0] - cur_x)**2 + (self.goal[1] - cur_y)**2)
-            # self.dy = velocity * (self.goal[1] - cur_y) / np.sqrt((self.goal[0] - cur_x)**2 + (self.goal[1] - cur_y)**2)
+            self.dx = velocity * (self.goal[0] - cur_x) / np.sqrt((self.goal[0] - cur_x)**2 + (self.goal[1] - cur_y)**2)
+            self.dy = velocity * (self.goal[1] - cur_y) / np.sqrt((self.goal[0] - cur_x)**2 + (self.goal[1] - cur_y)**2)
 
             # get the next point from the plan
             
-            self.dx = velocity * (next_path_point[0] - cur_x) / np.sqrt((next_path_point[0] - cur_x)**2 + (next_path_point[1] - cur_y)**2)
-            self.dy = velocity * (next_path_point[1] - cur_y) / np.sqrt((next_path_point[0] - cur_x)**2 + (next_path_point[1] - cur_y)**2)
+            # self.dx = velocity * (next_path_point[0] - cur_x) / np.sqrt((next_path_point[0] - cur_x)**2 + (next_path_point[1] - cur_y)**2)
+            # self.dy = velocity * (next_path_point[1] - cur_y) / np.sqrt((next_path_point[0] - cur_x)**2 + (next_path_point[1] - cur_y)**2)
 
         new_position = (self.grid_position[0] + self.dx, self.grid_position[1] + self.dy)
         new_x = new_position[0]
@@ -155,19 +155,19 @@ class Agent():
                     break
                 sampled_point= self.full_map[y, x]
                 if sampled_point == False:# obstacle
-                    self.agent_map[y, x] = 0
+                    self.agent_map[y, x] = KNOWN_WALL
                     # ddraw the obstacle
                     pygame.draw.circle(self.screen, color= (255, 0, 0), center=(x*self.grid_size, y*self.grid_size), radius=self.grid_size//2)
 
                     break
                 if r == max(ray_cast_samples):# frontier
-                    if self.agent_map[y, x] == 1:
+                    if self.agent_map[y, x] == KNOWN_EMPTY:
                         break
-                    self.agent_map[y, x] = 2
+                    self.agent_map[y, x] = FRONTIER
                     pygame.draw.circle(self.screen, color=(255, 255, 0), center=(x*self.grid_size, y*self.grid_size), radius=self.grid_size//2)
                     break
                 # free space
-                self.agent_map[y, x] = 1
+                self.agent_map[y, x] = KNOWN_EMPTY
                 # pygame.draw.circle(self.screen, color= (0, 255, 0), center=(x, y), radius=self.grid_size//5)
 
             # draw lidar lines
@@ -183,7 +183,7 @@ class Agent():
                 cur_cell = self.agent_map[r,c]
                 if cur_cell == mutual_cell: #Frontier
                     continue
-                if mutual_cell == -1:
+                if mutual_cell == UNKNOWN:
                     mutual_map[r,c] = cur_cell
                     # continue
                 # if cur_cell != mutual_cell:

@@ -6,6 +6,7 @@ import threading
 
 import src.world as world
 import src.agent as agent
+from src.config import *
 
 seed = 10
 random.seed(seed)
@@ -44,7 +45,7 @@ for i in range(n_bots):
     bots.append(agent.Agent(
                             id = i,
                             body_size = 3,
-                            grid_size = world.GRID_THICKNESS,
+                            grid_size = GRID_THICKNESS,
                             lidar_range = map.shape[0]//3,
                             full_map = map,
                             position = (np.random.randint(0, map.shape[0]), 
