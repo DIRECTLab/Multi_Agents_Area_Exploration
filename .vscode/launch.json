@@ -8,7 +8,7 @@
             "name": "Main",
             "type": "python",
             "request": "launch",
-            "program": "CTA/main.py",
+            "program": "main.py",
             "console": "integratedTerminal",
             "justMyCode": false
         },

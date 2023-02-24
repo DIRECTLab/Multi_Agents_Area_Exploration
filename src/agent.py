@@ -5,14 +5,16 @@ import pygame
 import numpy as np
 import matplotlib.pyplot as plt
 
-import src.world
-from src.astar import AStarPlanner
+from src.config import *
+
+# import src.planners.astar as planners
+from src.planners.astar import astar 
 
 # https://stackoverflow.com/a/40372261/9555123
 def custom_round(x, base=5):
     return int(base * round(float(x)/base))
 
-class Agent(AStarPlanner):
+class Agent():
     def __init__(self, 
             id, body_size, grid_size, lidar_range, 
             full_map, position=(10, 10),
@@ -41,12 +43,12 @@ class Agent(AStarPlanner):
 
         # scan the map and build the map
         self.scan()
-        # # plan the path
-        # super(Agent, self).__init__(map= np.where(self.built_map == 1, True, False))
-        # # plan is a list of tuples points
-        # self.plan = self.planning(sx = self.grid_position[0], sy = self.grid_position[1],
-        #                gx = self.goal[0], gy = self.goal[1])
-        self.plan = []
+
+
+
+        self.plan = astar(list(np.where(self.built_map == 1, 0, 1)), 
+                            self.grid_position, 
+                            self.goal)
 
 
     def get_random_goal(self):
@@ -78,28 +80,31 @@ class Agent(AStarPlanner):
         cur_x = self.grid_position[0]
         cur_y = self.grid_position[1]
 
+        next_path_point = self.plan[0]
+
+        if (int(np.round(cur_x)), int(np.round(cur_y))) == (next_path_point[0], next_path_point[1]):
+            # get the next point
+            self.plan.pop(0)
+            next_path_point = self.plan[0]
+
         if (int(np.round(cur_x)), int(np.round(cur_y))) == (self.goal[0], self.goal[1]):
             # get the next point
             self.goal = self.get_random_goal()
-        #     # update the plan
-        #     self.plan = self.planning(sx = int(np.round(cur_x)), sy =  int(np.round(cur_y)),
-        #                   gx = self.goal[0], gy = self.goal[1])
-        #     return
-        # elif (int(np.round(cur_x)), int(np.round(cur_y))) == self.plan[0]:
-        #     # remove the point from the plan
-        #     self.plan.pop(0)
+            self.plan = astar(list(np.where(self.built_map == 1, 0, 1)),
+                                self.grid_position,
+                                self.goal)
             return
         else:
             # get the direction from current position to next point
             #  scale such that the sum of the squares of the components is velocity
             velocity = 1
-            self.dx = velocity * (self.goal[0] - cur_x) / np.sqrt((self.goal[0] - cur_x)**2 + (self.goal[1] - cur_y)**2)
-            self.dy = velocity * (self.goal[1] - cur_y) / np.sqrt((self.goal[0] - cur_x)**2 + (self.goal[1] - cur_y)**2)
+            # self.dx = velocity * (self.goal[0] - cur_x) / np.sqrt((self.goal[0] - cur_x)**2 + (self.goal[1] - cur_y)**2)
+            # self.dy = velocity * (self.goal[1] - cur_y) / np.sqrt((self.goal[0] - cur_x)**2 + (self.goal[1] - cur_y)**2)
 
-            # # get the next point from the plan
-            # next_point = self.plan[0]
-            # self.dx = velocity * (next_point[0] - cur_x) / np.sqrt((next_point[0] - cur_x)**2 + (next_point[1] - cur_y)**2)
-            # self.dy = velocity * (next_point[1] - cur_y) / np.sqrt((next_point[0] - cur_x)**2 + (next_point[1] - cur_y)**2)
+            # get the next point from the plan
+            
+            self.dx = velocity * (next_path_point[0] - cur_x) / np.sqrt((next_path_point[0] - cur_x)**2 + (next_path_point[1] - cur_y)**2)
+            self.dy = velocity * (next_path_point[1] - cur_y) / np.sqrt((next_path_point[0] - cur_x)**2 + (next_path_point[1] - cur_y)**2)
 
         new_position = (self.grid_position[0] + self.dx, self.grid_position[1] + self.dy)
         new_x = new_position[0]
@@ -145,30 +150,30 @@ class Agent(AStarPlanner):
                     break
                 sampled_point= self.full_map[y, x]
                 if sampled_point == False:# obstacle
-                    self.built_map[y, x] = 0
+                    self.built_map[y, x] = KNOWN_EMPTY
                     # ddraw the obstacle
-                    pygame.draw.circle(self.screen, color= (255, 0, 0), center=(x*self.grid_size, y*self.grid_size), radius=self.grid_size//2)
-                    # add obstacle to the the list of obstacles if super class is set up 
-                    try:
-                        self.obstacle_map[y, x] = 1
-                    except:
-                        pass
-
+                    pygame.draw.circle(self.screen, color= RED, center=(x*self.grid_size, y*self.grid_size), radius=self.grid_size//2)
                     break
                 if r == max(ray_cast_samples):# frontier
-                    if self.built_map[y, x] == 1:
+                    if self.built_map[y, x] == KNOWN_EMPTY:
                         break
-                    self.built_map[y, x] = 2
-                    pygame.draw.circle(self.screen, color=(251, 233, 89), center=(x*self.grid_size, y*self.grid_size), radius=self.grid_size//2)
+                    self.built_map[y, x] = FRONTIER
+                    pygame.draw.circle(self.screen, color=YELLOW, center=(x*self.grid_size, y*self.grid_size), radius=self.grid_size//2)
                     break
                 # free space
-                self.built_map[y, x] = 1
+                self.built_map[y, x] = KNOWN_EMPTY
                 # pygame.draw.circle(self.screen, color= (0, 255, 0), center=(x, y), radius=self.grid_size//5)
 
-            pygame.draw.line(self.screen, color= (255, 0, 0), 
+            pygame.draw.line(self.screen, color= RED, 
                              start_pos=(self.grid_position[0]*self.grid_size, self.grid_position[1]*self.grid_size),
                              end_pos=(x*self.grid_size, y*self.grid_size),
                                 width=1)
+            
+    def replan(self):
+        # replan the path
+        self.plan = self.planning(sx = int(np.round(self.grid_position[0])), sy =  int(np.round(self.grid_position[1])),
+                      gx = self.goal[0], gy = self.goal[1])
+        return
 
     def update(self, draw=True):
         # Update the agent's position
