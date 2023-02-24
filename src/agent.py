@@ -159,7 +159,7 @@ class Agent(AStarPlanner):
                     if self.built_map[y, x] == 1:
                         break
                     self.built_map[y, x] = 2
-                    pygame.draw.circle(self.screen, color=(255, 255, 0), center=(x*self.grid_size, y*self.grid_size), radius=self.grid_size//2)
+                    pygame.draw.circle(self.screen, color=(251, 233, 89), center=(x*self.grid_size, y*self.grid_size), radius=self.grid_size//2)
                     break
                 # free space
                 self.built_map[y, x] = 1
@@ -180,4 +180,3 @@ class Agent(AStarPlanner):
             self.draw()
         
         # trade goal with other agents
-        

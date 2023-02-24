@@ -14,11 +14,12 @@ SCREEN_WIDTH = 100 * GRID_THICKNESS
 SCREEN_HEIGHT = 100 * GRID_THICKNESS
 
 # Define the colors to be used in the drawing
-BACKGROUND_COLOR = (255, 255, 255)
-WALL_COLOR = (0, 0, 0)
+BACKGROUND_COLOR = (78, 157, 157)
+WALL_COLOR = (80, 24, 99)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
+YELLOW = (251, 233, 89)
 
 
 
@@ -127,7 +128,7 @@ class World:
         self.map = self.get_map()
         return self.map.copy()
 
-    def draw_grid(self, color=( 150, 150, 150)):
+    def draw_grid(self, color=( 100, 100, 100)):
         # draw a thin grid 
         for x in range(0, SCREEN_WIDTH, 10):
             pygame.draw.line(self.screen, color, (x, 0), (x, SCREEN_HEIGHT))

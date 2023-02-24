@@ -111,9 +111,9 @@ while True:
     
     # update the map but continue 
     # wait to update plt at FPS of 10
-    # if frame_count % 10 == 0:
-    #     plt.pause(0.0001)
-    #     plt.draw()
+    if frame_count % 10 == 0:
+        plt.pause(0.0001)
+        plt.draw()
 
 
     frame_count += 1
