@@ -4,13 +4,13 @@ import pygame
 import sys
 
 
-COLUMNS = 25
-ROWS = 25
+COLUMNS = 55
+ROWS = 55
 # This sets the margin between each cell
-MARGIN = 5
+MARGIN = 2
 # This sets the WIDTH and HEIGHT of each grid location
-CELL_WIDTH = 20
-CELL_HEIGHT = 20
+CELL_WIDTH = 15
+CELL_HEIGHT = 15
 # Set the HEIGHT and WIDTH of the screen
 WINDOW_WIDTH = COLUMNS * (CELL_WIDTH + MARGIN) + MARGIN
 WINDOW_HEIGHT = ROWS * (CELL_HEIGHT + MARGIN) + MARGIN
