@@ -87,7 +87,7 @@ class World:
     # Define a function to generate a random floor plan
     def generate_floor_plan(self):
         # Generate the rooms
-        rooms = self.split_rect(pygame.Rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT ), MIN_ROOM_SIZE)
+        rooms = self.split_rect(pygame.Rect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT), MIN_ROOM_SIZE)
 
         # Draw the walls of the rooms
         for room in rooms:
@@ -109,12 +109,12 @@ class World:
         self.map = self.get_map()
         return self.map.copy()
 
-    def draw_grid(self, color=( 100, 100, 100)):
+    def draw_grid(self, color=(150, 150, 150)):
         # draw a thin grid 
-        for x in range(0, SCREEN_WIDTH, 10):
+        for x in range(0, SCREEN_WIDTH, 20):
             pygame.draw.line(self.screen, color, (x, 0), (x, SCREEN_HEIGHT))
 
-        for y in range(0, SCREEN_HEIGHT, 10):
+        for y in range(0, SCREEN_HEIGHT, 20):
             pygame.draw.line(self.screen, color, (0, y), (SCREEN_WIDTH, y))
 
     def get_map(self, show_grid=False):
