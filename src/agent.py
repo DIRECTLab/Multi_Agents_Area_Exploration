@@ -5,24 +5,29 @@ import pygame
 import numpy as np
 import matplotlib.pyplot as plt
 
-import src.world
-from src.astar import AStarPlanner
+# from src.astar import AStarPlanner
 
 # https://stackoverflow.com/a/40372261/9555123
 def custom_round(x, base=5):
     return int(base * round(float(x)/base))
 
-class Agent(AStarPlanner):
+class Agent():
     def __init__(self, 
-            id, body_size, grid_size, lidar_range, 
-            full_map, position=(10, 10),
-            goal=None, color=(random.randint(0, 255), random.randint(0, 255), 0),
-            ax=None,screen=None):
+                 id, 
+                 body_size,
+                 grid_size,
+                 lidar_range, 
+                 full_map,
+                 position=(10, 10),
+                 goal=None,
+                 color=(0,255,0),
+                 ax=None,
+                 screen=None):
         self.id = id
         self.body_size = body_size
         self.grid_size = grid_size
         self.full_map = full_map.copy()
-        self.built_map = np.zeros((full_map.shape[0], full_map.shape[1])).astype(int)
+        self.agent_map = - np.ones((full_map.shape[0], full_map.shape[1])).astype(int)
         self.grid_position = position
         self.cur_color = color
         self.lidarRange = lidar_range
@@ -63,12 +68,14 @@ class Agent(AStarPlanner):
                            center=(self.grid_position[0]* self.grid_size,self.grid_position[1]* self.grid_size),
                             radius=self.body_size)
         # draw line to goal
-        pygame.draw.line(self.screen, color= (0, 255, 0), 
-                         start_pos=(self.grid_position[0]* self.grid_size,self.grid_position[1]* self.grid_size), 
-                         end_pos=(self.goal[0]* self.grid_size,self.goal[1]* self.grid_size), width=5)
+        pygame.draw.circle( self.screen, 
+                            color= (0, 255, 0), 
+                            center=(self.goal[0]* self.grid_size,self.goal[1]* self.grid_size),
+                            radius=self.grid_size//2
+                        )
 
         # update plt plot
-        self.ax.matshow(self.built_map)
+        self.ax.matshow(self.agent_map)
         self.ax.plot(self.grid_position[0], self.grid_position[1], markersize=1, marker='.', color=np.array(self.cur_color)/255)
 
     
@@ -106,10 +113,10 @@ class Agent(AStarPlanner):
         new_y = new_position[1]
 
         # boundary collision
-        if new_x < 0 or new_x >= self.built_map.shape[0]:
+        if new_x < 0 or new_x >= self.agent_map.shape[0]:
             self.dx *= -1
             return 
-        if new_y < 0 or new_y >= self.built_map.shape[1]:
+        if new_y < 0 or new_y >= self.agent_map.shape[1]:
             self.dy *= -1
             return
         if new_x == np.NAN or new_y == np.NAN:
@@ -141,39 +148,50 @@ class Agent(AStarPlanner):
                 x = int(np.round(self.grid_position[0] + r*np.sin(angle)))
                 y = int(np.round(self.grid_position[1] + r*np.cos(angle)))
 
-                if x < 0 or x >= self.built_map.shape[1] or y < 0 or y >= self.built_map.shape[0]:
+                if x < 0 or x >= self.agent_map.shape[1] or y < 0 or y >= self.agent_map.shape[0]:
                     break
                 sampled_point= self.full_map[y, x]
                 if sampled_point == False:# obstacle
-                    self.built_map[y, x] = 0
+                    self.agent_map[y, x] = 0
                     # ddraw the obstacle
                     pygame.draw.circle(self.screen, color= (255, 0, 0), center=(x*self.grid_size, y*self.grid_size), radius=self.grid_size//2)
-                    # add obstacle to the the list of obstacles if super class is set up 
-                    try:
-                        self.obstacle_map[y, x] = 1
-                    except:
-                        pass
 
                     break
                 if r == max(ray_cast_samples):# frontier
-                    if self.built_map[y, x] == 1:
+                    if self.agent_map[y, x] == 1:
                         break
-                    self.built_map[y, x] = 2
+                    self.agent_map[y, x] = 2
                     pygame.draw.circle(self.screen, color=(255, 255, 0), center=(x*self.grid_size, y*self.grid_size), radius=self.grid_size//2)
                     break
                 # free space
-                self.built_map[y, x] = 1
+                self.agent_map[y, x] = 1
                 # pygame.draw.circle(self.screen, color= (0, 255, 0), center=(x, y), radius=self.grid_size//5)
 
-            pygame.draw.line(self.screen, color= (255, 0, 0), 
-                             start_pos=(self.grid_position[0]*self.grid_size, self.grid_position[1]*self.grid_size),
-                             end_pos=(x*self.grid_size, y*self.grid_size),
-                                width=1)
-
-    def update(self, draw=True):
+            # draw lidar lines
+            pygame.draw.circle( self.screen, 
+                                color=(0, 0, 255),
+                                center=(self.grid_position[0]*self.grid_size, self.grid_position[1]*self.grid_size),
+                                radius=self.grid_size//2
+                            )
+    def share_map(self, mutual_map):
+        # 1st method will be to look at all the cells and chooses what to assine in the returned map
+        for r,row in enumerate(mutual_map):
+            for c, mutual_cell in enumerate(row):
+                cur_cell = self.agent_map[r,c]
+                if cur_cell == mutual_cell: #Frontier
+                    continue
+                if mutual_cell == -1:
+                    mutual_map[r,c] = cur_cell
+                    # continue
+                # if cur_cell != mutual_cell:
+                #     mutual_map[r,c] = cur_cell
+                
+                    
+    def update(self, mutual_map, draw=True):
         # Update the agent's position
 
         self.scan()
+        self.share_map(mutual_map)
         self.move()
         # self.draw()
         if draw:

@@ -190,7 +190,7 @@ class DStarLiteRunner:
 
 if __name__ == "__main__":
 
-    f = open("/media/hmk/Files/Projects/PathPlanning/DStarLite-huzeyfe/maps/map2.txt", "r")
+    f = open("src/dstarlite/maps/map2.txt", "r")
     mapstring = f.read()
     
     grid_example = Grid(height=10, width=10)
@@ -214,7 +214,7 @@ if __name__ == "__main__":
             planned_path=planned_path
             )
         )
-    images[0].save('images/date'+str(time.asctime())+'.gif',
+    images[0].save('src/dstarlite/images/date'+str(time.asctime())+'.gif',
                save_all=True,
                append_images=images[1:],
                optimize=False,

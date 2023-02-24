@@ -15,45 +15,57 @@ np.random.seed(seed)
 pygame.init()
 # Define the size of the screen
 cur_world = world.World()
-    # Generate the floor plan
+# Generate the floor plan
 map = cur_world.generate_floor_plan()
 # cur_world.get_map(show_grid=True)
-# map_fig, map_ax = plt.subplots(1, 1, figsize=(10, 10))
-# map_ax.matshow(map)
+
+
+# mutual map
+map_fig, map_ax = plt.subplots(1, 1, figsize=(10, 10))
+map_ax.matshow(map)
+
+
 
 # get current screen
 map_screen = cur_world.screen.copy()
-n_bots = 1
+n_bots = 3
+
 row = int(np.sqrt(n_bots))
 col = int(np.ceil(n_bots/row))
 bot_fig, bot_ax = plt.subplots(row, col, figsize=(10, 10))
+
 if n_bots == 1:
     bot_ax = [bot_ax]
 else:
     bot_ax = bot_ax.flatten()
-plt.ion
+plt.ion()
 bots = []
 for i in range(n_bots):
-    bots.append(agent.Agent(id= i,body_size= 3,
-                            grid_size= world.GRID_THICKNESS,
-                            lidar_range=map.shape[0]//3,
+    bots.append(agent.Agent(
+                            id = i,
+                            body_size = 3,
+                            grid_size = world.GRID_THICKNESS,
+                            lidar_range = map.shape[0]//3,
                             full_map = map,
-                            position=(np.random.randint(0, map.shape[0]), 
+                            position = (np.random.randint(0, map.shape[0]), 
                                       np.random.randint(0, map.shape[0])),
-                            ax = bot_ax[i],screen=cur_world.screen))
+                            ax = bot_ax[i],
+                            screen = cur_world.screen
+                        )
+                )
     
     bot_ax[i].set_title(f"Bot {i}")
-    bot_ax[i].matshow(bots[i].built_map)
+    bot_ax[i].matshow(bots[i].agent_map)
 # Display the floor plan on the screen
 pygame.display.update()
 
 
 
 useTheads = False
-FPS = 160
+FPS = 10
 clock = pygame.time.Clock()
 
-cur_map = np.zeros((map.shape[0], map.shape[1])).astype(int)
+mutual_map = - np.ones((map.shape[0], map.shape[1])).astype(int)
 
 # Wait for the user to close the window
 frame_count = 0
@@ -68,9 +80,9 @@ while True:
             theads.append(t)
             # take the and of the maps
 
-            # cur_map = np.logical_and(cur_map, bot.built_map)
-            cur_map *= bot.built_map
-            cur_map += bot.built_map
+            # cur_map = np.logical_and(cur_map, bot.agent_map)
+            # mutual_map *= bot.agent_map
+            # mutual_map += bot.agent_map
 
                 
         for i, (t, bot)  in enumerate(zip(theads,bots)):
@@ -79,11 +91,14 @@ while True:
 
     else:
         for i, bot in enumerate(bots):
-            bot.update() #(draw=frame_count%10==0)
-            cur_map *= bot.built_map
-            cur_map += bot.built_map
+            last_map = mutual_map.copy()
+            print("mutual map update")
+            bot.update(mutual_map)#(draw=frame_count%10==0)
+            assert ( last_map.all() == mutual_map.all(),"Hi ")
+                # Yo we be doing somthing wrong"
+            # cur_map = bot.share(cur_map)
             # ax[i].clear()
-            # bot_ax[i].matshow(bot.built_map)
+            # bot_ax[i].matshow(bot.agent_map)
         
 
 
@@ -109,11 +124,20 @@ while True:
     # update the scrren
     cur_world.screen.blit(map_screen, (0, 0))
     
+
+    map_ax.matshow(mutual_map)
+    plt.pause(0.0001)
+    plt.draw()
+
+
     # update the map but continue 
     # wait to update plt at FPS of 10
-    # if frame_count % 10 == 0:
+    # if frame_count % 1 == 0:
+    #     map_ax.matshow(mutual_map)
     #     plt.pause(0.0001)
     #     plt.draw()
+    
+
 
 
     frame_count += 1
