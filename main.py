@@ -48,8 +48,6 @@ for i in range(n_bots):
                             grid_size = GRID_THICKNESS,
                             lidar_range = map.shape[0]//3,
                             full_map = map,
-                            position = (np.random.randint(0, map.shape[0]), 
-                                      np.random.randint(0, map.shape[0])),
                             ax = bot_ax[i],
                             screen = cur_world.screen
                         )
@@ -62,7 +60,7 @@ pygame.display.update()
 
 
 
-useTheads = False
+useTheads = True
 FPS = 10
 clock = pygame.time.Clock()
 
@@ -76,15 +74,9 @@ while True:
         theads = []
         for bot in bots:
             # place each bot in a different thread
-            t = threading.Thread(target=bot.update, args=(frame_count%10==0))
+            t = threading.Thread(target=bot.update, args=(mutual_map,))
             t.start()
             theads.append(t)
-            # take the and of the maps
-
-            # cur_map = np.logical_and(cur_map, bot.agent_map)
-            # mutual_map *= bot.agent_map
-            # mutual_map += bot.agent_map
-
                 
         for i, (t, bot)  in enumerate(zip(theads,bots)):
             t.join()
@@ -92,14 +84,7 @@ while True:
 
     else:
         for i, bot in enumerate(bots):
-            last_map = mutual_map.copy()
-            print("mutual map update")
-            bot.update(mutual_map)#(draw=frame_count%10==0)
-            assert ( last_map.all() == mutual_map.all(),"Hi ")
-                # Yo we be doing somthing wrong"
-            # cur_map = bot.share(cur_map)
-            # ax[i].clear()
-            # bot_ax[i].matshow(bot.agent_map)
+            bot.update(mutual_map)
         
 
 
