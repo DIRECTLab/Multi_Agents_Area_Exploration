@@ -1,9 +1,12 @@
+DRAW_SIM = False
+LOG_PLOTS = True
+
 # Define the size of the walls
 GRID_THICKNESS = 10
 
 # Define the size of the screen
-SCREEN_WIDTH = 100 * GRID_THICKNESS
-SCREEN_HEIGHT = 100 * GRID_THICKNESS
+SCREEN_WIDTH = 50 * GRID_THICKNESS
+SCREEN_HEIGHT = 50 * GRID_THICKNESS
 
 # Define the colors to be used in the drawing
 BACKGROUND_COLOR = (78, 157, 157)
