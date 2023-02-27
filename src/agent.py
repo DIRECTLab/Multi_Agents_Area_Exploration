@@ -5,15 +5,18 @@ import math
 import pygame
 import numpy as np
 import matplotlib.pyplot as plt
+from memory_profiler import profile
+import warnings
 
 from src.planners.astar import astar
 from src.config import *
+from src.replan.rand_horizen import *
 
-# https://stackoverflow.com/a/40372261/9555123
-def custom_round(x, base=5):
-    return int(base * round(float(x)/base))
+# # https://stackoverflow.com/a/40372261/9555123
+# def custom_round(x, base=5):
+#     return int(base * round(float(x)/base))
 
-class Agent():
+class Agent(rand_frontier):
     def __init__(self, 
                  id, 
                  body_size,
@@ -48,28 +51,22 @@ class Agent():
         # Start at 0 velocity
         self.dx= 0
         self.dy= 0
+        self.hist_dist = 0
 
         # scan the map and build the map
         self.scan()
         self.replan()
 
+    def _set_goal(self):
+        # self.goal = self.get_random_point()
+        self.goal = self.get_random_frontier()
+        self.replan()
 
-
-
-
-    def get_random_point(self):
-        # make sure the goal is not in the obstacle
-        while True:
-            goal = (np.random.randint(self.full_map.shape[0]), np.random.randint(self.full_map.shape[1]))
-            if self.full_map[goal] == True:
-                break
-        return goal
-    
     def replan(self):
-        # self.plan = astar(list(np.where(self.agent_map == KNOWN_WALL, 1, 0)), 
-        #                     (int(np.round(self.grid_position[0])), int(np.round(self.grid_position[1]))),
-        #                     self.goal,
-        #                     allow_diagonal_movement=True,)
+        # check id the goal is known
+        if self.agent_map[self.goal[1], self.goal[0]] == KNOWN_EMPTY:
+            self.goal = self.get_random_frontier()
+
         self.plan = astar(np.where(self.agent_map == KNOWN_WALL, KNOWN_WALL, KNOWN_EMPTY), 
                             (int(np.round(self.grid_position[0])), int(np.round(self.grid_position[1]))),
                             self.goal,
@@ -80,84 +77,54 @@ class Agent():
         # remove the current position
         if len(self.plan) > 0:
             self.plan.pop(0)
-    
-    # def draw_arrow(self, start, end, head_width =2, line_width = 2, color=RED, width=1):
-    #     # Calculate the angle of the arrow
-    #     # angle = np.atan2(end[1]-start[1], end[0]-start[0])
-    #     angle = np.arctan2(end[1]-start[1], end[0]-start[0])
-
-    #     # Calculate the length of the arrow line
-    #     length = np.sqrt((end[0]-start[0])**2 + (end[1]-start[1])**2)
-
-    #     # Calculate the size of the arrow head based on the line width
-    #     head_size = int(head_width * line_width)
-
-    #     # Create a surface to draw the arrow on
-    #     arrow_surface = pygame.Surface((length, head_size), pygame.SRCALPHA)
-        
-    #     # transform the surface to the correct angle
-    #     arrow_surface = pygame.transform.rotate(arrow_surface, np.rad2deg(angle))
-
-    #     # Draw the arrow line
-    #     pygame.draw.line(arrow_surface, color, (0, line_width//2), (length, line_width//2), line_width)
 
     def arrow( self, lcolor, tricolor, start, end, trirad, thickness=2):
         rad = math.pi/180
         pygame.draw.line(self.screen, lcolor, start, end, thickness)
         rotation = (math.atan2(start[1] - end[1], end[0] - start[0])) + math.pi/2
-        # pygame.draw.polygon(self.screen, tricolor, ((end[0] + trirad * math.sin(rotation),
-        #                                     end[1] + trirad * math.cos(rotation)),
-        #                                 (end[0] + trirad * math.sin(rotation - 120*rad),
-        #                                     end[1] + trirad * math.cos(rotation - 120*rad)),
-        #                                 (end[0] + trirad * math.sin(rotation + 120*rad),
-        #                                     end[1] + trirad * math.cos(rotation + 120*rad))))
 
-        # acute triangle
+        # right triangle
         pygame.draw.polygon(self.screen, tricolor, 
             ((end[0] + trirad * math.sin(rotation), end[1] + trirad * math.cos(rotation)),
             (end[0] + trirad * math.sin(rotation - 90*rad),end[1] + trirad * math.cos(rotation - 90*rad)),
             (end[0] + trirad * math.sin(rotation + 90*rad),end[1] + trirad * math.cos(rotation + 90*rad))))
 
+    # @profile
     def draw(self):    
-        # draw the agent, only when rendering do we need to use self.grid_size to scale the position
-        # pygame.draw.circle(self.screen, color= self.cur_color, 
-        #                    center=(self.grid_position[0]* self.grid_size,self.grid_position[1]* self.grid_size),
-        #                     radius=self.body_size)
-
-        # draw line to goal
-        # pygame.draw.line(self.screen, color= TEAL,
-        #                     start_pos=(self.grid_position[0]* self.grid_size,self.grid_position[1]* self.grid_size),
-        #                     end_pos=(self.goal[0]* self.grid_size,self.goal[1]* self.grid_size),
-        #                     width=self.grid_size//2)
-
-
+        somthing_drawn = False
         # draw an arrow in the direction of dx, dy
-        # self.draw_arrow((self.grid_position[0]* self.grid_size,self.grid_position[1]* self.grid_size),
-        #                 (self.grid_position[0]* self.grid_size + self.dx * self.grid_size,
-        #                 self.grid_position[1]* self.grid_size + self.dy * self.grid_size))
-        self.arrow(BLUE, 
-                    YELLOW, 
-                    (self.grid_position[0]* self.grid_size,self.grid_position[1]* self.grid_size),
-                    (self.grid_position[0]* self.grid_size + self.dx * self.grid_size,
-                    self.grid_position[1]* self.grid_size + self.dy * self.grid_size),
-                    10)
+        if self.screen is not None:
+            somthing_drawn = True
+            self.arrow(BLUE, 
+                        YELLOW, 
+                        (self.grid_position[0]* self.grid_size,self.grid_position[1]* self.grid_size),
+                        (self.grid_position[0]* self.grid_size + self.dx * self.grid_size,
+                        self.grid_position[1]* self.grid_size + self.dy * self.grid_size),
+                        10)
 
         # update plt plot
         # clear the plot
-        self.ax.clear()
-        self.ax.matshow(self.agent_map)
-        self.ax.plot(self.grid_position[0], self.grid_position[1], markersize=1, marker='.', color=np.array(self.cur_color)/255)
+        if self.ax is not None:
+            somthing_drawn = True
+            self.ax.clear()
+            self.ax.matshow(self.agent_map)
+            self.ax.plot(self.grid_position[0], self.grid_position[1], markersize=1, marker='.', color=np.array(self.cur_color)/255)
 
         # draw the plan line in pygame
-        if len(self.plan) > 0:
+        if self.ax is not None or self.screen is not None:
+            somthing_drawn = True
             for i in range(len(self.plan)-1):
-                pygame.draw.line(self.screen, color= GREEN,
-                                start_pos=(self.plan[i][0]* self.grid_size,self.plan[i][1]* self.grid_size),
-                                end_pos=(self.plan[i+1][0]* self.grid_size,self.plan[i+1][1]* self.grid_size),
-                                width=self.grid_size//4)
+                if self.screen is not None:
+                    somthing_drawn = True
+                    pygame.draw.line(self.screen, color= GREEN,
+                                    start_pos=(self.plan[i][0]* self.grid_size,self.plan[i][1]* self.grid_size),
+                                    end_pos=(self.plan[i+1][0]* self.grid_size,self.plan[i+1][1]* self.grid_size),
+                                    width=self.grid_size//4)
                 # draw plt line
-                self.ax.plot([self.plan[i][0], self.plan[i+1][0]], [self.plan[i][1], self.plan[i+1][1]], color=np.array(GREEN)/255)
-
+                if self.ax is not None:
+                    self.ax.plot([self.plan[i][0], self.plan[i+1][0]], [self.plan[i][1], self.plan[i+1][1]], color=np.array(GREEN)/255)
+        if not somthing_drawn:
+            warnings.warn("No drawing method is set, please set ax or screen")
 
 
     def move(self, ):
@@ -168,14 +135,12 @@ class Agent():
 
         if (int(np.round(cur_x)), int(np.round(cur_y))) == (self.goal[0], self.goal[1]):
             # get the next point
-            self.goal = self.get_random_point()
-            self.replan()
+            self._set_goal()
             return
         
         if len(self.plan) == 0:
             # get the next point
-            self.goal = self.get_random_point()
-            self.replan()
+            self._set_goal()
             return
         
         next_path_point = self.plan[0]
@@ -191,10 +156,6 @@ class Agent():
             # self.dy = velocity * (self.goal[1] - cur_y) / np.sqrt((self.goal[0] - cur_x)**2 + (self.goal[1] - cur_y)**2)
             # draw a line to the next point
 
-            # pygame.draw.line(self.screen, color= GREEN,
-            #                     start_pos=(cur_x* self.grid_size,cur_y* self.grid_size),
-            #                     end_pos=(next_path_point[0]* self.grid_size,next_path_point[1]* self.grid_size),
-            #                     width=self.grid_size//2)
             # move towards the next point
             direction = (next_path_point[0] - cur_x, next_path_point[1] - cur_y)
             self.dx = velocity * direction[0] / np.sqrt(direction[0]**2 + direction[1]**2)
@@ -225,6 +186,7 @@ class Agent():
             # throw an error
             # raise Exception("Agent collided with obstacle")
         
+        self.hist_dist += np.sqrt((self.grid_position[0] - new_position[0])**2 + (self.grid_position[1] - new_position[1])**2)
         self.grid_position = new_position
 
     def scan(self):
@@ -247,14 +209,16 @@ class Agent():
                 if sampled_point == False:# obstacle
                     self.agent_map[y, x] = KNOWN_WALL
                     # ddraw the obstacle
-                    pygame.draw.circle(self.screen, color= RED, center=(x*self.grid_size, y*self.grid_size), radius=self.grid_size//2)
+                    if self.screen is not None:
+                        pygame.draw.circle(self.screen, color= RED, center=(x*self.grid_size, y*self.grid_size), radius=self.grid_size//2)
 
                     break
                 if r == max(ray_cast_samples):# frontier
                     if self.agent_map[y, x] == KNOWN_EMPTY:
                         break
                     self.agent_map[y, x] = FRONTIER
-                    pygame.draw.circle(self.screen, color=YELLOW, center=(x*self.grid_size, y*self.grid_size), radius=self.grid_size//2)
+                    if self.screen is not None:
+                        pygame.draw.circle(self.screen, color=YELLOW, center=(x*self.grid_size, y*self.grid_size), radius=self.grid_size//2)
                     break
                 # free space
                 self.agent_map[y, x] = KNOWN_EMPTY
@@ -265,26 +229,36 @@ class Agent():
             #                     color=RED,
             #                     center=(self.grid_position[0]*self.grid_size, self.grid_position[1]*self.grid_size),
             #                     radius=self.grid_size//2)
+
     def share_map(self, mutual_map):
+        should_replan = False
         # 1st method will be to look at all the cells and chooses what to assine in the returned map
         for r,row in enumerate(mutual_map):
             for c, mutual_cell in enumerate(row):
                 cur_cell = self.agent_map[r,c]
-                if cur_cell == mutual_cell: #Frontier
+                if cur_cell == mutual_cell: 
+                    continue
+                if cur_cell == KNOWN_EMPTY or mutual_cell == KNOWN_EMPTY:
+                    mutual_map[r,c] = KNOWN_EMPTY
+                    should_replan = True
                     continue
                 if mutual_cell == UNKNOWN:
                     mutual_map[r,c] = cur_cell
+                    should_replan = True
                     # continue
                 # if cur_cell != mutual_cell:
                 #     mutual_map[r,c] = cur_cell
+
+        return should_replan
                 
                     
     def update(self, mutual_map, draw=True):
         # Update the agent's position
 
         self.scan()
-        self.share_map(mutual_map)
-        # self.agent_map = mutual_map.copy()
+        should_replan = self.share_map(mutual_map)
+        self.agent_map = mutual_map.copy()
+        # if should_replan:
         self.replan()
         
         self.move()
@@ -293,3 +267,5 @@ class Agent():
             self.draw()
         
         # trade goal with other agents
+
+        return len(self.plan), self.hist_dist
