@@ -37,6 +37,8 @@ class Agent(rand_frontier):
         self.lidarRange = lidar_range
         self.lidar_sweep_res = (np.arctan2(1, self.lidarRange)%np.pi ) * 2
         self.lidar_step_res = 1
+        self.replan_count = 0
+
         if goal is None:
             self.goal = self.get_random_point()
         else:
@@ -57,22 +59,25 @@ class Agent(rand_frontier):
         self.scan()
         self.replan()
 
-    def _set_goal(self):
+    def set_new_goal(self):
         # self.goal = self.get_random_point()
         self.goal = self.get_random_frontier()
-        self.replan()
+        # if self.goal == self.grid_position:
+        assert self.goal != self.grid_position, "Goal and position are the same"
+        
 
     def replan(self):
-        # check id the goal is known
-        if self.agent_map[self.goal[1], self.goal[0]] == KNOWN_EMPTY:
-            self.goal = self.get_random_frontier()
+        self.replan_count += 1
+        # # check id the goal is known
 
         self.plan = astar(np.where(self.agent_map == KNOWN_WALL, KNOWN_WALL, KNOWN_EMPTY), 
                             (int(np.round(self.grid_position[0])), int(np.round(self.grid_position[1]))),
                             self.goal,
                             allow_diagonal_movement=True,)
-        if type(self.plan) != list:
-            self.plan = []
+        if self.plan == None:
+            self.set_new_goal()
+            self.replan()
+            return
 
         # remove the current position
         if len(self.plan) > 0:
@@ -131,17 +136,6 @@ class Agent(rand_frontier):
         # Update the agent's position
         cur_x = self.grid_position[0]
         cur_y = self.grid_position[1]
-
-
-        if (int(np.round(cur_x)), int(np.round(cur_y))) == (self.goal[0], self.goal[1]):
-            # get the next point
-            self._set_goal()
-            return
-        
-        if len(self.plan) == 0:
-            # get the next point
-            self._set_goal()
-            return
         
         next_path_point = self.plan[0]
         if (int(np.round(cur_x)), int(np.round(cur_y))) == (next_path_point[0], next_path_point[1]):
@@ -231,7 +225,6 @@ class Agent(rand_frontier):
             #                     radius=self.grid_size//2)
 
     def share_map(self, mutual_map):
-        should_replan = False
         # 1st method will be to look at all the cells and chooses what to assine in the returned map
         for r,row in enumerate(mutual_map):
             for c, mutual_cell in enumerate(row):
@@ -240,27 +233,49 @@ class Agent(rand_frontier):
                     continue
                 if cur_cell == KNOWN_EMPTY or mutual_cell == KNOWN_EMPTY:
                     mutual_map[r,c] = KNOWN_EMPTY
-                    should_replan = True
                     continue
                 if mutual_cell == UNKNOWN:
                     mutual_map[r,c] = cur_cell
-                    should_replan = True
                     # continue
                 # if cur_cell != mutual_cell:
                 #     mutual_map[r,c] = cur_cell
 
-        return should_replan
-                
+    def check_should_replan(self):
+        # check if the plan is empty, if so replan
+        if len(self.plan) <= 2:
+            self.set_new_goal()
+            return True
+        else:
+            for path_point in self.plan:
+                if self.agent_map[path_point[1], path_point[0]] == KNOWN_WALL:
+                    return True
+
+        # check if the goal is known to be empty, if so replan
+        if self.agent_map[self.goal[1], self.goal[0]] == KNOWN_EMPTY or \
+            self.agent_map[self.goal[1], self.goal[0]] == KNOWN_WALL:
+            self.set_new_goal()
+            return True
+
+        # check if the goal is reached, if so replan
+        if (int(np.round(self.grid_position[0])), int(np.round(self.grid_position[1]))) == (self.goal[0], self.goal[1]):
+            return True
+
+        # NO need to replan
+        return False
                     
     def update(self, mutual_map, draw=True):
         # Update the agent's position
 
+        # Scan the environment
         self.scan()
-        should_replan = self.share_map(mutual_map)
+        # Share the agent's map with the mutual map
+        self.share_map(mutual_map)
+        # Update the agent's map
         self.agent_map = mutual_map.copy()
-        # if should_replan:
-        self.replan()
-        
+
+        if self.check_should_replan():
+            self.replan()
+            
         self.move()
         # self.draw()
         if draw:

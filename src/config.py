@@ -1,5 +1,9 @@
 DRAW_SIM = False
 LOG_PLOTS = True
+USE_THREADS = False
+
+N_BOTS = 7
+
 
 # Define the size of the walls
 GRID_THICKNESS = 10
