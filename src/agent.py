@@ -10,12 +10,13 @@ import warnings
 
 from src.planners.astar import astar
 from src.config import *
+from src.replan.rand_horizen import *
 
 # # https://stackoverflow.com/a/40372261/9555123
 # def custom_round(x, base=5):
 #     return int(base * round(float(x)/base))
 
-class Agent():
+class Agent(rand_frontier):
     def __init__(self, 
                  id, 
                  body_size,
@@ -60,39 +61,6 @@ class Agent():
         # self.goal = self.get_random_point()
         self.goal = self.get_random_frontier()
         self.replan()
-
-    def get_random_point(self):
-        # make sure the goal is not in the obstacle
-        while True:
-            goal = (np.random.randint(self.full_map.shape[0]), np.random.randint(self.full_map.shape[1]))
-            if self.full_map[goal] == True:
-                break
-        return goal
-    
-    def get_random_unnknown(self):
-        unknown_points = np.argwhere(self.agent_map == UNKNOWN)
-        if len(unknown_points) == 0:
-            return self.get_random_point()
-        elif len(unknown_points) == 1:
-            return (unknown_points[0][1], unknown_points[0][0])
-        # choose a random UNKNOWN
-        idx = np.random.randint(len(unknown_points))
-        return (unknown_points[idx][1], unknown_points[idx][0])
-
-
-    
-    def get_random_frontier(self):
-        frontier_points = np.argwhere(self.agent_map == FRONTIER)
-        if len(frontier_points) == 0:
-            return self.get_random_unnknown()
-        elif len(frontier_points) == 1:
-            return (frontier_points[0][1], frontier_points[0][0])
-        # choose a random frontier
-        idx = np.random.randint(len(frontier_points))
-        return (frontier_points[idx][1], frontier_points[idx][0])
-
-        
-        
 
     def replan(self):
         # check id the goal is known
@@ -263,6 +231,7 @@ class Agent():
             #                     radius=self.grid_size//2)
 
     def share_map(self, mutual_map):
+        should_replan = False
         # 1st method will be to look at all the cells and chooses what to assine in the returned map
         for r,row in enumerate(mutual_map):
             for c, mutual_cell in enumerate(row):
@@ -271,20 +240,25 @@ class Agent():
                     continue
                 if cur_cell == KNOWN_EMPTY or mutual_cell == KNOWN_EMPTY:
                     mutual_map[r,c] = KNOWN_EMPTY
+                    should_replan = True
                     continue
                 if mutual_cell == UNKNOWN:
                     mutual_map[r,c] = cur_cell
+                    should_replan = True
                     # continue
                 # if cur_cell != mutual_cell:
                 #     mutual_map[r,c] = cur_cell
+
+        return should_replan
                 
                     
     def update(self, mutual_map, draw=True):
         # Update the agent's position
 
         self.scan()
-        self.share_map(mutual_map)
+        should_replan = self.share_map(mutual_map)
         self.agent_map = mutual_map.copy()
+        # if should_replan:
         self.replan()
         
         self.move()
