@@ -147,8 +147,10 @@
 
 
 import heapq
-from src.config import *
 import matplotlib.pyplot as plt
+
+import psutil
+
 
 import heapq
 
@@ -165,7 +167,7 @@ class Node:
     def __lt__(self, other):
         return self.f() < other.f()
 
-def astar(map, start, end, allow_diagonal_movement=False):
+def astar(map, start, end, allow_diagonal_movement=False, debug=False, ax=None):
     # convert start and end tuples from (x, y) to (row, col)
     start = (start[1], start[0])
     end = (end[1], end[0])
@@ -184,6 +186,7 @@ def astar(map, start, end, allow_diagonal_movement=False):
     max_iterations = (len(map[0]) * len(map) // 2)
     loop_count = 0
 
+    start_time = psutil.Process().cpu_times().user
     # loop until the open list is empty
     while open_list:
         # pop the node with the lowest f-value from the open list
@@ -219,6 +222,16 @@ def astar(map, start, end, allow_diagonal_movement=False):
                 # straight move
                 successor_g = current_node.g + map[row+drow, col+dcol]
 
+            #check if the successor is already in the open list
+            for node in open_list:
+                if node.position == (row+drow, col+dcol):
+                    # update the existing node if the new path is better
+                    if successor_g < node.g:
+                        node.g = successor_g
+                        node.parent = current_node
+                    break
+
+
             # compute the heuristic value of the successor
             successor_h = heuristic((row+drow, col+dcol), end)
 
@@ -228,6 +241,17 @@ def astar(map, start, end, allow_diagonal_movement=False):
             # check if the successor is already in the closed list
             if successor_node.position in closed_list:
                 continue
+            
+            if debug:
+                # draw the explored nodes
+                import numpy as np
+                rand_color = np.random.rand(3)
+                # ax.plot(col+dcol, row+drow, "x", color=rand_color, markersize=6)
+                # draw rectangle
+                ax.add_patch(plt.Rectangle((col+dcol-0.5, row+drow-0.5), 1, 1, color=rand_color, alpha=0.5))
+
+                plt.pause(0.1)
+                plt.draw()
 
             # check if the successor is already in the open list
             for node in open_list:
@@ -244,12 +268,71 @@ def astar(map, start, end, allow_diagonal_movement=False):
                 heapq.heappush(open_list, successor_node)
         
         loop_count += 1
-        if loop_count > max_iterations:
-            print("Exceeded max iterations")
-            break
+        # if loop_count > max_iterations:
+        #     print("Exceeded max iterations")
+        #     break
+
+
+    end_time = psutil.Process().cpu_times().user
+    print("loop_count:",loop_count)
+    print("time:", end_time - start_time)
     # if we reach this point, there is no path from start to end
     return None
 
 def heuristic(a, b):
-    # compute the Manhattan distance between a and b
-    return abs(a[0] - b[0]) + abs(a[1] - b[1])
+    # # compute the Manhattan distance between a and b
+    # return abs(a[0] - b[0]) + abs(a[1] - b[1])
+
+    # compute the Euclidean distance between a and b
+    return ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** 0.5
+
+def main():
+    import numpy as np
+    # map = np.array([
+    #     [1, 1, 1, 0, 1, 1, 1, 1, 1, 1],
+    #     [1, 0, 1, 0, 1, 1, 1, 1, 0, 1],
+    #     [1, 0, 1, 0, 0, 0, 0, 0, 0, 1],
+    #     [1, 0, 1, 1, 1, 1, 1, 1, 0, 1],
+    #     [1, 0, 1, 1, 1, 1, 1, 1, 0, 1],
+    #     [1, 0, 1, 1, 1, 1, 1, 1, 0, 1],
+    #     [1, 0, 1, 1, 1, 1, 1, 1, 0, 1],
+    #     [1, 0, 1, 1, 1, 1, 1, 1, 0, 1],
+    #     [1, 0, 0, 0, 0, 0, 0, 0, 0, 1],
+    #     [1, 1, 1, 1, 1, 1, 1, 1, 1, 1],])
+
+    # map = np.linspace(1, 100, 100).reshape(10, 10
+    map = np.ones((100, 100))
+
+    # draw a L
+    # map[7:8, 2:8] = 0
+    # map[2:8, 7:8] = 0
+
+    map[70:80, 0:100] = 0
+    map[2:8, 7:8] = 0
+
+    
+    start = (0, 0)
+    end = (9, 99)
+    fig,ax = plt.subplots()
+    # plt.ion()
+    path =None
+    plt.imshow(map, cmap='Greys', origin='lower')
+    path = astar(map, start, end, allow_diagonal_movement=True, debug=False, ax = ax)
+
+    if path is not None:
+        print("Found path:", path)
+        print("Path length:", len(path))
+    else:
+        print("No path found")
+
+    plt.plot(start[0], start[1], 'bs')
+    plt.plot(end[0], end[1], 'gs')
+        
+    if path is not None:
+        path = np.array(path)
+        plt.plot(path[:, 0], path[:, 1], 'g-')
+
+    plt.show()
+
+if __name__ == '__main__':
+    main()
