@@ -185,8 +185,9 @@ def astar(map, start, end, allow_diagonal_movement=False, debug=False, ax=None):
 
     max_iterations = (len(map[0]) * len(map) // 2)
     loop_count = 0
-
-    start_time = psutil.Process().cpu_times().user
+    start_time = 0
+    if debug:
+        start_time = psutil.Process().cpu_times().user
     # loop until the open list is empty
     while open_list:
         # pop the node with the lowest f-value from the open list
@@ -242,7 +243,7 @@ def astar(map, start, end, allow_diagonal_movement=False, debug=False, ax=None):
             if successor_node.position in closed_list:
                 continue
             
-            if debug:
+            if ax:
                 # draw the explored nodes
                 import numpy as np
                 rand_color = np.random.rand(3)
@@ -272,10 +273,10 @@ def astar(map, start, end, allow_diagonal_movement=False, debug=False, ax=None):
         #     print("Exceeded max iterations")
         #     break
 
-
-    end_time = psutil.Process().cpu_times().user
-    print("loop_count:",loop_count)
-    print("time:", end_time - start_time)
+    if debug:
+        end_time = psutil.Process().cpu_times().user
+        print("loop_count:",loop_count)
+        print("time:", end_time - start_time)
     # if we reach this point, there is no path from start to end
     return None
 
@@ -312,7 +313,7 @@ def main():
 
     
     start = (0, 0)
-    end = (9, 99)
+    end = (99, 99)
     fig,ax = plt.subplots()
     # plt.ion()
     path =None
