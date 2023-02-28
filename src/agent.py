@@ -76,6 +76,11 @@ class Agent(rand_frontier):
                             self.goal,
                             allow_diagonal_movement=True,)
         if self.plan == None:
+            if self.replan_count > 100:
+                warnings.warn("Replan count is too high")
+            if self.replan_count > 200:
+                warnings.warn("Replan count is too high")
+                exit(-1)
             self.set_new_goal()
             self.replan()
             return

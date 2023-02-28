@@ -99,9 +99,6 @@ def run_experiment(process_ID, return_dict, cfg, experiment_name):
         FPS = 10
         clock = pygame.time.Clock()
 
-
-
-
     
     mutual_map = - np.ones((map.shape[0], map.shape[1])).astype(int)
 
@@ -199,7 +196,7 @@ def run_experiment(process_ID, return_dict, cfg, experiment_name):
     print("Done: Saving Data")
     import time
     import os
-    folder_name =  experiment_name + time.strftime("%Y-%m-%d_%H:%M:%S")
+    folder_name =  experiment_name+ '/' + time.strftime("%Y-%m-%d_%H:%M:%S")
     # create expeament folder
     os.makedirs(f"data/{folder_name}", exist_ok=True)
 
@@ -221,8 +218,8 @@ def run_experiment(process_ID, return_dict, cfg, experiment_name):
     df = pd.DataFrame(data)
     df.to_csv(f"data/{folder_name}/data.csv")
     print(f"Done {experiment_name}")
-    return_dict[process_ID] = [df, cfg]
-    return df, cfg
+    return_dict[process_ID] = [df, cfg, map]
+    return df, cfg, map
 
 def main():
     all_df = pd.DataFrame()
@@ -233,7 +230,7 @@ def main():
     Process_list = []
     # for i in np.arange(2,10,2):
     # for i in tqdm(np.arange(10,20,2), desc="Running Experiments", leave=False, position=0):
-    for i in tqdm(np.arange(1,120,1), desc="Running Experiments", leave=False, position=0):
+    for i in tqdm(np.arange(20,30,10), desc="Running Experiments", leave=False, position=0):
 
         random.seed(int(i))
         np.random.seed(int(i))
@@ -253,18 +250,21 @@ def main():
     # for p in Process_list:
     #     p.join()
     
-    for [df, cfg] in return_dict.values():
+    for [df, cfg, full_map] in return_dict.values():
         # add the config to the data frame
-        df['SEED'] = cfg.SEED 
-        df['DRAW_SIM'] = cfg.DRAW_SIM
-        df['LOG_PLOTS'] = cfg.LOG_PLOTS
-        df['USE_THREADS'] = cfg.USE_THREADS
-        df['N_BOTS'] = cfg.N_BOTS
-        df['GRID_THICKNESS'] = cfg.GRID_THICKNESS
-        df['SCREEN_WIDTH'] = cfg.SCREEN_WIDTH
-        df['SCREEN_HEIGHT'] = cfg.SCREEN_HEIGHT
-        df['MIN_ROOM_SIZE'] = cfg.MIN_ROOM_SIZE 
-        df['MAX_ROOM_SIZE'] = cfg.MAX_ROOM_SIZE
+        df['SEED'.lower()] = cfg.SEED 
+        df['DRAW_SIM'.lower()] = cfg.DRAW_SIM
+        df['LOG_PLOTS'.lower()] = cfg.LOG_PLOTS
+        df['USE_THREADS'.lower()] = cfg.USE_THREADS
+        df['N_BOTS'.lower()] = cfg.N_BOTS
+        df['GRID_THICKNESS'.lower()] = cfg.GRID_THICKNESS
+        df['SCREEN_WIDTH'.lower()] = cfg.SCREEN_WIDTH
+        df['SCREEN_HEIGHT'.lower()] = cfg.SCREEN_HEIGHT
+        df['MIN_ROOM_SIZE'.lower()] = cfg.MIN_ROOM_SIZE 
+        df['MAX_ROOM_SIZE'.lower()] = cfg.MAX_ROOM_SIZE
+
+        # area densely
+        df['wall_ratio'] = np.sum(full_map == 0) / full_map.size
      
         all_df = all_df.append(df, ignore_index=True)
 

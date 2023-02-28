@@ -2,7 +2,7 @@ class Config:
     def __init__(self):
         self.SEED = None
         self.DRAW_SIM = False
-        self.LOG_PLOTS = True # False
+        self.LOG_PLOTS = False
         self.USE_THREADS = False
 
         self.N_BOTS = 7
