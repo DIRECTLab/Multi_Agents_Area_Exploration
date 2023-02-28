@@ -1,33 +1,36 @@
 import random
-import pygame
 import numpy as np
 import matplotlib.pyplot as plt
 import threading
 from multiprocessing.pool import ThreadPool
+from multiprocessing import Process, Queue, Pool, Manager
+
+import pandas as pd
+from os import environ
+environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
+import pygame
+
 
 import psutil
 from tqdm import tqdm
 
 import src.world as world
 import src.agent as agent
-from src.config import *
+from src.config import Config
 
-# seed = 10
-# random.seed(seed)
-# np.random.seed(seed)
-
-def run_experiment():
+def run_experiment(process_ID, return_dict, cfg, experiment_name):
     import os
 
-    if DRAW_SIM:
+    if cfg.DRAW_SIM:
         # Initialize pygame
         pygame.init()
     else:
         os.environ["SDL_VIDEODRIVER"] = "dummy"
     # Define the size of the screen
-    cur_world = world.World()
+    cur_world = world.World(cfg)
     # Generate the floor plan
     map = cur_world.generate_floor_plan()
+
     map_screen = cur_world.screen.copy()
     # cur_world.get_map(show_grid=True)
 
@@ -43,7 +46,7 @@ def run_experiment():
 
 
 
-    if LOG_PLOTS:
+    if cfg.LOG_PLOTS:
         # create a map figure
         map_fig = plt.figure(figsize=(20, 10))
         ax1 = plt.subplot2grid((3, 2), (0, 0), rowspan=3, colspan=1)
@@ -63,33 +66,34 @@ def run_experiment():
         log_ax[0].matshow(map)
 
 
-    if DRAW_SIM:
-        row = int(np.sqrt(N_BOTS))
-        col = int(np.ceil(N_BOTS/row))
+    if cfg.DRAW_SIM:
+        row = int(np.sqrt(cfg.N_BOTS))
+        col = int(np.ceil(cfg.N_BOTS/row))
         bot_fig, bot_ax = plt.subplots(row, col, )#figsize=(10, 10))
 
-        if N_BOTS == 1:
+        if cfg.N_BOTS == 1:
             bot_ax = [bot_ax]
         else:
             bot_ax = bot_ax.flatten()
         plt.ion()
     bots = []
-    for i in range(N_BOTS):
+    for i in range(cfg.N_BOTS):
         bots.append(agent.Agent(
+                                cfg = cfg,
                                 id = i,
                                 body_size = 3,
-                                grid_size = GRID_THICKNESS,
+                                grid_size = cfg.GRID_THICKNESS,
                                 lidar_range = map.shape[0]//3,
                                 full_map = map,
-                                ax = bot_ax[i] if DRAW_SIM else None,
-                                screen = cur_world.screen if DRAW_SIM else None,
+                                ax = bot_ax[i] if cfg.DRAW_SIM else None,
+                                screen = cur_world.screen if cfg.DRAW_SIM else None,
                             )
                     )
-        if DRAW_SIM:
+        if cfg.DRAW_SIM:
             bot_ax[i].set_title(f"Bot {i}")
             bot_ax[i].matshow(bots[i].agent_map)
 
-    if DRAW_SIM:        
+    if cfg.DRAW_SIM:        
         # Display the floor plan on the screen
         pygame.display.update()
         FPS = 10
@@ -107,19 +111,19 @@ def run_experiment():
     while True:
         path_length = 0
         replan_count = 0
-        if USE_THREADS:
+        if cfg.USE_THREADS:
             threads = []
             start_time = psutil.Process().cpu_times().user
             # for bot in bots:
             #     # place each bot in a different thread
-            #     t = threading.Thread(target=bot.update, args=(mutual_map,DRAW_SIM ))
+            #     t = threading.Thread(target=bot.update, args=(mutual_map,cfg.DRAW_SIM ))
             #     t.start()
             #     theads.append(t)
                     
             pool = ThreadPool(processes=len(bots))
             for i, bot in enumerate(bots):
                 # place each bot in a different thread
-                t = pool.apply_async(bot.update, (mutual_map,DRAW_SIM ))
+                t = pool.apply_async(bot.update, (mutual_map,cfg.DRAW_SIM ))
                 threads.append(t)
 
 
@@ -134,14 +138,14 @@ def run_experiment():
             # time the bot update
             start_time = psutil.Process().cpu_times().user
             for i, bot in enumerate(bots):
-                bot.update(mutual_map, draw=DRAW_SIM)
+                bot.update(mutual_map, draw=cfg.DRAW_SIM)
                 path_length += len(bot.plan)
                 replan_count += bot.replan_count
             end_time = psutil.Process().cpu_times().user
 
 
 
-        if DRAW_SIM:
+        if cfg.DRAW_SIM:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -161,7 +165,7 @@ def run_experiment():
         data['frame_count'].append(frame_count)
         data['known_area'].append(cur_known)
 
-        if LOG_PLOTS:
+        if cfg.LOG_PLOTS:
             # set the frame rate
 
             # update the map and plt
@@ -180,7 +184,7 @@ def run_experiment():
             for i, data_key in enumerate(list(data.keys())[0:plot_rows]):
                 log_ax[i+1].scatter(frame_count, data[data_key][-1], color='g')
 
-        if LOG_PLOTS or DRAW_SIM:
+        if cfg.LOG_PLOTS or cfg.DRAW_SIM:
             # update the map but continue 
             # wait to update plt at FPS of 10
             if frame_count % 3 == 0:
@@ -195,40 +199,76 @@ def run_experiment():
     print("Done: Saving Data")
     import time
     import os
-    import pandas as pd
-    folder_date = time.strftime("%Y/%m/%d_%H:%M:%S")
+    folder_name =  experiment_name + time.strftime("%Y-%m-%d_%H:%M:%S")
     # create expeament folder
-    os.makedirs(f"data/{folder_date}", exist_ok=True)
+    os.makedirs(f"data/{folder_name}", exist_ok=True)
 
-    if LOG_PLOTS:
-        map_fig.savefig(f"data/{folder_date}/map_fig.png")
+    if cfg.LOG_PLOTS:
+        map_fig.savefig(f"data/{folder_name}/map_fig.png")
 
-    if DRAW_SIM:
+    if cfg.DRAW_SIM:
         # save the screen
-        pygame.image.save(cur_world.screen, f"data/{folder_date}/screen.png")
+        pygame.image.save(cur_world.screen, f"data/{folder_name}/screen.png")
         pygame.quit()
+
+    # save the config in jason format
+    import json
+    with open(f"data/{folder_name}/config.json", 'w') as f:
+        json.dump(cfg.__dict__, f, indent=4)
+
 
     # save the data
     df = pd.DataFrame(data)
-    df.to_csv(f"data/{folder_date}/data.csv")
-    print("Done")
+    df.to_csv(f"data/{folder_name}/data.csv")
+    print(f"Done {experiment_name}")
+    return_dict[process_ID] = [df, cfg]
+    return df, cfg
 
 def main():
-    from tqdm import tqdm
-    # import multiprocessing
-    from multiprocessing import Process, Queue
-    agent_ramges = np.arange(1,10)
+    all_df = pd.DataFrame()
+    df_index = 0
+    
+    process_manager = Manager()
+    return_dict = process_manager.dict()
     Process_list = []
-    for i in range(10):
-        print(i)
-        run_experiment()
-        # # run the simulation in a new process
-        # p = Process(target=run_experiment, args=())
+    # for i in np.arange(2,10,2):
+    # for i in tqdm(np.arange(10,20,2), desc="Running Experiments", leave=False, position=0):
+    for i in tqdm(np.arange(1,120,1), desc="Running Experiments", leave=False, position=0):
+
+        random.seed(int(i))
+        np.random.seed(int(i))
+        cfg =Config()
+        cfg.SEED = int(i)
+        cfg.N_BOTS = int(i)
+        experiment_name = f"test_{i}_bots{cfg.N_BOTS}"
+        print(f"Running {experiment_name}")
+
+        run_experiment(df_index, return_dict,cfg,experiment_name)
+        df_index += 1
+        # # # run the simulation in a new process
+        # p = Process(target=run_experiment, args=(i, return_dict,cfg,experiment_name))
         # p.start()
         # Process_list.append(p)
 
-    for p in Process_list:
-        p.join()
+    # for p in Process_list:
+    #     p.join()
+    
+    for [df, cfg] in return_dict.values():
+        # add the config to the data frame
+        df['SEED'] = cfg.SEED 
+        df['DRAW_SIM'] = cfg.DRAW_SIM
+        df['LOG_PLOTS'] = cfg.LOG_PLOTS
+        df['USE_THREADS'] = cfg.USE_THREADS
+        df['N_BOTS'] = cfg.N_BOTS
+        df['GRID_THICKNESS'] = cfg.GRID_THICKNESS
+        df['SCREEN_WIDTH'] = cfg.SCREEN_WIDTH
+        df['SCREEN_HEIGHT'] = cfg.SCREEN_HEIGHT
+        df['MIN_ROOM_SIZE'] = cfg.MIN_ROOM_SIZE 
+        df['MAX_ROOM_SIZE'] = cfg.MAX_ROOM_SIZE
+     
+        all_df = all_df.append(df, ignore_index=True)
+
+    all_df.to_csv(f"data/all_data.csv")
 
 if __name__ == "__main__":
     main()

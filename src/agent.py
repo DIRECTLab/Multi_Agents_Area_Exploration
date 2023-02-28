@@ -9,7 +9,6 @@ from memory_profiler import profile
 import warnings
 
 from src.planners.astar import astar
-from src.config import *
 from src.replan.rand_horizen import *
 
 # # https://stackoverflow.com/a/40372261/9555123
@@ -18,6 +17,7 @@ from src.replan.rand_horizen import *
 
 class Agent(rand_frontier):
     def __init__(self, 
+                 cfg,
                  id, 
                  body_size,
                  grid_size,
@@ -28,6 +28,7 @@ class Agent(rand_frontier):
                  color=(0,255,0),
                  ax=None,
                  screen=None):
+        self.cfg = cfg
         self.id = id
         self.body_size = body_size
         self.grid_size = grid_size
@@ -70,7 +71,7 @@ class Agent(rand_frontier):
         self.replan_count += 1
         # # check id the goal is known
 
-        self.plan = astar(np.where(self.agent_map == KNOWN_WALL, KNOWN_WALL, KNOWN_EMPTY), 
+        self.plan = astar(np.where(self.agent_map == self.cfg.KNOWN_WALL, self.cfg.KNOWN_WALL, self.cfg.KNOWN_EMPTY), 
                             (int(np.round(self.grid_position[0])), int(np.round(self.grid_position[1]))),
                             self.goal,
                             allow_diagonal_movement=True,)
@@ -100,8 +101,8 @@ class Agent(rand_frontier):
         # draw an arrow in the direction of dx, dy
         if self.screen is not None:
             somthing_drawn = True
-            self.arrow(BLUE, 
-                        YELLOW, 
+            self.arrow(self.cfg.BLUE, 
+                        self.cfg.YELLOW, 
                         (self.grid_position[0]* self.grid_size,self.grid_position[1]* self.grid_size),
                         (self.grid_position[0]* self.grid_size + self.dx * self.grid_size,
                         self.grid_position[1]* self.grid_size + self.dy * self.grid_size),
@@ -121,13 +122,13 @@ class Agent(rand_frontier):
             for i in range(len(self.plan)-1):
                 if self.screen is not None:
                     somthing_drawn = True
-                    pygame.draw.line(self.screen, color= GREEN,
+                    pygame.draw.line(self.screen, color= self.cfg.GREEN,
                                     start_pos=(self.plan[i][0]* self.grid_size,self.plan[i][1]* self.grid_size),
                                     end_pos=(self.plan[i+1][0]* self.grid_size,self.plan[i+1][1]* self.grid_size),
                                     width=self.grid_size//4)
                 # draw plt line
                 if self.ax is not None:
-                    self.ax.plot([self.plan[i][0], self.plan[i+1][0]], [self.plan[i][1], self.plan[i+1][1]], color=np.array(GREEN)/255)
+                    self.ax.plot([self.plan[i][0], self.plan[i+1][0]], [self.plan[i][1], self.plan[i+1][1]], color=np.array(self.cfg.GREEN)/255)
         if not somthing_drawn:
             warnings.warn("No drawing method is set, please set ax or screen")
 
@@ -201,21 +202,21 @@ class Agent(rand_frontier):
                     break
                 sampled_point= self.full_map[y, x]
                 if sampled_point == False:# obstacle
-                    self.agent_map[y, x] = KNOWN_WALL
+                    self.agent_map[y, x] = self.cfg.KNOWN_WALL
                     # ddraw the obstacle
                     if self.screen is not None:
-                        pygame.draw.circle(self.screen, color= RED, center=(x*self.grid_size, y*self.grid_size), radius=self.grid_size//2)
+                        pygame.draw.circle(self.screen, color= self.cfg.RED, center=(x*self.grid_size, y*self.grid_size), radius=self.grid_size//2)
 
                     break
                 if r == max(ray_cast_samples):# frontier
-                    if self.agent_map[y, x] == KNOWN_EMPTY:
+                    if self.agent_map[y, x] == self.cfg.KNOWN_EMPTY:
                         break
-                    self.agent_map[y, x] = FRONTIER
+                    self.agent_map[y, x] = self.cfg.FRONTIER
                     if self.screen is not None:
-                        pygame.draw.circle(self.screen, color=YELLOW, center=(x*self.grid_size, y*self.grid_size), radius=self.grid_size//2)
+                        pygame.draw.circle(self.screen, color=self.cfg.YELLOW, center=(x*self.grid_size, y*self.grid_size), radius=self.grid_size//2)
                     break
                 # free space
-                self.agent_map[y, x] = KNOWN_EMPTY
+                self.agent_map[y, x] = self.cfg.KNOWN_EMPTY
                 # pygame.draw.circle(self.screen, color= (0, 255, 0), center=(x, y), radius=self.grid_size//5)
 
             # draw lidar lines
@@ -231,10 +232,10 @@ class Agent(rand_frontier):
                 cur_cell = self.agent_map[r,c]
                 if cur_cell == mutual_cell: 
                     continue
-                if cur_cell == KNOWN_EMPTY or mutual_cell == KNOWN_EMPTY:
-                    mutual_map[r,c] = KNOWN_EMPTY
+                if cur_cell == self.cfg.KNOWN_EMPTY or mutual_cell == self.cfg.KNOWN_EMPTY:
+                    mutual_map[r,c] = self.cfg.KNOWN_EMPTY
                     continue
-                if mutual_cell == UNKNOWN:
+                if mutual_cell == self.cfg.UNKNOWN:
                     mutual_map[r,c] = cur_cell
                     # continue
                 # if cur_cell != mutual_cell:
@@ -247,12 +248,12 @@ class Agent(rand_frontier):
             return True
         else:
             for path_point in self.plan:
-                if self.agent_map[path_point[1], path_point[0]] == KNOWN_WALL:
+                if self.agent_map[path_point[1], path_point[0]] == self.cfg.KNOWN_WALL:
                     return True
 
         # check if the goal is known to be empty, if so replan
-        if self.agent_map[self.goal[1], self.goal[0]] == KNOWN_EMPTY or \
-            self.agent_map[self.goal[1], self.goal[0]] == KNOWN_WALL:
+        if self.agent_map[self.goal[1], self.goal[0]] == self.cfg.KNOWN_EMPTY or \
+            self.agent_map[self.goal[1], self.goal[0]] == self.cfg.KNOWN_WALL:
             self.set_new_goal()
             return True
 
