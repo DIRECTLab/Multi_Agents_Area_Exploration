@@ -9,7 +9,6 @@ from memory_profiler import profile
 import warnings
 
 from src.planners.astar import astar
-from src.config import *
 from src.replan.rand_horizen import *
 
 # # https://stackoverflow.com/a/40372261/9555123
@@ -18,6 +17,7 @@ from src.replan.rand_horizen import *
 
 class Agent(rand_frontier):
     def __init__(self, 
+                 cfg,
                  id, 
                  body_size,
                  grid_size,
@@ -28,6 +28,7 @@ class Agent(rand_frontier):
                  color=(0,255,0),
                  ax=None,
                  screen=None):
+        self.cfg = cfg
         self.id = id
         self.body_size = body_size
         self.grid_size = grid_size
@@ -37,6 +38,8 @@ class Agent(rand_frontier):
         self.lidarRange = lidar_range
         self.lidar_sweep_res = (np.arctan2(1, self.lidarRange)%np.pi ) * 2
         self.lidar_step_res = 1
+        self.replan_count = 0
+
         if goal is None:
             self.goal = self.get_random_point()
         else:
@@ -57,22 +60,30 @@ class Agent(rand_frontier):
         self.scan()
         self.replan()
 
-    def _set_goal(self):
+    def set_new_goal(self):
         # self.goal = self.get_random_point()
         self.goal = self.get_random_frontier()
-        self.replan()
+        # if self.goal == self.grid_position:
+        assert self.goal != self.grid_position, "Goal and position are the same"
+        
 
     def replan(self):
-        # check id the goal is known
-        if self.agent_map[self.goal[1], self.goal[0]] == KNOWN_EMPTY:
-            self.goal = self.get_random_frontier()
+        self.replan_count += 1
+        # # check id the goal is known
 
-        self.plan = astar(np.where(self.agent_map == KNOWN_WALL, KNOWN_WALL, KNOWN_EMPTY), 
+        self.plan = astar(np.where(self.agent_map == self.cfg.KNOWN_WALL, self.cfg.KNOWN_WALL, self.cfg.KNOWN_EMPTY), 
                             (int(np.round(self.grid_position[0])), int(np.round(self.grid_position[1]))),
                             self.goal,
                             allow_diagonal_movement=True,)
-        if type(self.plan) != list:
-            self.plan = []
+        if self.plan == None:
+            if self.replan_count > 100:
+                warnings.warn("Replan count is too high")
+            if self.replan_count > 200:
+                warnings.warn("Replan count is too high")
+                exit(-1)
+            self.set_new_goal()
+            self.replan()
+            return
 
         # remove the current position
         if len(self.plan) > 0:
@@ -95,8 +106,8 @@ class Agent(rand_frontier):
         # draw an arrow in the direction of dx, dy
         if self.screen is not None:
             somthing_drawn = True
-            self.arrow(BLUE, 
-                        YELLOW, 
+            self.arrow(self.cfg.BLUE, 
+                        self.cfg.YELLOW, 
                         (self.grid_position[0]* self.grid_size,self.grid_position[1]* self.grid_size),
                         (self.grid_position[0]* self.grid_size + self.dx * self.grid_size,
                         self.grid_position[1]* self.grid_size + self.dy * self.grid_size),
@@ -116,13 +127,13 @@ class Agent(rand_frontier):
             for i in range(len(self.plan)-1):
                 if self.screen is not None:
                     somthing_drawn = True
-                    pygame.draw.line(self.screen, color= GREEN,
+                    pygame.draw.line(self.screen, color= self.cfg.GREEN,
                                     start_pos=(self.plan[i][0]* self.grid_size,self.plan[i][1]* self.grid_size),
                                     end_pos=(self.plan[i+1][0]* self.grid_size,self.plan[i+1][1]* self.grid_size),
                                     width=self.grid_size//4)
                 # draw plt line
                 if self.ax is not None:
-                    self.ax.plot([self.plan[i][0], self.plan[i+1][0]], [self.plan[i][1], self.plan[i+1][1]], color=np.array(GREEN)/255)
+                    self.ax.plot([self.plan[i][0], self.plan[i+1][0]], [self.plan[i][1], self.plan[i+1][1]], color=np.array(self.cfg.GREEN)/255)
         if not somthing_drawn:
             warnings.warn("No drawing method is set, please set ax or screen")
 
@@ -131,17 +142,6 @@ class Agent(rand_frontier):
         # Update the agent's position
         cur_x = self.grid_position[0]
         cur_y = self.grid_position[1]
-
-
-        if (int(np.round(cur_x)), int(np.round(cur_y))) == (self.goal[0], self.goal[1]):
-            # get the next point
-            self._set_goal()
-            return
-        
-        if len(self.plan) == 0:
-            # get the next point
-            self._set_goal()
-            return
         
         next_path_point = self.plan[0]
         if (int(np.round(cur_x)), int(np.round(cur_y))) == (next_path_point[0], next_path_point[1]):
@@ -207,21 +207,21 @@ class Agent(rand_frontier):
                     break
                 sampled_point= self.full_map[y, x]
                 if sampled_point == False:# obstacle
-                    self.agent_map[y, x] = KNOWN_WALL
+                    self.agent_map[y, x] = self.cfg.KNOWN_WALL
                     # ddraw the obstacle
                     if self.screen is not None:
-                        pygame.draw.circle(self.screen, color= RED, center=(x*self.grid_size, y*self.grid_size), radius=self.grid_size//2)
+                        pygame.draw.circle(self.screen, color= self.cfg.RED, center=(x*self.grid_size, y*self.grid_size), radius=self.grid_size//2)
 
                     break
                 if r == max(ray_cast_samples):# frontier
-                    if self.agent_map[y, x] == KNOWN_EMPTY:
+                    if self.agent_map[y, x] == self.cfg.KNOWN_EMPTY:
                         break
-                    self.agent_map[y, x] = FRONTIER
+                    self.agent_map[y, x] = self.cfg.FRONTIER
                     if self.screen is not None:
-                        pygame.draw.circle(self.screen, color=YELLOW, center=(x*self.grid_size, y*self.grid_size), radius=self.grid_size//2)
+                        pygame.draw.circle(self.screen, color=self.cfg.YELLOW, center=(x*self.grid_size, y*self.grid_size), radius=self.grid_size//2)
                     break
                 # free space
-                self.agent_map[y, x] = KNOWN_EMPTY
+                self.agent_map[y, x] = self.cfg.KNOWN_EMPTY
                 # pygame.draw.circle(self.screen, color= (0, 255, 0), center=(x, y), radius=self.grid_size//5)
 
             # draw lidar lines
@@ -231,36 +231,57 @@ class Agent(rand_frontier):
             #                     radius=self.grid_size//2)
 
     def share_map(self, mutual_map):
-        should_replan = False
         # 1st method will be to look at all the cells and chooses what to assine in the returned map
         for r,row in enumerate(mutual_map):
             for c, mutual_cell in enumerate(row):
                 cur_cell = self.agent_map[r,c]
                 if cur_cell == mutual_cell: 
                     continue
-                if cur_cell == KNOWN_EMPTY or mutual_cell == KNOWN_EMPTY:
-                    mutual_map[r,c] = KNOWN_EMPTY
-                    should_replan = True
+                if cur_cell == self.cfg.KNOWN_EMPTY or mutual_cell == self.cfg.KNOWN_EMPTY:
+                    mutual_map[r,c] = self.cfg.KNOWN_EMPTY
                     continue
-                if mutual_cell == UNKNOWN:
+                if mutual_cell == self.cfg.UNKNOWN:
                     mutual_map[r,c] = cur_cell
-                    should_replan = True
                     # continue
                 # if cur_cell != mutual_cell:
                 #     mutual_map[r,c] = cur_cell
 
-        return should_replan
-                
+    def check_should_replan(self):
+        # check if the plan is empty, if so replan
+        if len(self.plan) <= 2:
+            self.set_new_goal()
+            return True
+        else:
+            for path_point in self.plan:
+                if self.agent_map[path_point[1], path_point[0]] == self.cfg.KNOWN_WALL:
+                    return True
+
+        # check if the goal is known to be empty, if so replan
+        if self.agent_map[self.goal[1], self.goal[0]] == self.cfg.KNOWN_EMPTY or \
+            self.agent_map[self.goal[1], self.goal[0]] == self.cfg.KNOWN_WALL:
+            self.set_new_goal()
+            return True
+
+        # check if the goal is reached, if so replan
+        if (int(np.round(self.grid_position[0])), int(np.round(self.grid_position[1]))) == (self.goal[0], self.goal[1]):
+            return True
+
+        # NO need to replan
+        return False
                     
     def update(self, mutual_map, draw=True):
         # Update the agent's position
 
+        # Scan the environment
         self.scan()
-        should_replan = self.share_map(mutual_map)
+        # Share the agent's map with the mutual map
+        self.share_map(mutual_map)
+        # Update the agent's map
         self.agent_map = mutual_map.copy()
-        # if should_replan:
-        self.replan()
-        
+
+        if self.check_should_replan():
+            self.replan()
+            
         self.move()
         # self.draw()
         if draw:
