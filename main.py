@@ -187,6 +187,7 @@ def run_experiment(process_ID, return_dict, cfg, experiment_name):
             if frame_count % 3 == 0:
                 # map_ax.matshow(mutual_map)
                 plt.pause(0.00001)
+                # plt.pause(0.1)
                 plt.draw()
         
         frame_count += 1
@@ -230,7 +231,7 @@ def main():
     Process_list = []
     # for i in np.arange(2,10,2):
     # for i in tqdm(np.arange(10,20,2), desc="Running Experiments", leave=False, position=0):
-    for i in tqdm(np.arange(20,30,10), desc="Running Experiments", leave=False, position=0):
+    for i in tqdm(np.arange(5,15,5), desc="Running Experiments", leave=False, position=0):
 
         random.seed(int(i))
         np.random.seed(int(i))

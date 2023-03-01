@@ -5,10 +5,9 @@ import math
 import pygame
 import numpy as np
 import matplotlib.pyplot as plt
-from memory_profiler import profile
 import warnings
-
-from src.planners.astar import astar
+# from src.planners.astar_new import astar
+from src.planners.astar_old import astar
 from src.replan.rand_horizen import *
 
 # # https://stackoverflow.com/a/40372261/9555123
@@ -70,11 +69,10 @@ class Agent(rand_frontier):
     def replan(self):
         self.replan_count += 1
         # # check id the goal is known
-
         self.plan = astar(np.where(self.agent_map == self.cfg.KNOWN_WALL, self.cfg.KNOWN_WALL, self.cfg.KNOWN_EMPTY), 
                             (int(np.round(self.grid_position[0])), int(np.round(self.grid_position[1]))),
-                            self.goal,
-                            allow_diagonal_movement=True,)
+                            self.goal)
+        # print("self.plan",self.plan)
         if self.plan == None:
             if self.replan_count > 100:
                 warnings.warn("Replan count is too high")
@@ -88,6 +86,7 @@ class Agent(rand_frontier):
         # remove the current position
         if len(self.plan) > 0:
             self.plan.pop(0)
+            # print("following element is popped", self.plan.pop(0), "for agent", self.id)
 
     def arrow( self, lcolor, tricolor, start, end, trirad, thickness=2):
         rad = math.pi/180
