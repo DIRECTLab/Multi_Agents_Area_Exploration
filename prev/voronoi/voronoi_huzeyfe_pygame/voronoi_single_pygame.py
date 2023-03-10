@@ -3,14 +3,15 @@ import sys
 import numpy as np
 import time
 import random
+import psutil
 
-COLUMNS = 50
-ROWS = 50
+COLUMNS = 400
+ROWS = 400
 # This sets the margin between each cell
-MARGIN = 3
+MARGIN = 1
 # This sets the WIDTH and HEIGHT of each grid location
-CELL_WIDTH = 10
-CELL_HEIGHT = 10
+CELL_WIDTH = 1
+CELL_HEIGHT = 1
 # Set the HEIGHT and WIDTH of the screen
 WINDOW_WIDTH = COLUMNS * (CELL_WIDTH + MARGIN) + MARGIN
 WINDOW_HEIGHT = ROWS * (CELL_HEIGHT + MARGIN) + MARGIN
@@ -20,6 +21,7 @@ COLOR_BLACK = (0,0,0)
 COLOR_GRAY = (50,50,50)
 COLOR_GREEN = (0,255,0)
 COLOR_PINK = (255,0,255)
+AGENT_COUNT = 100
 
 def random_color():
     color = list(np.random.choice(range(256), size=3))
@@ -55,7 +57,6 @@ class Agent:
     def __init__(self, row, column):
         self.row = row
         self.column = column
-        self.responsible_cell_count = 0
         self.agent_id = None
         self.distance_matrix = None
     
@@ -67,8 +68,6 @@ class Agent:
 
 
     
-    
-
 def neighbours(x, y):
     pn = [(x-1, y), (x+1, y), (x-1, y-1), (x, y-1),
           (x+1, y-1), (x-1, y+1), (x, y+1), (x+1, y+1)]
@@ -136,73 +135,39 @@ def main():
             if event.type == pygame.QUIT:  # If user clicked close
                 pygame.quit()   # we are done so we exit this loop
                 sys.exit()
-            # set agent locs
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                index = index + 1
-                # print("index value is: ", index)
-                # User clicks the mouse. Get the position
-                pos = pygame.mouse.get_pos()
-                # Change the x/y screen coordinates to grid coordinates
-                column = pos[0] // (CELL_WIDTH + MARGIN)
-                row = pos[1] // (CELL_HEIGHT + MARGIN)
-                
-                # Set that location to one
-                grid[row][column].agent = True
-
-                agent_list[index] = Agent(row,column)
-                print("Agent",index,"is at:",row,column)
-                # start working on distance matrix
-                agent_list[index].distance_matrix = Agent.calc_distance_matrices(agent_list[index])
-                agent_list[index].agent_id = index
-                print("Distance matrix for Agent",index,":\n", agent_list[index].distance_matrix)
-                # add all distance matrixes of agents into one giant matrix table for later comparisons
-                matrix_list.append(agent_list[index].distance_matrix)
-                agent_locs.add((row,column))
-
-            # check if a key in the keyboard is pressed
             if event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_a:
+                    sim_start_time = psutil.Process().cpu_times().user
+
+
+                    for count in range(AGENT_COUNT):
+                        column = random.randint(0, COLUMNS-1)
+                        row = random.randint(0, ROWS -1)
+                        grid[row][column].agent = True
+                        agent_list[count] = Agent(row,column)
+                        # print("Agent",index,"is at:",row,column)
+                        agent_list[count].distance_matrix = Agent.calc_distance_matrices(agent_list[count])
+                        agent_list[count].agent_id = count
+                        # print("Distance matrix for Agent",index,":\n", agent_list[count].distance_matrix)
+                        matrix_list.append(agent_list[count].distance_matrix)
+                        agent_locs.add((row,column))
                 
-                # if 'c' is pressed
-                # clean everything to start again 
-                if event.key == pygame.K_c:
-                    print("clearing everything...")
-                    index = -1
-                    matrix_list.clear()
-                    agent_list.clear()
-                    for row in range(ROWS):
-                        for column in range(COLUMNS):            
-                            grid[row][column].agent_id = None
-                            grid[row][column].agent = False
-
-
-
-                # if 'a' is pressed
-                # find voronoi regions as follow:
-                # compare all distance matrixes to decide which agent should cover what part of the map
-                elif event.key == pygame.K_a:
-                    #print("Here is the matrix_list table...\n", matrix_list)
-                    #assign each cell to closest agent
-
-                    # generate random colors for the entered number of agents
-                    for i in range(index+1):
+                    for i in range(AGENT_COUNT):
                         col = random_color()
                         colors.append(col)
-
+                    
                     minimum_comparison_table = np.argmin((matrix_list), 0)
                     print('\nminimum value comparison:\n', minimum_comparison_table)
                     
                     for row in range(ROWS):
                         for column in range(COLUMNS):
-                            grid[row][column].agent = True                                          # each Box(cell) has an agent(TRUE) or notF(FALSE)
-                            grid[row][column].agent_id = minimum_comparison_table[row][column]      # the agent_id of a cell is coming from min_table
-                            #based on the agent id, increase the responsible cell count
-                            #print("here is the agent ids for each cell....", grid[row][column].agent_id)
-                            agent_list[grid[row][column].agent_id].responsible_cell_count = agent_list[grid[row][column].agent_id].responsible_cell_count + 1
-                    
-                    for i in agent_list:
-                        print("Agent", i, "has", agent_list[i].responsible_cell_count, "cells.")
-                    print("Average cells count:", int(ROWS*COLUMNS/(index+1)))
+                            grid[row][column].agent = True
+                            grid[row][column].agent_id = minimum_comparison_table[row][column]
 
+                    sim_end_time = psutil.Process().cpu_times().user
+                    print("Tot time=", sim_end_time - sim_start_time)
+                    
+                    
 
         # Set the screen background
         screen.fill(COLOR_BLACK)
@@ -218,7 +183,7 @@ def main():
                 if box.agent:
                     box.draw(screen, COLOR_GREEN)
 
-                for i in range(index+1):
+                for i in range(AGENT_COUNT):
                     if grid[row][column].agent_id == i:
                         box.draw(screen, colors[i])
 

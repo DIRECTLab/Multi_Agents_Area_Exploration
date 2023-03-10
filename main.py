@@ -4,16 +4,12 @@ import matplotlib.pyplot as plt
 import threading
 from multiprocessing.pool import ThreadPool
 from multiprocessing import Process, Queue, Pool, Manager
-
 import pandas as pd
 from os import environ
 environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 import pygame
-
-
 import psutil
 from tqdm import tqdm
-
 import src.world as world
 import src.agent as agent
 from src.config import Config
@@ -170,8 +166,12 @@ def run_experiment(process_ID, return_dict, cfg, experiment_name):
             log_ax[0].set_title(f"Max Known Area {map.size}")
             log_ax[0].matshow(mutual_map)
             for i, bot in enumerate(bots):
-                log_ax[0].text(bot.grid_position[0], bot.grid_position[1],
-                            s=f"{i}",color='r')
+                log_ax[0].scatter(bot.grid_position[0], bot.grid_position[1],
+                            color='b')
+
+                # log_ax[0].text(bot.grid_position[0], bot.grid_position[1],
+                #             s=f"{i}",color='r')                
+                
                 log_ax[0].text(bot.goal[0], bot.goal[1],
                             s=f"{i}",color='w')
                 x = [item[0] for item in bot.plan]
@@ -184,10 +184,12 @@ def run_experiment(process_ID, return_dict, cfg, experiment_name):
         if cfg.LOG_PLOTS or cfg.DRAW_SIM:
             # update the map but continue 
             # wait to update plt at FPS of 10
-            if frame_count % 3 == 0:
+            # if frame_count % 3 == 0:
                 # map_ax.matshow(mutual_map)
-                plt.pause(0.00001)
-                plt.draw()
+                # plt.pause(0.00001)
+            plt.pause(0.0001)
+                # plt.pause(0.1)
+            plt.draw()
         
         frame_count += 1
         if cur_known == mutual_map.size:
@@ -230,17 +232,17 @@ def main():
     Process_list = []
     # for i in np.arange(2,10,2):
     # for i in tqdm(np.arange(10,20,2), desc="Running Experiments", leave=False, position=0):
-    for i in tqdm(np.arange(20,30,10), desc="Running Experiments", leave=False, position=0):
+    for i in tqdm(np.arange(1,2,1), desc="Running Experiments", leave=False, position=0):
 
         random.seed(int(i))
         np.random.seed(int(i))
-        cfg =Config()
+        cfg = Config()
         cfg.SEED = int(i)
         cfg.N_BOTS = int(i)
         experiment_name = f"test_{i}_bots{cfg.N_BOTS}"
         print(f"Running {experiment_name}")
 
-        run_experiment(df_index, return_dict,cfg,experiment_name)
+        run_experiment(df_index, return_dict, cfg, experiment_name)
         df_index += 1
         # # # run the simulation in a new process
         # p = Process(target=run_experiment, args=(i, return_dict,cfg,experiment_name))
@@ -262,7 +264,6 @@ def main():
         df['SCREEN_HEIGHT'.lower()] = cfg.SCREEN_HEIGHT
         df['MIN_ROOM_SIZE'.lower()] = cfg.MIN_ROOM_SIZE 
         df['MAX_ROOM_SIZE'.lower()] = cfg.MAX_ROOM_SIZE
-
         # area densely
         df['wall_ratio'] = np.sum(full_map == 0) / full_map.size
      

@@ -34,4 +34,8 @@ class rand_frontier:
         idx = np.random.randint(len(frontier_points))
         return (frontier_points[idx][1], frontier_points[idx][0])
 
-        
+    # def set_new_goal(self):
+    #     # self.goal = self.get_random_point()
+    #     self.goal = self.get_random_frontier()
+    #     # if self.goal == self.grid_position:
+    #     assert self.goal != self.grid_position, "Goal and position are the same"
