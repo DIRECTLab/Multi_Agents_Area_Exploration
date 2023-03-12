@@ -1,7 +1,7 @@
 class Config:
     def __init__(self):
         self.DRAW_SIM = False
-        self.LOG_PLOTS = False
+        self.LOG_PLOTS = True
         self.USE_THREADS = False
         
         self.SEED = None
@@ -9,16 +9,26 @@ class Config:
         # Define the size of the walls
         self.GRID_THICKNESS = 10
         # Define the size of the screen
-        self.SCREEN_WIDTH = 50 * self.GRID_THICKNESS
-        self.SCREEN_HEIGHT = 50 * self.GRID_THICKNESS
+        self.COLS = 50
+        self.ROWS = 50
+
+        self.SCREEN_WIDTH = self.COLS * self.GRID_THICKNESS
+        self.SCREEN_HEIGHT = self.ROWS * self.GRID_THICKNESS
         # Define the minimum and maximum sizes for the rooms
         self.MIN_ROOM_SIZE = 10 * self.GRID_THICKNESS
         self.MAX_ROOM_SIZE = 20 * self.GRID_THICKNESS
-        # Map location definitions
+
+        # The Ground truth map is a 2D array of booleans
+        self.EMPTY = True
+        self.OBSTACLE = False
+
+        # Map location definitions for agent_map
         self.UNKNOWN = -1
         self.KNOWN_WALL = 0
         self.KNOWN_EMPTY = 1
         self.FRONTIER = 2
+
+
 
         # Define the colors to be used in the drawing
         self.BACKGROUND_COLOR = (78, 157, 157)

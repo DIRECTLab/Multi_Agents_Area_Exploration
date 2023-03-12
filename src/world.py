@@ -124,7 +124,7 @@ class World:
     def get_map(self, show_grid=False):
         # show the floor plan in matplotlib
         world_grid = np.zeros((self.cfg.SCREEN_HEIGHT//self.cfg.GRID_THICKNESS, self.cfg.SCREEN_WIDTH//self.cfg.GRID_THICKNESS)).astype(bool)
-        world_grid.fill(True)
+        world_grid.fill(self.cfg.EMPTY)
         
         for wall in self.walls:
             x, y = wall.x, wall.y

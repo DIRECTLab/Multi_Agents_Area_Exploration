@@ -13,8 +13,13 @@ from tqdm import tqdm
 import src.world as world
 import src.agent as agent
 from src.config import Config
+import src.log_plot as log_plot
+import json
 
-def run_experiment(process_ID, return_dict, cfg, experiment_name):
+
+import src.replan.voronoi_random as voronoi_random
+
+def run_experiment(process_ID, return_dict, cfg, experiment_name, Search_methods):
     import os
 
     if cfg.DRAW_SIM:
@@ -26,7 +31,7 @@ def run_experiment(process_ID, return_dict, cfg, experiment_name):
     cur_world = world.World(cfg)
     # Generate the floor plan
     map = cur_world.generate_floor_plan()
-
+    print(f"Map size: {map.shape}")
     map_screen = cur_world.screen.copy()
     # cur_world.get_map(show_grid=True)
 
@@ -36,6 +41,7 @@ def run_experiment(process_ID, return_dict, cfg, experiment_name):
         'delta_time' : [],
         'plan_length' : [],
         'replan_count' : [],
+        'logging_time' : [0],
         'frame_count': [],
         'known_area' : [],
         }
@@ -43,23 +49,13 @@ def run_experiment(process_ID, return_dict, cfg, experiment_name):
 
 
     if cfg.LOG_PLOTS:
-        # create a map figure
-        map_fig = plt.figure(figsize=(20, 10))
-        ax1 = plt.subplot2grid((3, 2), (0, 0), rowspan=3, colspan=1)
-        plot_rows = 5
-        log_ax = [ax1]
-        for i in range(plot_rows):
-            ax = plt.subplot2grid((plot_rows, 2), (i, 1), rowspan=1)
-            log_ax.append(ax)
-        log_ax[0].set_title(f"Max Known Area {map.size}")
-        for i, data_key in enumerate(list(data.keys())[0:plot_rows]):
-            log_ax[i+1].set_ylabel(f"{data_key.replace('_', ' ').title()}")
-
-
+        # create Log_plot object
+        log_plot_obj = log_plot.LogPlot(cfg, data)
+        
         # space out the subplots
-        map_fig.tight_layout()
+        log_plot_obj.map_fig.tight_layout()
         # create a grid of subplots 
-        log_ax[0].matshow(map)
+        log_plot_obj.log_ax[0].matshow(map)
 
 
     if cfg.DRAW_SIM:
@@ -72,22 +68,58 @@ def run_experiment(process_ID, return_dict, cfg, experiment_name):
         else:
             bot_ax = bot_ax.flatten()
         plt.ion()
+    
+    if Search_methods['Use_Vernoi_method']:
+        matrix_list, coming_set, colors, grid = list(), list(), list(), list()
+        agent_locs = set()
+        voronoi_random.ROWS = map.shape[0]
+        voronoi_random.COLUMNS = map.shape[1]
+
+
+
+
+    for row in range(cfg.ROWS):
+        grid.append([])
+        for column in range(cfg.COLS):
+            grid[row].append(voronoi_random.Cell(row,column))
+    
     bots = []
+
     for i in range(cfg.N_BOTS):
         bots.append(agent.Agent(
-                                cfg = cfg,
-                                id = i,
-                                body_size = 3,
-                                grid_size = cfg.GRID_THICKNESS,
-                                lidar_range = map.shape[0]//3,
-                                full_map = map,
-                                ax = bot_ax[i] if cfg.DRAW_SIM else None,
-                                screen = cur_world.screen if cfg.DRAW_SIM else None,
-                            )
-                    )
+                    cfg = cfg,
+                    id = i,
+                    body_size = 3,
+                    grid_size = cfg.GRID_THICKNESS,
+                    lidar_range = map.shape[0]//3,
+                    full_map = map,
+                    ax = bot_ax[i] if cfg.DRAW_SIM else None,
+                    screen = cur_world.screen if cfg.DRAW_SIM else None,
+                )
+            )
+        
+        if Search_methods['Use_Vernoi_method']:
+            column = bots[i].grid_position_xy[0]
+            row = bots[i].grid_position_xy[1]
+            # print(f"Bot {i} at x:{row}, y:{column}")
+
+            grid[row][column].agent = True
+            grid[row][column].agent_id = i
+            grid[row][column].distance_matrix = grid[row][column].calc_distance_matrices()
+            matrix_list.append(grid[row][column].distance_matrix)
+            agent_locs.add((row,column))
+            log_plot_obj.log_ax[0].scatter(x=column, y=row, c='r', s=100)
+            log_plot_obj.log_ax[0].text(column, row, f"(x:{column},y:{row})", fontsize=10, color='g', ha='center', va='center')
+
+
         if cfg.DRAW_SIM:
             bot_ax[i].set_title(f"Bot {i}")
             bot_ax[i].matshow(bots[i].agent_map)
+
+    if Search_methods['Use_Vernoi_method']:
+        minimum_comparison_table = np.argmin((matrix_list), 0)
+        log_plot_obj.log_ax[0].matshow(minimum_comparison_table, alpha=0.6)
+
 
     if cfg.DRAW_SIM:        
         # Display the floor plan on the screen
@@ -125,8 +157,6 @@ def run_experiment(process_ID, return_dict, cfg, experiment_name):
                 path_length += length
             end_time = psutil.Process().cpu_times().user
 
-
-
         else:
             # time the bot update
             start_time = psutil.Process().cpu_times().user
@@ -149,6 +179,8 @@ def run_experiment(process_ID, return_dict, cfg, experiment_name):
             cur_world.screen.blit(map_screen, (0, 0))
             print("clock.get_fps()",clock.get_fps(), end='\r')
 
+        # LOG ALL THE DATA
+        logging_time_start = psutil.Process().cpu_times().user
         cur_known = np.sum(mutual_map != -1)
         data['area_percent'].append(cur_known / mutual_map.size)
         data['update_time'].append(end_time - start_time)
@@ -159,29 +191,13 @@ def run_experiment(process_ID, return_dict, cfg, experiment_name):
         data['known_area'].append(cur_known)
 
         if cfg.LOG_PLOTS:
-            # set the frame rate
-
             # update the map and plt
-            log_ax[0].clear()
-            log_ax[0].set_title(f"Max Known Area {map.size}")
-            log_ax[0].matshow(mutual_map)
-            for i, bot in enumerate(bots):
-                log_ax[0].scatter(bot.grid_position[0], bot.grid_position[1],
-                            color='b')
+            log_plot_obj.plot_map(mutual_map, bots, data)
+            log_plot_obj.log_ax[0].set_title(f"Max Known Area {map.size}")
+            if Search_methods['Use_Vernoi_method']:
+                log_plot_obj.log_ax[0].matshow(minimum_comparison_table, alpha=0.3)
 
-                # log_ax[0].text(bot.grid_position[0], bot.grid_position[1],
-                #             s=f"{i}",color='r')                
-                
-                log_ax[0].text(bot.goal[0], bot.goal[1],
-                            s=f"{i}",color='w')
-                x = [item[0] for item in bot.plan]
-                y = [item[1] for item in bot.plan]
-                log_ax[0].plot(x,y, color='g')
-                
-            for i, data_key in enumerate(list(data.keys())[0:plot_rows]):
-                log_ax[i+1].scatter(frame_count, data[data_key][-1], color='g')
-
-        if cfg.LOG_PLOTS or cfg.DRAW_SIM:
+        if cfg.DRAW_SIM or cfg.LOG_PLOTS:
             # update the map but continue 
             # wait to update plt at FPS of 10
             # if frame_count % 3 == 0:
@@ -195,6 +211,10 @@ def run_experiment(process_ID, return_dict, cfg, experiment_name):
         if cur_known == mutual_map.size:
             break
 
+        logging_end_time = psutil.Process().cpu_times().user
+        data['logging_time'].append(logging_end_time - logging_time_start)
+
+
     print("Done: Saving Data")
     import time
     import os
@@ -203,7 +223,13 @@ def run_experiment(process_ID, return_dict, cfg, experiment_name):
     os.makedirs(f"data/{folder_name}", exist_ok=True)
 
     if cfg.LOG_PLOTS:
-        map_fig.savefig(f"data/{folder_name}/map_fig.png")
+        # update the map and plt
+        log_plot_obj.plot_map(mutual_map, bots, data)
+        log_plot_obj.log_ax[0].set_title(f"Max Known Area {map.size}")
+        if Search_methods['Use_Vernoi_method']:
+            log_plot_obj.log_ax[0].matshow(minimum_comparison_table, alpha=0.3)
+
+        log_plot_obj.map_fig.savefig(f"data/{folder_name}/map_fig.png")
 
     if cfg.DRAW_SIM:
         # save the screen
@@ -211,13 +237,26 @@ def run_experiment(process_ID, return_dict, cfg, experiment_name):
         pygame.quit()
 
     # save the config in jason format
-    import json
     with open(f"data/{folder_name}/config.json", 'w') as f:
         json.dump(cfg.__dict__, f, indent=4)
 
 
     # save the data
     df = pd.DataFrame(data)
+    # add the config to the data frame
+    df['SEED'.lower()] = cfg.SEED 
+    df['DRAW_SIM'.lower()] = cfg.DRAW_SIM
+    df['LOG_PLOTS'.lower()] = cfg.LOG_PLOTS
+    df['USE_THREADS'.lower()] = cfg.USE_THREADS
+    df['N_BOTS'.lower()] = cfg.N_BOTS
+    df['GRID_THICKNESS'.lower()] = cfg.GRID_THICKNESS
+    df['SCREEN_WIDTH'.lower()] = cfg.SCREEN_WIDTH
+    df['SCREEN_HEIGHT'.lower()] = cfg.SCREEN_HEIGHT
+    df['MIN_ROOM_SIZE'.lower()] = cfg.MIN_ROOM_SIZE 
+    df['MAX_ROOM_SIZE'.lower()] = cfg.MAX_ROOM_SIZE
+    # area densely
+    df['wall_ratio'] = np.sum(map == 0) / map.size
+
     df.to_csv(f"data/{folder_name}/data.csv")
     print(f"Done {experiment_name}")
     return_dict[process_ID] = [df, cfg, map]
@@ -230,43 +269,39 @@ def main():
     process_manager = Manager()
     return_dict = process_manager.dict()
     Process_list = []
-    # for i in np.arange(2,10,2):
-    # for i in tqdm(np.arange(10,20,2), desc="Running Experiments", leave=False, position=0):
-    for i in tqdm(np.arange(1,2,1), desc="Running Experiments", leave=False, position=0):
+
+    search_methods = { 
+        'Use_Vernoi_method' : True,
+        }
+    
+    # create a pfrogress bar for each process thead
+    
+
+    for i in range(3, 6):
 
         random.seed(int(i))
         np.random.seed(int(i))
         cfg = Config()
         cfg.SEED = int(i)
         cfg.N_BOTS = int(i)
-        experiment_name = f"test_{i}_bots{cfg.N_BOTS}"
-        print(f"Running {experiment_name}")
+        experiment_name = f"test_{i}_nbots{cfg.N_BOTS}"
+        print(f"Starting Experiment: {experiment_name}")
+        
 
-        run_experiment(df_index, return_dict, cfg, experiment_name)
+        run_experiment(df_index, return_dict, cfg, experiment_name, search_methods)
         df_index += 1
-        # # # run the simulation in a new process
-        # p = Process(target=run_experiment, args=(i, return_dict,cfg,experiment_name))
-        # p.start()
-        # Process_list.append(p)
+    #     # # run the simulation in a new process
+    #     cfg.USE_THREADS = True
+    #     p = Process(target=run_experiment, args=(i, return_dict,cfg,experiment_name, search_methods))
+    #     p.start()
+    #     Process_list.append(p)
 
     # for p in Process_list:
     #     p.join()
+    #     print("Joined Process: ", p.pid)
     
+    # collect all the data
     for [df, cfg, full_map] in return_dict.values():
-        # add the config to the data frame
-        df['SEED'.lower()] = cfg.SEED 
-        df['DRAW_SIM'.lower()] = cfg.DRAW_SIM
-        df['LOG_PLOTS'.lower()] = cfg.LOG_PLOTS
-        df['USE_THREADS'.lower()] = cfg.USE_THREADS
-        df['N_BOTS'.lower()] = cfg.N_BOTS
-        df['GRID_THICKNESS'.lower()] = cfg.GRID_THICKNESS
-        df['SCREEN_WIDTH'.lower()] = cfg.SCREEN_WIDTH
-        df['SCREEN_HEIGHT'.lower()] = cfg.SCREEN_HEIGHT
-        df['MIN_ROOM_SIZE'.lower()] = cfg.MIN_ROOM_SIZE 
-        df['MAX_ROOM_SIZE'.lower()] = cfg.MAX_ROOM_SIZE
-        # area densely
-        df['wall_ratio'] = np.sum(full_map == 0) / full_map.size
-     
         all_df = all_df.append(df, ignore_index=True)
 
     all_df.to_csv(f"data/all_data.csv")

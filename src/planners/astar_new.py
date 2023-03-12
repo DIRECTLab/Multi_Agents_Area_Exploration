@@ -10,7 +10,7 @@ def heuristic(a, b):
     return ((a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2) ** 0.5
 
 # path finding function
-def astar(array, start, end):
+def astar(array, start, end, debug=False):
     start = (start[1], start[0])
     end = (end[1], end[0])
 
@@ -22,9 +22,9 @@ def astar(array, start, end):
     oheap = []
     heapq.heappush(oheap, (fscore[start], start))
  
-
-    loop_count = 0
-    start_time = psutil.Process().cpu_times().user
+    if debug:
+        loop_count = 0
+        start_time = psutil.Process().cpu_times().user
 
     while oheap:
         current = heapq.heappop(oheap)[1]
@@ -55,11 +55,13 @@ def astar(array, start, end):
                 gscore[neighbor] = tentative_g_score
                 fscore[neighbor] = tentative_g_score + heuristic(neighbor, end)
                 heapq.heappush(oheap, (fscore[neighbor], neighbor))
-        loop_count += 1
-    
-    end_time = psutil.Process().cpu_times().user
-    print("loop_count:",loop_count)
-    print("time:", end_time - start_time)
+
+        if debug:
+            loop_count += 1
+    if debug:
+        end_time = psutil.Process().cpu_times().user
+        print("loop_count:",loop_count)
+        print("time:", end_time - start_time)
     return None
 
 def main():
@@ -88,7 +90,7 @@ def main():
     # end = (99, 99)
 
 
-    route = astar(map, start, end)
+    route = astar(map, start, end, debug=True)
     if route is not None:
         route = route + [start]
         route = route[::-1]

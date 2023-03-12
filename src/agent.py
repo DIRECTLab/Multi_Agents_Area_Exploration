@@ -15,62 +15,65 @@ from src.replan.rand_horizen import *
 
 class Agent(rand_frontier):
     def __init__(self, 
-                 cfg,
-                 id, 
-                 body_size,
-                 grid_size,
-                 lidar_range, 
-                 full_map,
-                 position=None,
-                 goal=None,
-                 color=(0,255,0),
-                 ax=None,
-                 screen=None):
+                cfg,
+                id, 
+                body_size,
+                grid_size,
+                lidar_range, 
+                full_map,
+                position=None,
+                goal_xy=None,
+                color=(0,255,0),
+                ax=None,
+                screen=None):
         self.cfg = cfg
         self.id = id
         self.body_size = body_size
         self.grid_size = grid_size
-        self.full_map = full_map.copy()
-        self.agent_map = - np.ones((full_map.shape[0], full_map.shape[1])).astype(int)
+        self.ground_truth_map = full_map.copy()
+        self.agent_map = np.zeros((full_map.shape[0], full_map.shape[1])).astype(int)
+        self.agent_map.fill(self.cfg.UNKNOWN)
+
         self.cur_color = color
         self.lidarRange = lidar_range
         self.lidar_sweep_res = (np.arctan2(1, self.lidarRange)%np.pi ) * 2
         self.lidar_step_res = 1
         self.replan_count = 0
 
-        if goal is None:
-            self.goal = self.get_random_point()
+        if goal_xy is None:
+            self.goal_xy = self.get_random_point()
         else:
-            self.goal = goal
+            self.goal_xy = goal_xy
         if position is None:
-            self.grid_position = self.get_random_point()
+            self.grid_position_xy = self.get_random_point()
         else:
-            self.grid_position = position
+            self.grid_position_xy = position
 
         self.ax = ax
         self.screen = screen
         # Start at 0 velocity
         self.dx= 0
         self.dy= 0
-        self.hist_dist = 0
+        self.total_dist_traveled = 0
+        self.past_traversed_locations =[self.grid_position_xy]
 
         # scan the map and build the map
         self.scan()
         self.replan()
 
     def set_new_goal(self):
-        # self.goal = self.get_random_point()
-        self.goal = self.get_random_frontier()
-        # if self.goal == self.grid_position:
-        assert self.goal != self.grid_position, "Goal and position are the same"
+        # self.goal_xy = self.get_random_point()
+        self.goal_xy = self.get_random_frontier()
+        # if self.goal_xy == self.grid_position:
+        assert self.goal_xy != self.grid_position_xy, "Goal and position are the same"
         
 
     def replan(self):
         self.replan_count += 1
-        # # check id the goal is known
+        # # check id the goal_xy is known
         self.plan = astar(  np.where(self.agent_map == self.cfg.KNOWN_WALL, self.cfg.KNOWN_WALL, self.cfg.KNOWN_EMPTY), 
-                            (int(np.round(self.grid_position[0])), int(np.round(self.grid_position[1]))),
-                            self.goal)
+                            (int(np.round(self.grid_position_xy[0])), int(np.round(self.grid_position_xy[1]))),
+                            self.goal_xy)
         if self.plan == None:
             if self.replan_count > 100:
                 warnings.warn("Replan count is too high")
@@ -105,9 +108,9 @@ class Agent(rand_frontier):
             somthing_drawn = True
             self.arrow(self.cfg.BLUE, 
                         self.cfg.YELLOW, 
-                        (self.grid_position[0]* self.grid_size,self.grid_position[1]* self.grid_size),
-                        (self.grid_position[0]* self.grid_size + self.dx * self.grid_size,
-                        self.grid_position[1]* self.grid_size + self.dy * self.grid_size),
+                        (self.grid_position_xy[0]* self.grid_size,self.grid_position_xy[1]* self.grid_size),
+                        (self.grid_position_xy[0]* self.grid_size + self.dx * self.grid_size,
+                        self.grid_position_xy[1]* self.grid_size + self.dy * self.grid_size),
                         10)
 
         # update plt plot
@@ -116,7 +119,7 @@ class Agent(rand_frontier):
             somthing_drawn = True
             self.ax.clear()
             self.ax.matshow(self.agent_map)
-            self.ax.plot(self.grid_position[0], self.grid_position[1], markersize=1, marker='.', color=np.array(self.cur_color)/255)
+            self.ax.plot(self.grid_position_xy[0], self.grid_position_xy[1], markersize=1, marker='.', color=np.array(self.cur_color)/255)
 
         # draw the plan line in pygame
         if self.ax is not None or self.screen is not None:
@@ -137,8 +140,8 @@ class Agent(rand_frontier):
 
     def move(self):
         # Update the agent's position
-        cur_x = self.grid_position[0]
-        cur_y = self.grid_position[1]
+        cur_x = self.grid_position_xy[0]
+        cur_y = self.grid_position_xy[1]
         
         next_path_point = self.plan[0]
         if (int(np.round(cur_x)), int(np.round(cur_y))) == (next_path_point[0], next_path_point[1]):
@@ -149,8 +152,8 @@ class Agent(rand_frontier):
             # # get the direction from current position to next point
             # #  scale such that the sum of the squares of the components is velocity
             # velocity = 1
-            # # self.dx = velocity * (self.goal[0] - cur_x) / np.sqrt((self.goal[0] - cur_x)**2 + (self.goal[1] - cur_y)**2)
-            # # self.dy = velocity * (self.goal[1] - cur_y) / np.sqrt((self.goal[0] - cur_x)**2 + (self.goal[1] - cur_y)**2)
+            # # self.dx = velocity * (self.goal_xy[0] - cur_x) / np.sqrt((self.goal_xy[0] - cur_x)**2 + (self.goal_xy[1] - cur_y)**2)
+            # # self.dy = velocity * (self.goal_xy[1] - cur_y) / np.sqrt((self.goal_xy[0] - cur_x)**2 + (self.goal_xy[1] - cur_y)**2)
             # # draw a line to the next point
 
             # # move towards the next point
@@ -159,10 +162,12 @@ class Agent(rand_frontier):
             # self.dy = velocity * direction[1] / np.sqrt(direction[0]**2 + direction[1]**2)    self.grid_position = next_path_point
             pass
 
-        self.grid_position = next_path_point
+        self.total_dist_traveled += np.sqrt((next_path_point[0] - cur_x)**2 + (next_path_point[1] - cur_y)**2)
+        self.grid_position_xy = next_path_point
+        self.past_traversed_locations.append(self.grid_position_xy)
         return
 
-        new_position = (self.grid_position[0] + self.dx, self.grid_position[1] + self.dy)
+        new_position = (self.grid_position_xy[0] + self.dx, self.grid_position_xy[1] + self.dy)
         new_x = new_position[0]
         new_y = new_position[1]
 
@@ -178,7 +183,7 @@ class Agent(rand_frontier):
             print("Agent collided with wall")
             return
         # wall collision
-        sampled_next_point = self.full_map[int(np.round(new_y)), int(np.round(new_x))]
+        sampled_next_point = self.ground_truth_map[int(np.round(new_y)), int(np.round(new_x))]
         if sampled_next_point == False:# obstacle
             # move in the direction from sampeld_point to position
             self.dx *= -1
@@ -186,26 +191,26 @@ class Agent(rand_frontier):
             # throw an error
             # raise Exception("Agent collided with obstacle")
         
-        self.hist_dist += np.sqrt((self.grid_position[0] - new_position[0])**2 + (self.grid_position[1] - new_position[1])**2)
-        self.grid_position = new_position
+        self.total_dist_traveled += np.sqrt((self.grid_position_xy[0] - new_position[0])**2 + (self.grid_position_xy[1] - new_position[1])**2)
+        self.grid_position_xy = new_position
 
     def scan(self):
         # send out scan to update local built_map
         for i, angle in enumerate(np.arange(0, 2*np.pi, self.lidar_sweep_res)):
 
-            x, y = self.grid_position
+            x, y = self.grid_position_xy
 
             ray_cast_samples = np.arange(0,self.lidarRange, self.lidar_step_res)
             for j, r in enumerate(ray_cast_samples):
                 # self.world_ax.add_patch(plt.Circle((self.pose_rc[1], self.pose_rc[0]), r, color='pink', fill=False))
 
                 # get the point rounded to the nearest grid
-                x = int(np.round(self.grid_position[0] + r*np.sin(angle)))
-                y = int(np.round(self.grid_position[1] + r*np.cos(angle)))
+                x = int(np.round(self.grid_position_xy[0] + r*np.sin(angle)))
+                y = int(np.round(self.grid_position_xy[1] + r*np.cos(angle)))
 
                 if x < 0 or x >= self.agent_map.shape[1] or y < 0 or y >= self.agent_map.shape[0]:
                     break
-                sampled_point= self.full_map[y, x]
+                sampled_point= self.ground_truth_map[y, x]
                 if sampled_point == False:# obstacle
                     self.agent_map[y, x] = self.cfg.KNOWN_WALL
                     # ddraw the obstacle
@@ -256,14 +261,14 @@ class Agent(rand_frontier):
                 if self.agent_map[path_point[1], path_point[0]] == self.cfg.KNOWN_WALL:
                     return True
 
-        # check if the goal is known to be empty, if so replan
-        if self.agent_map[self.goal[1], self.goal[0]] == self.cfg.KNOWN_EMPTY or \
-            self.agent_map[self.goal[1], self.goal[0]] == self.cfg.KNOWN_WALL:
+        # check if the goal_xy is known to be empty, if so replan
+        if self.agent_map[self.goal_xy[1], self.goal_xy[0]] == self.cfg.KNOWN_EMPTY or \
+            self.agent_map[self.goal_xy[1], self.goal_xy[0]] == self.cfg.KNOWN_WALL:
             self.set_new_goal()
             return True
 
-        # check if the goal is reached, if so replan
-        if (int(np.round(self.grid_position[0])), int(np.round(self.grid_position[1]))) == (self.goal[0], self.goal[1]):
+        # check if the goal_xy is reached, if so replan
+        if (int(np.round(self.grid_position_xy[0])), int(np.round(self.grid_position_xy[1]))) == (self.goal_xy[0], self.goal_xy[1]):
             return True
 
         # NO need to replan
@@ -286,5 +291,5 @@ class Agent(rand_frontier):
         if draw:
             self.draw()
         
-        # trade goal with other agents
-        return len(self.plan), self.hist_dist
+        # trade goal_xy with other agents
+        return len(self.plan), self.total_dist_traveled

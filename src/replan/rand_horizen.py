@@ -1,18 +1,19 @@
 import numpy as np
 
 class rand_frontier:
-    def __init__(self, cfg, agent_map, agent_pos, full_map):
+    def __init__(self, cfg, agent_map, agent_pos, ground_truth_map):
         self.cfg = cfg
         self.agent_map = agent_map
         self.agent_pos = agent_pos
-        self.full_map = full_map
+        self.ground_truth_map = ground_truth_map
     def get_random_point(self):
         # make sure the goal is not in the obstacle
         while True:
-            goal = (np.random.randint(self.full_map.shape[0]), np.random.randint(self.full_map.shape[1]))
-            if self.full_map[goal] == True:
+            point_rc = (np.random.randint(self.ground_truth_map.shape[0]), np.random.randint(self.ground_truth_map.shape[1]))
+            if self.ground_truth_map[point_rc] == self.cfg.EMPTY:
+                point_xy = (point_rc[1], point_rc[0])
                 break
-        return goal
+        return point_xy
         
     def get_random_unnknown(self):
         unknown_points = np.argwhere(self.agent_map == self.cfg.UNKNOWN)
