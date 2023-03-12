@@ -55,7 +55,7 @@ def run_experiment(process_ID, return_dict, cfg, experiment_name, Search_methods
         # space out the subplots
         log_plot_obj.map_fig.tight_layout()
         # create a grid of subplots 
-        log_plot_obj.log_ax[0].matshow(map)
+        log_plot_obj.map_ax.matshow(map)
 
 
     if cfg.DRAW_SIM:
@@ -108,8 +108,8 @@ def run_experiment(process_ID, return_dict, cfg, experiment_name, Search_methods
             grid[row][column].distance_matrix = grid[row][column].calc_distance_matrices()
             matrix_list.append(grid[row][column].distance_matrix)
             agent_locs.add((row,column))
-            log_plot_obj.log_ax[0].scatter(x=column, y=row, c='r', s=100)
-            log_plot_obj.log_ax[0].text(column, row, f"(x:{column},y:{row})", fontsize=10, color='g', ha='center', va='center')
+            log_plot_obj.map_ax.scatter(x=column, y=row, c='r', s=100)
+            log_plot_obj.map_ax.text(column, row, f"(x:{column},y:{row})", fontsize=10, color='g', ha='center', va='center')
 
 
         if cfg.DRAW_SIM:
@@ -118,7 +118,7 @@ def run_experiment(process_ID, return_dict, cfg, experiment_name, Search_methods
 
     if Search_methods['Use_Vernoi_method']:
         minimum_comparison_table = np.argmin((matrix_list), 0)
-        log_plot_obj.log_ax[0].matshow(minimum_comparison_table, alpha=0.6)
+        log_plot_obj.map_ax.matshow(minimum_comparison_table, alpha=0.6)
 
 
     if cfg.DRAW_SIM:        
@@ -193,9 +193,9 @@ def run_experiment(process_ID, return_dict, cfg, experiment_name, Search_methods
         if cfg.LOG_PLOTS:
             # update the map and plt
             log_plot_obj.plot_map(mutual_map, bots, data)
-            log_plot_obj.log_ax[0].set_title(f"Max Known Area {map.size}")
+            log_plot_obj.map_ax.set_title(f"Max Known Area {map.size}")
             if Search_methods['Use_Vernoi_method']:
-                log_plot_obj.log_ax[0].matshow(minimum_comparison_table, alpha=0.3)
+                log_plot_obj.map_ax.matshow(minimum_comparison_table, alpha=0.3)
 
         if cfg.DRAW_SIM or cfg.LOG_PLOTS:
             # update the map but continue 
@@ -225,9 +225,9 @@ def run_experiment(process_ID, return_dict, cfg, experiment_name, Search_methods
     if cfg.LOG_PLOTS:
         # update the map and plt
         log_plot_obj.plot_map(mutual_map, bots, data)
-        log_plot_obj.log_ax[0].set_title(f"Max Known Area {map.size}")
+        log_plot_obj.map_ax.set_title(f"Max Known Area {map.size}")
         if Search_methods['Use_Vernoi_method']:
-            log_plot_obj.log_ax[0].matshow(minimum_comparison_table, alpha=0.3)
+            log_plot_obj.map_ax.matshow(minimum_comparison_table, alpha=0.3)
 
         log_plot_obj.map_fig.savefig(f"data/{folder_name}/map_fig.png")
 
