@@ -8,12 +8,18 @@ import matplotlib.pyplot as plt
 import warnings
 from src.planners.astar_new import astar
 from src.replan.rand_horizen import *
+from src.replan.voronoi_random import Rand_Voronoi
+
 
 # # https://stackoverflow.com/a/40372261/9555123
 # def custom_round(x, base=5):
 #     return int(base * round(float(x)/base))
 
-class Agent(rand_frontier):
+class Agent(
+    # rand_frontier
+    Rand_Voronoi
+    # Closest_Voronoi
+    ):
     def __init__(self, 
                 cfg,
                 id, 
@@ -21,11 +27,13 @@ class Agent(rand_frontier):
                 grid_size,
                 lidar_range, 
                 full_map,
+                assigned_points =None,
                 position=None,
                 goal_xy=None,
                 color=(0,255,0),
                 ax=None,
-                screen=None):
+                screen=None,
+                lock = None):
         self.cfg = cfg
         self.id = id
         self.body_size = body_size
@@ -33,6 +41,8 @@ class Agent(rand_frontier):
         self.ground_truth_map = full_map.copy()
         self.agent_map = np.zeros((full_map.shape[0], full_map.shape[1])).astype(int)
         self.agent_map.fill(self.cfg.UNKNOWN)
+        self.assigned_points = assigned_points
+        self.area_completed = False
 
         self.cur_color = color
         self.lidarRange = lidar_range
@@ -51,6 +61,8 @@ class Agent(rand_frontier):
 
         self.ax = ax
         self.screen = screen
+
+        self.lock = lock
         # Start at 0 velocity
         self.dx= 0
         self.dy= 0
@@ -60,15 +72,34 @@ class Agent(rand_frontier):
         # scan the map and build the map
         self.scan()
         self.replan()
-
+        
+    def get_random_point(self):
+        # make sure the goal is not in the obstacle
+        while True:
+            point_rc = (np.random.randint(self.ground_truth_map.shape[0]), np.random.randint(self.ground_truth_map.shape[1]))
+            if self.ground_truth_map[point_rc] == self.cfg.EMPTY:
+                point_xy = (point_rc[1], point_rc[0])
+                break
+        return point_xy
+    
+    def get_closest_point(self, pointlist):
+        min_dist = np.inf
+        min_point = None
+        for point in pointlist:
+            dist = np.sqrt((point[0] - self.grid_position_xy[0])**2 + (point[1] - self.grid_position_xy[1])**2)
+            if dist < min_dist:
+                min_dist = dist
+                min_point = point
+        return min_point
+    
     def set_new_goal(self):
-        # self.goal_xy = self.get_random_point()
-        self.goal_xy = self.get_random_frontier()
-        # if self.goal_xy == self.grid_position:
+        self.goal_xy = self.get_goal_method()
         assert self.goal_xy != self.grid_position_xy, "Goal and position are the same"
         
 
     def replan(self):
+        if self.area_completed:
+            return
         self.replan_count += 1
         # # check id the goal_xy is known
         self.plan = astar(  np.where(self.agent_map == self.cfg.KNOWN_WALL, self.cfg.KNOWN_WALL, self.cfg.KNOWN_EMPTY), 
@@ -77,9 +108,8 @@ class Agent(rand_frontier):
         if self.plan == None:
             if self.replan_count > 100:
                 warnings.warn("Replan count is too high")
-            if self.replan_count > 200:
-                warnings.warn("Replan count is too high")
-                exit(-1)
+            assert self.replan_count < 200, "Replan count is too high 200"
+
             self.set_new_goal()
             self.replan()
             return
@@ -239,17 +269,18 @@ class Agent(rand_frontier):
         # 1st method will be to look at all the cells and chooses what to assine in the returned map
         for r,row in enumerate(mutual_map):
             for c, mutual_cell in enumerate(row):
-                cur_cell = self.agent_map[r,c]
-                if cur_cell == mutual_cell: 
-                    continue
-                if cur_cell == self.cfg.KNOWN_EMPTY or mutual_cell == self.cfg.KNOWN_EMPTY:
-                    mutual_map[r,c] = self.cfg.KNOWN_EMPTY
-                    continue
-                if mutual_cell == self.cfg.UNKNOWN:
-                    mutual_map[r,c] = cur_cell
-                    # continue
-                # if cur_cell != mutual_cell:
-                #     mutual_map[r,c] = cur_cell
+                with self.lock:
+                    cur_cell = self.agent_map[r,c]
+                    if cur_cell == mutual_cell: 
+                        continue
+                    if cur_cell == self.cfg.KNOWN_EMPTY or mutual_cell == self.cfg.KNOWN_EMPTY:
+                        mutual_map[r,c] = self.cfg.KNOWN_EMPTY
+                        continue
+                    if mutual_cell == self.cfg.UNKNOWN:
+                        mutual_map[r,c] = cur_cell
+                        # continue
+                    # if cur_cell != mutual_cell:
+                    #     mutual_map[r,c] = cur_cell
 
     def check_should_replan(self):
         # check if the plan is empty, if so replan
@@ -275,6 +306,8 @@ class Agent(rand_frontier):
         return False
                     
     def update(self, mutual_map, draw=True):
+        if self.area_completed:
+            return 0, self.total_dist_traveled
         # Update the agent's position
         # Scan the environment
         self.scan()
@@ -283,8 +316,12 @@ class Agent(rand_frontier):
         # Update the agent's map
         self.agent_map = mutual_map.copy()
 
+
+
         if self.check_should_replan():
             self.replan()
+            if self.area_completed:
+                return 0, self.total_dist_traveled
             
         self.move()
         # self.draw()
