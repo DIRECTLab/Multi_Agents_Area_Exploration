@@ -23,13 +23,11 @@ from src.replan.rand_horizen import *
 from src.replan.voronoi_random import *
 
 
-
-def run_experiment(process_ID, 
-                return_dict, 
+def setup_experiment(
                 cfg, 
                 experiment_name, 
-                Search_methods,
-                Agent_Class):
+                Agent_Class,
+                search_method,):
     import os
 
     if cfg.DRAW_SIM:
@@ -40,7 +38,7 @@ def run_experiment(process_ID,
     # Define the size of the screen
     cur_world = world.World(cfg)
     # Generate the floor plan
-    map = cur_world.generate_floor_plan()
+    ground_truth_map = cur_world.generate_floor_plan()
     map_screen = cur_world.screen.copy()
     # cur_world.get_map(show_grid=True)
 
@@ -62,7 +60,7 @@ def run_experiment(process_ID,
         # space out the subplots
         log_plot_obj.map_fig.tight_layout()
         # create a grid of subplots 
-        log_plot_obj.map_ax.matshow(map)
+        log_plot_obj.map_ax.matshow(ground_truth_map)
 
 
     if cfg.DRAW_SIM:
@@ -76,19 +74,16 @@ def run_experiment(process_ID,
             bot_ax = bot_ax.flatten()
         plt.ion()
     
-    if Search_methods['Use_Vernoi_method']:
+    if 'Voronoi' in search_method:
         matrix_list, coming_set, colors, grid = list(), list(), list(), list()
         agent_locs = set()
-        voronoi_random.ROWS = map.shape[0]
-        voronoi_random.COLUMNS = map.shape[1]
+        voronoi_random.ROWS = ground_truth_map.shape[0]
+        voronoi_random.COLUMNS = ground_truth_map.shape[1]
 
-
-
-
-    for row in range(cfg.ROWS):
-        grid.append([])
-        for column in range(cfg.COLS):
-            grid[row].append(voronoi_random.Cell(row,column))
+        for row in range(cfg.ROWS):
+            grid.append([])
+            for column in range(cfg.COLS):
+                grid[row].append(voronoi_random.Cell(row,column))
     
     bots = []
     lock = threading.Lock()
@@ -105,15 +100,15 @@ def run_experiment(process_ID,
                     id = i,
                     body_size = 3,
                     grid_size = cfg.GRID_THICKNESS,
-                    lidar_range = map.shape[0]//3,
-                    full_map = map,
+                    lidar_range = ground_truth_map.shape[0]//3,
+                    full_map = ground_truth_map,
                     ax = bot_ax[i] if cfg.DRAW_SIM else None,
                     screen = cur_world.screen if cfg.DRAW_SIM else None,
                     lock= lock,
                 )
             )
         
-        if Search_methods['Use_Vernoi_method']:
+        if 'Voronoi' in search_method:
             column = bots[i].grid_position_xy[0]
             row = bots[i].grid_position_xy[1]
             # print(f"Bot {i} at x:{row}, y:{column}")
@@ -131,7 +126,8 @@ def run_experiment(process_ID,
             bot_ax[i].set_title(f"Bot {i}")
             bot_ax[i].matshow(bots[i].agent_map)
 
-    if Search_methods['Use_Vernoi_method']:
+    minimum_comparison_table = None
+    if 'Voronoi' in search_method:
         minimum_comparison_table = np.argmin((matrix_list), 0)
         log_plot_obj.map_ax.matshow(minimum_comparison_table, alpha=0.6)
         for bot in bots:
@@ -139,17 +135,27 @@ def run_experiment(process_ID,
             # convert list of list into list of tuples
             assigned_points = [tuple(point) for point in assigned_points]
             bot.assigned_points = assigned_points
+    
+    mutual_map = - np.ones((ground_truth_map.shape[0], ground_truth_map.shape[1])).astype(int)
 
+    return [data, bots, ground_truth_map, mutual_map, log_plot_obj, 
+            minimum_comparison_table, cur_world, map_screen] 
 
+def run_experiment(process_ID, 
+                return_dict, 
+                cfg, 
+                experiment_name, 
+                search_method,
+                set_up_data,
+                debug=False):
 
+    [data, bots, ground_truth_map, mutual_map, log_plot_obj, 
+            minimum_comparison_table, cur_world, map_screen] = set_up_data
     if cfg.DRAW_SIM:        
         # Display the floor plan on the screen
         pygame.display.update()
         FPS = 10
         clock = pygame.time.Clock()
-
-    
-    mutual_map = - np.ones((map.shape[0], map.shape[1])).astype(int)
 
     # Wait for the user to close the window
     frame_count = 0
@@ -211,22 +217,23 @@ def run_experiment(process_ID,
         data['frame_count'].append(frame_count)
         data['known_area'].append(cur_known)
 
-        if cfg.LOG_PLOTS:
-            # update the map and plt
-            log_plot_obj.plot_map(mutual_map, bots, data)
-            log_plot_obj.map_ax.set_title(f"Max Known Area {map.size}\n {Agent_Class.__bases__[0].__name__} \n{experiment_name.replace('_',' ').title()}")
-            if Search_methods['Use_Vernoi_method']:
-                log_plot_obj.map_ax.matshow(minimum_comparison_table, alpha=0.3)
+        if debug:
+            if cfg.LOG_PLOTS:
+                # update the ground_truth_map and plt
+                log_plot_obj.plot_map(mutual_map, bots, data)
+                log_plot_obj.map_ax.set_title(f"Max Known Area {ground_truth_map.size}\n {search_method} \n{experiment_name.replace('_',' ').title()}")
+                if 'Voronoi' in search_method:
+                    log_plot_obj.map_ax.matshow(minimum_comparison_table, alpha=0.3)
 
-        if cfg.DRAW_SIM or cfg.LOG_PLOTS:
-            # update the map but continue 
-            # wait to update plt at FPS of 10
-            # if frame_count % 3 == 0:
-                # map_ax.matshow(mutual_map)
-                # plt.pause(0.00001)
-            plt.pause(0.0001)
-                # plt.pause(0.1)
-            plt.draw()
+            if cfg.DRAW_SIM or cfg.LOG_PLOTS:
+                # update the ground_truth_map but continue 
+                # wait to update plt at FPS of 10
+                # if frame_count % 3 == 0:
+                    # map_ax.matshow(mutual_map)
+                    # plt.pause(0.00001)
+                plt.pause(0.0001)
+                    # plt.pause(0.1)
+                plt.draw()
         
         frame_count += 1
         if cur_known == mutual_map.size:
@@ -244,10 +251,10 @@ def run_experiment(process_ID,
     os.makedirs(f"data/{folder_name}", exist_ok=True)
 
     if cfg.LOG_PLOTS:
-        # update the map and plt
+        # update the ground_truth_map and plt
         log_plot_obj.plot_map(mutual_map, bots, data)
-        log_plot_obj.map_ax.set_title(f"Max Known Area {map.size}")
-        if Search_methods['Use_Vernoi_method']:
+        log_plot_obj.map_ax.set_title(f"Max Known Area {ground_truth_map.size}")
+        if 'Voronoi' in search_method:
             log_plot_obj.map_ax.matshow(minimum_comparison_table, alpha=0.3)
 
         log_plot_obj.map_fig.savefig(f"data/{folder_name}/map_fig.png")
@@ -276,10 +283,10 @@ def run_experiment(process_ID,
     df['MIN_ROOM_SIZE'.lower()] = cfg.MIN_ROOM_SIZE 
     df['MAX_ROOM_SIZE'.lower()] = cfg.MAX_ROOM_SIZE
     # area densely
-    df['wall_ratio'] = np.sum(map == 0) / map.size
-    df['mathod'] = Agent_Class.__bases__[0].__name__
+    df['wall_ratio'] = np.sum(ground_truth_map == 0) / ground_truth_map.size
+    df['mathod'] = search_method
 
     df.to_csv(f"data/{folder_name}/data.csv")
     print(f"Done {experiment_name}")
-    return_dict[process_ID] = [df, cfg, map]
-    return df, cfg, map
+    return_dict[process_ID] = [df, cfg, ground_truth_map]
+    return df, cfg, ground_truth_map
