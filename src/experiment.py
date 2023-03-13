@@ -19,9 +19,17 @@ import src.log_plot as log_plot
 from src.config import Config
 import src.replan.voronoi_random as voronoi_random
 
+from src.replan.rand_horizen import *
+from src.replan.voronoi_random import *
 
 
-def run_experiment(process_ID, return_dict, cfg, experiment_name, Search_methods):
+
+def run_experiment(process_ID, 
+                return_dict, 
+                cfg, 
+                experiment_name, 
+                Search_methods,
+                Agent_Class):
     import os
 
     if cfg.DRAW_SIM:
@@ -46,8 +54,6 @@ def run_experiment(process_ID, return_dict, cfg, experiment_name, Search_methods
         'frame_count': [],
         'known_area' : [],
         }
-
-
 
     if cfg.LOG_PLOTS:
         # create Log_plot object
@@ -87,11 +93,14 @@ def run_experiment(process_ID, return_dict, cfg, experiment_name, Search_methods
     bots = []
     lock = threading.Lock()
 
-        
     assert cfg.USE_THREADS != True, "The use of the threads is not enabled"
+    
 
+    # Rand_Frontier
+    # Rand_Voronoi
+    # Closest_Voronoi
     for i in range(cfg.N_BOTS):
-        bots.append(agent.Agent(
+        bots.append(Agent_Class(
                     cfg = cfg,
                     id = i,
                     body_size = 3,
@@ -205,7 +214,7 @@ def run_experiment(process_ID, return_dict, cfg, experiment_name, Search_methods
         if cfg.LOG_PLOTS:
             # update the map and plt
             log_plot_obj.plot_map(mutual_map, bots, data)
-            log_plot_obj.map_ax.set_title(f"Max Known Area {map.size}")
+            log_plot_obj.map_ax.set_title(f"Max Known Area {map.size}\n {Agent_Class.__bases__[0].__name__} \n{experiment_name.replace('_',' ').title()}")
             if Search_methods['Use_Vernoi_method']:
                 log_plot_obj.map_ax.matshow(minimum_comparison_table, alpha=0.3)
 
@@ -268,6 +277,7 @@ def run_experiment(process_ID, return_dict, cfg, experiment_name, Search_methods
     df['MAX_ROOM_SIZE'.lower()] = cfg.MAX_ROOM_SIZE
     # area densely
     df['wall_ratio'] = np.sum(map == 0) / map.size
+    df['mathod'] = Agent_Class.__bases__[0].__name__
 
     df.to_csv(f"data/{folder_name}/data.csv")
     print(f"Done {experiment_name}")

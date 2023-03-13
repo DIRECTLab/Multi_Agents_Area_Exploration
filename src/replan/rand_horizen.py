@@ -1,6 +1,6 @@
 import numpy as np
 
-class rand_frontier:
+class Rand_Frontier:
     # def __init__(self, cfg, agent_map, agent_pos, ground_truth_map):
     #     self.cfg = cfg
     #     self.agent_map = agent_map
@@ -20,7 +20,10 @@ class rand_frontier:
         if len(unknown_points) == 0:
             # return self.get_random_point()
             print("get_random_unnknown(): No unknown points")
-            return 
+            # set goal as current position
+            self.plan = []
+            self.area_completed = True
+            return [-1,-1]
         elif len(unknown_points) == 1:
             return (unknown_points[0][1], unknown_points[0][0])
         # choose a random UNKNOWN
@@ -36,6 +39,9 @@ class rand_frontier:
         # choose a random frontier
         idx = np.random.randint(len(frontier_points))
         return (frontier_points[idx][1], frontier_points[idx][0])
+    
+    def get_goal_method(self):
+        return self.get_random_frontier()
 
     # def set_new_goal(self):
     #     # self.goal = self.get_random_point()

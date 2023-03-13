@@ -5,6 +5,9 @@ from multiprocessing import Pool, Manager, Process, Queue
 
 from src.config import Config
 from src.experiment import run_experiment
+from src.replan.rand_horizen import *
+from src.replan.voronoi_random import *
+from src.agent import createBot
 
 def main():
     all_df = pd.DataFrame()
@@ -19,30 +22,38 @@ def main():
         }
     
     # create a pfrogress bar for each process thead
-    
-    do_theading = True
-    for k in range(50,51,1):
-        for i in range(4,20,10):
+    Method_list = [
+        Rand_Frontier,
+        #Rand_Closest_Frontier,
+        Rand_Voronoi, 
+        Closest_Voronoi,
+        ]
+    for map_length in range(20,100,10):
+        for agent_count in range(2,10,2):
+            for method_id, method in enumerate(Method_list):
 
-            random.seed(int(i))
-            np.random.seed(int(i))
-            cfg = Config()
-            cfg.SEED = int(i)
-            cfg.N_BOTS = int(i)
+                cfg = Config()
+                cfg.SEED = int(map_length )
+                cfg.N_BOTS = int(agent_count)
 
-            cfg.COLS = int(k)
-            cfg.ROWS = int(k)
-            cfg.SCREEN_WIDTH = int(k*cfg.GRID_THICKNESS)
-            cfg.SCREEN_HEIGHT = int(k*cfg.GRID_THICKNESS)
+                random.seed(cfg.SEED)
+                np.random.seed(cfg.SEED)
 
-            experiment_name = f"test_{i}_nbots{cfg.N_BOTS}_rows{cfg.ROWS}_cols{cfg.COLS}_seed{cfg.SEED}"
-            print(f"Starting Experiment: {experiment_name}")
+                cfg.COLS = int(map_length)
+                cfg.ROWS = int(map_length)
+                cfg.SCREEN_WIDTH = int(map_length*cfg.GRID_THICKNESS)
+                cfg.SCREEN_HEIGHT = int(map_length*cfg.GRID_THICKNESS)
 
-            # do_theading = not do_theading
-            # cfg.USE_THREADS =do_theading
-            print("cfg.USE_THREADS", cfg.USE_THREADS)
+                experiment_name = f"test_{agent_count}_nbots{cfg.N_BOTS}_rows{cfg.ROWS}_cols{cfg.COLS}_seed{cfg.SEED}"
+                print(f"Starting Experiment: {experiment_name}")
 
-            run_experiment(df_index, return_dict, cfg, experiment_name, search_methods)
+                # do_theading = not do_theading
+                # cfg.USE_THREADS =do_theading
+                print("cfg.USE_THREADS", cfg.USE_THREADS)
+
+                Agent_Class = createBot(method)
+                print("Method:", Agent_Class.__bases__[0].__name__)
+                run_experiment(df_index, return_dict, cfg, experiment_name, search_methods, Agent_Class=Agent)
     #             df_index += 1
     #             # # run the simulation in a new process
     #             p = Process(target=run_experiment, args=(i, return_dict,cfg,experiment_name, search_methods))
