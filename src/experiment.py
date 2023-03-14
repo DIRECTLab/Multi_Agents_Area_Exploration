@@ -1,35 +1,31 @@
 import matplotlib.pyplot as plt
 import threading
 from multiprocessing.pool import ThreadPool
-
 from os import environ
 environ['PYGAME_HIDE_SUPPORT_PROMPT'] = '1'
 import pygame
 import psutil
-from tqdm import tqdm
+# from tqdm import tqdm
 import json
-
 import numpy as np
 import pandas as pd
-
+import os
 
 import src.world as world
 import src.agent as agent
 import src.log_plot as log_plot
 from src.config import Config
 import src.replan.voronoi_random as voronoi_random
-
 from src.replan.rand_horizen import *
 from src.replan.voronoi_random import *
 
 
 def setup_experiment(
-                cfg, 
-                experiment_name, 
+                cfg,
+                experiment_name,
                 Agent_Class,
-                search_method,):
-    import os
-
+                search_method):
+    
     if cfg.DRAW_SIM:
         # Initialize pygame
         pygame.init()
@@ -231,7 +227,7 @@ def run_experiment(process_ID,
                 # if frame_count % 3 == 0:
                     # map_ax.matshow(mutual_map)
                     # plt.pause(0.00001)
-                plt.pause(0.0001)
+                plt.pause(1)
                     # plt.pause(0.1)
                 plt.draw()
         

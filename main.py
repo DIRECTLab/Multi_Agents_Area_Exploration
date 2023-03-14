@@ -19,13 +19,15 @@ def main():
     # create a pfrogress bar for each process thead
     Method_list = [
         Rand_Frontier,
-        #Rand_Closest_Frontier,TODO
-        Rand_Voronoi, 
+        Rand_Closest_Frontier,
+        Rand_Voronoi,
         Closest_Voronoi,
         ]
+
+
     prosses_count = 0
-    for map_length in range(20,100,10):
-        for agent_count in range(2,10,2):
+    for map_length in range(20,30,10):
+        for agent_count in range(5,10,5):
             for method_id, method in enumerate(Method_list):
 
                 cfg = Config()
@@ -54,31 +56,32 @@ def main():
 
                 set_up_data = setup_experiment(cfg, experiment_name, Agent_Class, search_method, )
 
-                # run_experiment(prosses_count, 
-                #             return_dict,
-                #             cfg,
-                #             experiment_name, 
-                #             search_method =search_method,
-                #             set_up_data = set_up_data, 
-                #             debug=True)
+                run_experiment(prosses_count, 
+                            return_dict,
+                            cfg,
+                            experiment_name, 
+                            search_method =search_method,
+                            set_up_data = set_up_data, 
+                            debug=True)
                 df_index += 1
-                # # run the simulation in a new process
-                p = Process(target=run_experiment, 
-                            args=(
-                                    prosses_count, 
-                                    return_dict,
-                                    cfg,
-                                    experiment_name, 
-                                    search_method ,
-                                    set_up_data , 
-                                ))
-                p.start()
-                Process_list.append(p)
-                prosses_count += 1
+    
+    #             # run the simulation in a new process
+    #             p = Process(target=run_experiment, 
+    #                         args=(
+    #                                 prosses_count, 
+    #                                 return_dict,
+    #                                 cfg,
+    #                                 experiment_name, 
+    #                                 search_method ,
+    #                                 set_up_data , 
+    #                             ))
+    #             p.start()
+    #             Process_list.append(p)
+    #             prosses_count += 1
 
-    for p in Process_list:
-        p.join()
-        print("Joined Process: ", p.pid)
+    # for p in Process_list:
+    #     p.join()
+    #     print("Joined Process: ", p.pid)
     
     # collect all the data
     for [df, cfg, full_map] in return_dict.values():

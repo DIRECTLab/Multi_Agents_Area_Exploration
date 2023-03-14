@@ -44,7 +44,6 @@ class Rand_Voronoi:
         return self.get_random_frontier()
 
 class Closest_Voronoi():
-
     def get_closet_unknown(self):
         # finds the classes unknown point
         unknown_points = np.argwhere(self.agent_map == self.cfg.UNKNOWN)
@@ -77,7 +76,6 @@ class Closest_Voronoi():
             return (frontier_points_assigned[0][1], frontier_points_assigned[0][0])
         # choose the closest frontier
         nest_point = self.get_closest_point_rc(frontier_points_assigned)
-
         return (nest_point[1], nest_point[0])
 
     def get_goal_method(self):

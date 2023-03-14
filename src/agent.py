@@ -10,7 +10,7 @@ from src.planners.astar_new import astar
 from src.replan.rand_horizen import *
 from src.replan.voronoi_random import *
 
-def createBot(base =None):
+def createBot(base = None):
     # # Rand_Frontier
     # # Rand_Voronoi
     # Closest_Voronoi
