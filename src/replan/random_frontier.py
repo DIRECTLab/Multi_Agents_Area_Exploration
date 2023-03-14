@@ -1,6 +1,6 @@
 import numpy as np
 
-class Rand_Frontier:
+class Random_Frontier:
     def get_random_point(self):
         # make sure the goal is not in the obstacle
         while True:
@@ -37,43 +37,3 @@ class Rand_Frontier:
     
     def get_goal_method(self):
         return self.get_random_frontier()
-
-
-
-class Rand_Closest_Frontier:
-    # def get_random_point(self):
-    #     # make sure the goal is not in the obstacle
-    #     while True:
-    #         point_rc = (np.random.randint(self.ground_truth_map.shape[0]), np.random.randint(self.ground_truth_map.shape[1]))
-    #         if self.ground_truth_map[point_rc] == self.cfg.EMPTY:
-    #             point_xy = (point_rc[1], point_rc[0])
-    #             break
-    #     return point_xy
-        
-    def get_closet_unknown(self):
-        unknown_points = np.argwhere(self.agent_map == self.cfg.UNKNOWN)
-        if len(unknown_points) == 0:
-            # return self.get_closet_unknown()
-            print("get_closet_unknown(): No unknown points")
-            # set goal as current position
-            self.plan = []
-            self.area_completed = True
-            return [-1,-1]
-        elif len(unknown_points) == 1:
-            return (unknown_points[0][1], unknown_points[0][0])
-        # choose a random UNKNOWN
-        idx = self.get_closest_point_rc(list(unknown_points))
-        return (idx[1], idx[0])
-
-    def get_closet_frontier(self):
-        frontier_points = np.argwhere(self.agent_map == self.cfg.FRONTIER)
-        if len(frontier_points) == 0:
-            return self.get_closet_unknown()
-        elif len(frontier_points) == 1:
-            return (frontier_points[0][1], frontier_points[0][0])
-        # choose a random frontier
-        idx = self.get_closest_point_rc(list(frontier_points))
-        return (idx[1], idx[0])
-    
-    def get_goal_method(self):
-        return self.get_closet_frontier()

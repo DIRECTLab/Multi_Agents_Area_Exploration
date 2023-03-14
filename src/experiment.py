@@ -14,11 +14,6 @@ import os
 import src.world as world
 import src.agent as agent
 import src.log_plot as log_plot
-from src.config import Config
-import src.replan.voronoi_random as voronoi_random
-from src.replan.rand_horizen import *
-from src.replan.voronoi_random import *
-
 
 def setup_experiment(
                 cfg,
@@ -70,26 +65,45 @@ def setup_experiment(
             bot_ax = bot_ax.flatten()
         plt.ion()
     
-    if 'Voronoi' in search_method:
-        matrix_list, coming_set, colors, grid = list(), list(), list(), list()
-        agent_locs = set()
-        voronoi_random.ROWS = ground_truth_map.shape[0]
-        voronoi_random.COLUMNS = ground_truth_map.shape[1]
 
+
+
+
+
+
+    if 'Voronoi' in search_method:
+        matrix_list, grid = list(), list()
+        agent_locs = set()
+        class Cell:
+            def __init__(self, row, column):        
+                self.pos_row = row
+                self.pos_column = column
+                self.agent = False          # is there any agent over a cell
+                self.agent_id = None        # which agent is placed on a box 
+                self.distance_matrix = None
+            def calc_distance_matrices(self):
+                x_arr, y_arr = np.mgrid[0:cfg.ROWS, 0:cfg.COLS]
+                cell = (self.pos_row, self.pos_column)
+                dists = np.sqrt((x_arr - cell[0])**2 + (y_arr - cell[1])**2)
+                return dists
         for row in range(cfg.ROWS):
             grid.append([])
             for column in range(cfg.COLS):
-                grid[row].append(voronoi_random.Cell(row,column))
-    
+                grid[row].append(Cell(row,column))
+
+
+
+
+
+
+
+
+
     bots = []
     lock = threading.Lock()
 
     assert cfg.USE_THREADS != True, "The use of the threads is not enabled"
     
-
-    # Rand_Frontier
-    # Rand_Voronoi
-    # Closest_Voronoi
     for i in range(cfg.N_BOTS):
         bots.append(Agent_Class(
                     cfg = cfg,
@@ -104,11 +118,16 @@ def setup_experiment(
                 )
             )
         
+    
+    
+    
+    
+
+
         if 'Voronoi' in search_method:
             column = bots[i].grid_position_xy[0]
             row = bots[i].grid_position_xy[1]
             # print(f"Bot {i} at x:{row}, y:{column}")
-
             grid[row][column].agent = True
             grid[row][column].agent_id = i
             grid[row][column].distance_matrix = grid[row][column].calc_distance_matrices()
@@ -118,10 +137,20 @@ def setup_experiment(
             log_plot_obj.map_ax.text(column, row, f"(x:{column},y:{row})", fontsize=10, color='g', ha='center', va='center')
 
 
+
+
+
+    
+    
         if cfg.DRAW_SIM:
             bot_ax[i].set_title(f"Bot {i}")
             bot_ax[i].matshow(bots[i].agent_map)
 
+    
+
+
+
+    
     minimum_comparison_table = None
     if 'Voronoi' in search_method:
         minimum_comparison_table = np.argmin((matrix_list), 0)
@@ -132,10 +161,20 @@ def setup_experiment(
             assigned_points = [tuple(point) for point in assigned_points]
             bot.assigned_points = assigned_points
     
-    mutual_map = - np.ones((ground_truth_map.shape[0], ground_truth_map.shape[1])).astype(int)
 
-    return [data, bots, ground_truth_map, mutual_map, log_plot_obj, 
-            minimum_comparison_table, cur_world, map_screen] 
+
+
+
+
+
+    
+    mutual_map = - np.ones((ground_truth_map.shape[0], ground_truth_map.shape[1])).astype(int)
+    return [data, bots, ground_truth_map, mutual_map, log_plot_obj, minimum_comparison_table, cur_world, map_screen]
+
+
+
+
+
 
 def run_experiment(process_ID, 
                 return_dict, 
@@ -227,7 +266,7 @@ def run_experiment(process_ID,
                 # if frame_count % 3 == 0:
                     # map_ax.matshow(mutual_map)
                     # plt.pause(0.00001)
-                plt.pause(1)
+                plt.pause(0.1)
                     # plt.pause(0.1)
                 plt.draw()
         

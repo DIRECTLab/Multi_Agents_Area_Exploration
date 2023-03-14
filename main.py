@@ -5,9 +5,11 @@ from multiprocessing import Pool, Manager, Process, Queue
 
 from src.config import Config
 from src.experiment import run_experiment, setup_experiment
-from src.replan.rand_horizen import *
-from src.replan.voronoi_random import *
 from src.agent import createBot
+from src.replan.random_frontier import Random_Frontier
+from src.replan.random_frontier_closest import Random_Frontier_Closest
+from src.replan.voronoi_random_frontier import Voronoi_Random_Frontier
+from src.replan.voronoi_random_closest_frontier import Voronoi_Random_Closest_Frontier
 
 def main():
     all_df = pd.DataFrame()
@@ -18,10 +20,10 @@ def main():
     Process_list = [] 
     # create a pfrogress bar for each process thead
     Method_list = [
-        Rand_Frontier,
-        Rand_Closest_Frontier,
-        Rand_Voronoi,
-        Closest_Voronoi,
+        Random_Frontier,
+        Random_Frontier_Closest,
+        Voronoi_Random_Frontier,
+        Voronoi_Random_Closest_Frontier,
         ]
 
 
@@ -51,7 +53,7 @@ def main():
 
                 global Agent_Class 
                 Agent_Class = createBot(method)
-                search_method =f"{Agent_Class.__bases__[0].__name__}"
+                search_method = f"{Agent_Class.__bases__[0].__name__}"
                 print("Method:", Agent_Class.__bases__[0].__name__)
 
                 set_up_data = setup_experiment(cfg, experiment_name, Agent_Class, search_method, )
@@ -65,7 +67,7 @@ def main():
                             debug=True)
                 df_index += 1
     
-    #             # run the simulation in a new process
+                # run the simulation in a new process
     #             p = Process(target=run_experiment, 
     #                         args=(
     #                                 prosses_count, 

@@ -7,8 +7,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import warnings
 from src.planners.astar_new import astar
-from src.replan.rand_horizen import *
-from src.replan.voronoi_random import *
+from src.replan.random_frontier import *
+from src.replan.voronoi_random_frontier import *
 
 def createBot(base = None):
     # # Rand_Frontier
