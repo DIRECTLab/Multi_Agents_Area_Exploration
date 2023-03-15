@@ -66,11 +66,6 @@ def setup_experiment(
         plt.ion()
     
 
-
-
-
-
-
     if 'Voronoi' in search_method:
         matrix_list, grid = list(), list()
         agent_locs = set()
@@ -90,15 +85,6 @@ def setup_experiment(
             grid.append([])
             for column in range(cfg.COLS):
                 grid[row].append(Cell(row,column))
-
-
-
-
-
-
-
-
-
     bots = []
     lock = threading.Lock()
 
@@ -117,11 +103,6 @@ def setup_experiment(
                     lock= lock,
                 )
             )
-        
-    
-    
-    
-    
 
 
         if 'Voronoi' in search_method:
@@ -135,22 +116,13 @@ def setup_experiment(
             agent_locs.add((row,column))
             log_plot_obj.map_ax.scatter(x=column, y=row, c='r', s=100)
             log_plot_obj.map_ax.text(column, row, f"(x:{column},y:{row})", fontsize=10, color='g', ha='center', va='center')
-
-
-
-
-
     
     
         if cfg.DRAW_SIM:
             bot_ax[i].set_title(f"Bot {i}")
             bot_ax[i].matshow(bots[i].agent_map)
 
-    
-
-
-
-    
+        
     minimum_comparison_table = None
     if 'Voronoi' in search_method:
         minimum_comparison_table = np.argmin((matrix_list), 0)
@@ -162,19 +134,9 @@ def setup_experiment(
             bot.assigned_points = assigned_points
     
 
-
-
-
-
-
     
     mutual_map = - np.ones((ground_truth_map.shape[0], ground_truth_map.shape[1])).astype(int)
     return [data, bots, ground_truth_map, mutual_map, log_plot_obj, minimum_comparison_table, cur_world, map_screen]
-
-
-
-
-
 
 def run_experiment(process_ID, 
                 return_dict, 
