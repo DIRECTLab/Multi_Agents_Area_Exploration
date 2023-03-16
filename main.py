@@ -81,13 +81,13 @@ def main():
 
                 set_up_data = setup_experiment(cfg, experiment_name, Agent_Class, search_method, )
 
-                # run_experiment(prosses_count, 
-                #             return_dict,
-                #             cfg,
-                #             experiment_name, 
-                #             search_method =search_method,
-                #             set_up_data = set_up_data, 
-                #             debug=True)
+                run_experiment(prosses_count, 
+                            return_dict,
+                            cfg,
+                            experiment_name, 
+                            search_method =search_method,
+                            set_up_data = set_up_data, 
+                            debug=True)
                 df_index += 1
     
     #             # run the simulation in a new process
@@ -104,9 +104,9 @@ def main():
     #             Process_list.append(p)
     #             prosses_count += 1
 
-    for p in Process_list:
-        p.join()
-        print("Joined Process: ", p.pid)
+    # for p in Process_list:
+    #     p.join()
+    #     print("Joined Process: ", p.pid)
     
     # collect all the data
     for [df, cfg, full_map] in return_dict.values():
