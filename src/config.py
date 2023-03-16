@@ -6,6 +6,9 @@ class Config:
         
         self.SEED = None
         self.N_BOTS = 7
+        self.START_LOC_LIST_XY = None
+        self.START_CENTROID_LIST_XY = None 
+        
         # Define the size of the walls
         self.GRID_THICKNESS = 10
         # Define the size of the screen

@@ -6,11 +6,11 @@ class Random_Frontier_Closest:
         unknown_points = np.argwhere(self.agent_map == self.cfg.UNKNOWN)
         if len(unknown_points) == 0:
             # return self.get_closet_unknown()
-            print("get_closet_unknown(): No unknown points")
+            #print("get_closet_unknown(): No unknown points")
             # set goal as current position
             self.plan = []
             self.area_completed = True
-            return [-1,-1]
+            return self.grid_position_xy
         elif len(unknown_points) == 1:
             return (unknown_points[0][1], unknown_points[0][0])
         # choose a random UNKNOWN

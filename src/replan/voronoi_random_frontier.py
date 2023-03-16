@@ -9,11 +9,11 @@ class Voronoi_Random_Frontier:
                 unknown_points_assigned.append(point)
         if len(unknown_points_assigned) == 0:
             # return self.get_random_point()
-            print("get_random_unnknown(): No unknown points")
+            # print("#get_random_unnknown(): No unknown points")
             # set goal as current position
             self.plan = []
             self.area_completed = True
-            return [-1,-1]
+            return self.grid_position_xy
         elif len(unknown_points_assigned) == 1:
             return (unknown_points_assigned[0][1], unknown_points_assigned[0][0])
         # choose a random UNKNOWN
