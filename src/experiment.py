@@ -124,7 +124,7 @@ def setup_experiment(
             grid[row][column].agent_id = i
             grid[row][column].distance_matrix = grid[row][column].calc_distance_matrices()
             matrix_list.append(grid[row][column].distance_matrix)
-            agent_locs.add((row,column))
+            # agent_locs.add((row,column))
             log_plot_obj.map_ax.scatter(x=column, y=row, c='r', s=100)
             log_plot_obj.map_ax.text(column, row, f"(x:{column},y:{row})", fontsize=10, color='g', ha='center', va='center')
     
