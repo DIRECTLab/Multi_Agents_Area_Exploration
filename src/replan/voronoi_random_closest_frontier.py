@@ -14,7 +14,7 @@ class Voronoi_Random_Closest_Frontier():
             # set goal as current position
             self.plan = []
             self.area_completed = True
-            return [-1,-1]
+            return self.grid_position_xy
         elif len(unknown_points_assigned) == 1:
             return (unknown_points_assigned[0][1], unknown_points_assigned[0][0])
         # choose the closest UNKNOWN

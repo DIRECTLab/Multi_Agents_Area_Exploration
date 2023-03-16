@@ -120,8 +120,8 @@ def setup_experiment(
 
         # TODO MOVE THIS UP TO THE 1st Voronoi IF STATEMENT
         if 'Voronoi' in search_method:
-            column = bots[i].grid_position_xy[0]
-            row = bots[i].grid_position_xy[1]
+            column = bots[i].goal_xy[0]
+            row = bots[i].goal_xy[1]
             # print(f"Bot {i} at x:{row}, y:{column}")
             grid[row][column].agent = True
             grid[row][column].agent_id = i
@@ -147,10 +147,22 @@ def setup_experiment(
             assigned_points = [tuple(point) for point in assigned_points]
             bot.assigned_points = assigned_points
     
-
-    
     mutual_map = - np.ones((ground_truth_map.shape[0], ground_truth_map.shape[1])).astype(int)
-    return [data, bots, ground_truth_map, mutual_map, log_plot_obj, minimum_comparison_table, cur_world, map_screen]
+    import time
+    folder_name =  'data/' + experiment_name+ '/' + time.strftime("%Y-%m-%d_%H:%M:%S")
+    if cfg.LOG_PLOTS:
+        os.makedirs(folder_name)
+
+        # log_plot_obj.plot_map(mutual_map, bots, data)
+        log_plot_obj.map_ax.set_title(f"Max Known Area {ground_truth_map.size}\n {search_method} \n{experiment_name.replace('_',' ').title()}")
+        if 'Voronoi' in search_method:
+            log_plot_obj.map_ax.matshow(minimum_comparison_table, alpha=0.3)
+        log_plot_obj.map_fig.savefig(folder_name + '/starting_map.png')
+
+    if cfg.DRAW_SIM:
+        bot_fig.savefig(folder_name + '/starting_bot.png')
+    
+    return [data, bots, ground_truth_map, mutual_map, log_plot_obj, minimum_comparison_table, cur_world, map_screen, folder_name]
 
 def run_experiment(process_ID, 
                 return_dict, 
@@ -161,7 +173,7 @@ def run_experiment(process_ID,
                 debug=False):
 
     [data, bots, ground_truth_map, mutual_map, log_plot_obj, 
-            minimum_comparison_table, cur_world, map_screen] = set_up_data
+            minimum_comparison_table, cur_world, map_screen, folder_name] = set_up_data
     if cfg.DRAW_SIM:        
         # Display the floor plan on the screen
         pygame.display.update()
@@ -257,9 +269,9 @@ def run_experiment(process_ID,
     print(f"Simulation Complete: {experiment_name} in {data['delta_time'][-1]} seconds")
     import time
     import os
-    folder_name =  experiment_name+ '/' + time.strftime("%Y-%m-%d_%H:%M:%S")
+    
     # create expeament folder
-    os.makedirs(f"data/{folder_name}", exist_ok=True)
+    os.makedirs(f"{folder_name}", exist_ok=True)
 
     if cfg.LOG_PLOTS:
         # update the ground_truth_map and plt
@@ -268,15 +280,15 @@ def run_experiment(process_ID,
         if 'Voronoi' in search_method:
             log_plot_obj.map_ax.matshow(minimum_comparison_table, alpha=0.3)
 
-        log_plot_obj.map_fig.savefig(f"data/{folder_name}/map_fig.png")
+        log_plot_obj.map_fig.savefig(f"{folder_name}/map_fig.png")
 
     if cfg.DRAW_SIM:
         # save the screen
-        pygame.image.save(cur_world.screen, f"data/{folder_name}/screen.png")
+        pygame.image.save(cur_world.screen, f"{folder_name}/screen.png")
         pygame.quit()
 
     # save the config in jason format
-    with open(f"data/{folder_name}/config.json", 'w') as f:
+    with open(f"{folder_name}/config.json", 'w') as f:
         json.dump(cfg.__dict__, f, indent=4)
 
 
@@ -297,7 +309,7 @@ def run_experiment(process_ID,
     df['wall_ratio'] = np.sum(ground_truth_map == 0) / ground_truth_map.size
     df['mathod'] = search_method
 
-    df.to_csv(f"data/{folder_name}/data.csv")
+    df.to_csv(f"{folder_name}/data.csv")
     print(f"Done {experiment_name}")
     return_dict[process_ID] = [df, cfg, ground_truth_map]
     return df, cfg, ground_truth_map
