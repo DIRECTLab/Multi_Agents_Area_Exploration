@@ -11,6 +11,10 @@ from src.replan.random_frontier_closest import Random_Frontier_Closest
 from src.replan.voronoi_random_frontier import Voronoi_Random_Frontier
 from src.replan.voronoi_random_closest_frontier import Voronoi_Random_Closest_Frontier
 
+# from src.starting_scenario.random_start import Rand_Start
+from src.starting_scenario.starting_methods import  *
+
+
 def main():
     all_df = pd.DataFrame()
     df_index = 0
@@ -25,49 +29,52 @@ def main():
         Voronoi_Random_Frontier,
         Voronoi_Random_Closest_Frontier,
         ]
+    
+    Start_scenario_list = [
+        Edge_Start,
+        Top_Left_Start,
+        Rand_Start,
+        Center_Start,
+        ]
 
 
     prosses_count = 0
     for map_length in range(20,30,10):
-        for agent_count in range(5,10,5):
+        for agent_count in range(4,10,2):
             for method_id, method in enumerate(Method_list):
+                for starting_scenario_id, starting_scenario in enumerate(Start_scenario_list):
 
-                cfg = Config()
-                cfg.SEED = int(map_length )
-                cfg.N_BOTS = int(agent_count)
+                    cfg = Config()
+                    cfg.SEED = int(map_length )
+                    cfg.N_BOTS = int(agent_count)
 
-                random.seed(cfg.SEED)
-                np.random.seed(cfg.SEED)
+                    random.seed(cfg.SEED)
+                    np.random.seed(cfg.SEED)
 
-                cfg.COLS = int(map_length)
-                cfg.ROWS = int(map_length)
-                cfg.SCREEN_WIDTH = int(map_length*cfg.GRID_THICKNESS)
-                cfg.SCREEN_HEIGHT = int(map_length*cfg.GRID_THICKNESS)
+                    cfg.COLS = int(map_length)
+                    cfg.ROWS = int(map_length)
+                    cfg.SCREEN_WIDTH = int(map_length*cfg.GRID_THICKNESS)
+                    cfg.SCREEN_HEIGHT = int(map_length*cfg.GRID_THICKNESS)
 
-                experiment_name = f"test_{agent_count}_nbots{cfg.N_BOTS}_rows{cfg.ROWS}_cols{cfg.COLS}_seed{cfg.SEED}"
-                print(f"Starting Experiment: {experiment_name}")
+                    experiment_name = f"test_{agent_count}_nbots{cfg.N_BOTS}_rows{cfg.ROWS}_cols{cfg.COLS}_seed{cfg.SEED}"
+                    print(f"Starting Experiment: {experiment_name}")
 
-                # do_theading = not do_theading
-                # cfg.USE_THREADS =do_theading
-                print("cfg.USE_THREADS", cfg.USE_THREADS)
+                    Agent_Class = createBot([method, starting_scenario])
+                    search_method = f"{Agent_Class.__bases__[0].__name__}"
+                    print("Method:", Agent_Class.__bases__[0].__name__)
 
-                global Agent_Class 
-                Agent_Class = createBot(method)
-                search_method = f"{Agent_Class.__bases__[0].__name__}"
-                print("Method:", Agent_Class.__bases__[0].__name__)
+                    set_up_data = setup_experiment(cfg, experiment_name, Agent_Class, search_method, )
 
-                set_up_data = setup_experiment(cfg, experiment_name, Agent_Class, search_method, )
-
-                run_experiment(prosses_count, 
-                            return_dict,
-                            cfg,
-                            experiment_name, 
-                            search_method =search_method,
-                            set_up_data = set_up_data, 
-                            debug=True)
-                df_index += 1
+                    run_experiment(prosses_count, 
+                                return_dict,
+                                cfg,
+                                experiment_name, 
+                                search_method =search_method,
+                                set_up_data = set_up_data, 
+                                debug=True)
+                    df_index += 1
     
-                # run the simulation in a new process
+    #             # run the simulation in a new process
     #             p = Process(target=run_experiment, 
     #                         args=(
     #                                 prosses_count, 
@@ -93,3 +100,7 @@ def main():
 
 if __name__ == "__main__":
     main()
+    # save the Conda environment yaml file so that we can recreate the environment on any machine
+    import os
+    # with out the prefix, the environment will be saved to the current directory
+    os.system("conda env export --no-builds > environment.yml")

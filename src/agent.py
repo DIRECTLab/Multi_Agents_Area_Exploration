@@ -14,7 +14,7 @@ def createBot(base = None):
     # # Rand_Frontier
     # # Rand_Voronoi
     # Closest_Voronoi
-    class Agent(base):
+    class Agent(*base):
         def __init__(self, 
                     cfg,
                     id, 
@@ -23,8 +23,8 @@ def createBot(base = None):
                     lidar_range, 
                     full_map,
                     assigned_points =None,
-                    position=None,
-                    goal_xy=None,
+                    # position=None,
+                    # goal_xy=None,
                     color=(0,255,0),
                     ax=None,
                     screen=None,
@@ -45,14 +45,18 @@ def createBot(base = None):
             self.lidar_step_res = 1
             self.replan_count = 0
 
-            if goal_xy is None:
-                self.goal_xy = self.get_random_point()
-            else:
-                self.goal_xy = goal_xy
-            if position is None:
-                self.grid_position_xy = self.get_random_point()
-            else:
-                self.grid_position_xy = position
+            self.goal_xy = None
+            self.grid_position_xy = None
+            # Base Class will set the goal
+            self.choose_start()
+            assert self.goal_xy is not None, "goal_xy is None, the Base method is not implemented"
+            assert self.grid_position_xy is not None, "grid_position_xy is None, the Base method is not implemented"
+
+            # if position is None:
+            #     self.grid_position_xy = self.get_random_point()
+            # else:
+            #     self.grid_position_xy = position
+            
 
             self.ax = ax
             self.screen = screen
