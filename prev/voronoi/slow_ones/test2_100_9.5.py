@@ -1,27 +1,29 @@
 import random as r
 import math as m
-import pygame
-from pygame import gfxdraw
 import psutil
 import sys
 
 def makeMap(numPoints, mapSize):
     # Generate random colors so I can see what's happened.
     colors = []
-    for color in range(numPoints):
-        red = r.randint(0, 255)
-        grn = r.randint(0, 255)
-        blu = r.randint(0, 255)
-        colors.append((red, grn, blu))
+    for color in range(4):
+        print(color)
+        colors.append(color)
     # Generate the base points.
     ct = 0
-    basePoints = []
-    for point in range(numPoints):
-        x = r.randint(0, mapSize)
-        y = r.randint(0, mapSize)
-        # print(x,y)
-        basePoints.append((x, y, colors[ct]))
-        ct += 1
+    
+    # basePoints = []
+    # for point in range(numPoints):
+    #     x = r.randint(0, mapSize)
+    #     y = r.randint(0, mapSize)
+    #     # print(x,y)
+    #     basePoints.append((x, y, colors[ct]))
+    #     ct += 1
+
+    basePoints = [(5, 5, 0), (5, 15, 1), (15, 5, 2), (15, 15, 3)]
+    print(basePoints)
+
+    
     # Generate all the other points on the map.
     points = []
     for x in range(mapSize):
@@ -40,36 +42,21 @@ def makeMap(numPoints, mapSize):
 
 
 def main():    
-    pygame.init()
-    size = (400, 400)
-    surf = pygame.display.set_mode(size)
+    # sim_start_time = psutil.Process().cpu_times().user
+    points = makeMap(4, 20)
+    print(points)
 
-    while True:
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                sys.exit()
-            if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_a:
-                    sim_start_time = psutil.Process().cpu_times().user
-
-
-
-
-
-                    points = makeMap(100, 400)
-                    # colorize the grid
-                    for p in points:
-                        gfxdraw.pixel(surf, p[0], p[1], p[2])
+    # for p in points:
+    #     gfxdraw.pixel(surf, p[0], p[1], p[2])
 
 
 
 
 
 
-                    
-                    end_time = psutil.Process().cpu_times().user
-                    print("Tot time=", end_time - sim_start_time)
-        pygame.display.flip()
+    
+    # end_time = psutil.Process().cpu_times().user
+    # print("Tot time=", end_time - sim_start_time)
+    #     pygame.display.flip()
 if __name__ == "__main__":
     main()

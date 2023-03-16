@@ -53,7 +53,6 @@ def setup_experiment(
         # create a grid of subplots 
         log_plot_obj.map_ax.matshow(ground_truth_map)
 
-
     if cfg.DRAW_SIM:
         row = int(np.sqrt(cfg.N_BOTS))
         col = int(np.ceil(cfg.N_BOTS/row))
@@ -64,22 +63,15 @@ def setup_experiment(
         else:
             bot_ax = bot_ax.flatten()
         plt.ion()
-    
-
-
-
-
-
 
     if 'Voronoi' in search_method:
-        matrix_list, grid = list(), list()
-        agent_locs = set()
+        matrix_list, grid = [], []
         class Cell:
-            def __init__(self, row, column):        
+            def __init__(self, row, column):
                 self.pos_row = row
                 self.pos_column = column
                 self.agent = False          # is there any agent over a cell
-                self.agent_id = None        # which agent is placed on a box 
+                self.agent_id = None        # which agent is placed on a box
                 self.distance_matrix = None
             def calc_distance_matrices(self):
                 x_arr, y_arr = np.mgrid[0:cfg.ROWS, 0:cfg.COLS]
@@ -91,17 +83,8 @@ def setup_experiment(
             for column in range(cfg.COLS):
                 grid[row].append(Cell(row,column))
 
-
-
-
-
-
-
-
-
     bots = []
     lock = threading.Lock()
-
     assert cfg.USE_THREADS != True, "The use of the threads is not enabled"
     
     for i in range(cfg.N_BOTS):
@@ -118,39 +101,30 @@ def setup_experiment(
                 )
             )
         
-    
-    
-    
-    
-
-
         if 'Voronoi' in search_method:
             column = bots[i].grid_position_xy[0]
             row = bots[i].grid_position_xy[1]
             # print(f"Bot {i} at x:{row}, y:{column}")
             grid[row][column].agent = True
             grid[row][column].agent_id = i
+
+
+            
+            
+            
+            
             grid[row][column].distance_matrix = grid[row][column].calc_distance_matrices()
+
+
+
             matrix_list.append(grid[row][column].distance_matrix)
-            agent_locs.add((row,column))
             log_plot_obj.map_ax.scatter(x=column, y=row, c='r', s=100)
             log_plot_obj.map_ax.text(column, row, f"(x:{column},y:{row})", fontsize=10, color='g', ha='center', va='center')
-
-
-
-
-
-    
     
         if cfg.DRAW_SIM:
             bot_ax[i].set_title(f"Bot {i}")
             bot_ax[i].matshow(bots[i].agent_map)
 
-    
-
-
-
-    
     minimum_comparison_table = None
     if 'Voronoi' in search_method:
         minimum_comparison_table = np.argmin((matrix_list), 0)
@@ -160,16 +134,34 @@ def setup_experiment(
             # convert list of list into list of tuples
             assigned_points = [tuple(point) for point in assigned_points]
             bot.assigned_points = assigned_points
-    
 
-
-
-
-
-
-    
     mutual_map = - np.ones((ground_truth_map.shape[0], ground_truth_map.shape[1])).astype(int)
     return [data, bots, ground_truth_map, mutual_map, log_plot_obj, minimum_comparison_table, cur_world, map_screen]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -288,7 +280,7 @@ def run_experiment(process_ID,
     if cfg.LOG_PLOTS:
         # update the ground_truth_map and plt
         log_plot_obj.plot_map(mutual_map, bots, data)
-        log_plot_obj.map_ax.set_title(f"Max Known Area {ground_truth_map.size}")
+        log_plot_obj.map_ax.set_title(f"Max Known Area {ground_truth_map.size}\n {search_method} \n{experiment_name.replace('_',' ').title()}")
         if 'Voronoi' in search_method:
             log_plot_obj.map_ax.matshow(minimum_comparison_table, alpha=0.3)
 

@@ -1,14 +1,6 @@
 import numpy as np
 
 class Random_Frontier:
-    def get_random_point(self):
-        # make sure the goal is not in the obstacle
-        while True:
-            point_rc = (np.random.randint(self.ground_truth_map.shape[0]), np.random.randint(self.ground_truth_map.shape[1]))
-            if self.ground_truth_map[point_rc] == self.cfg.EMPTY:
-                point_xy = (point_rc[1], point_rc[0])
-                break
-        return point_xy
         
     def get_random_unnknown(self):
         unknown_points = np.argwhere(self.agent_map == self.cfg.UNKNOWN)

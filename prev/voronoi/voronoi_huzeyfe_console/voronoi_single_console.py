@@ -3,9 +3,9 @@ from random import sample
 import psutil
 from itertools import product
 
-AGENT_COUNT = 100
-ROWS = 400
-COLUMNS = 400
+AGENT_COUNT = 4
+ROWS = 20
+COLUMNS = 20
 matrix_list, coming_set, colors, grid = list(), list(), list(), list()
 agent_locs = set()
 agent_list = dict()
@@ -50,7 +50,9 @@ def main():
     global grid
     sim_start_time = psutil.Process().cpu_times().user
 
-    rand_list = sample(list(product(range(COLUMNS), repeat=2)), k=AGENT_COUNT)
+    # rand_list = sample(list(product(range(COLUMNS), repeat=2)), k=AGENT_COUNT)
+    rand_list = [(5, 5), (5, 15), (15, 5), (15, 15)]
+    print(rand_list)
     for count in range(AGENT_COUNT):
         row = rand_list[count][0]
         column = rand_list[count][1]
@@ -64,7 +66,7 @@ def main():
         agent_locs.add((row,column))
     
     minimum_comparison_table = np.argmin((matrix_list), 0)
-    # print('\nminimum value comparison:\n', minimum_comparison_table)
+    print('\nminimum value comparison:\n', minimum_comparison_table)
     print('\nagent locs length:', len(agent_locs))
     
     for row in range(ROWS):

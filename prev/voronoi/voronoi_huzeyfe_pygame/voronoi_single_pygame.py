@@ -5,13 +5,14 @@ import time
 import random
 import psutil
 
-COLUMNS = 400
-ROWS = 400
+AGENT_COUNT = 4
+COLUMNS = 20
+ROWS = 20
 # This sets the margin between each cell
 MARGIN = 1
 # This sets the WIDTH and HEIGHT of each grid location
-CELL_WIDTH = 1
-CELL_HEIGHT = 1
+CELL_WIDTH = 10
+CELL_HEIGHT = 10
 # Set the HEIGHT and WIDTH of the screen
 WINDOW_WIDTH = COLUMNS * (CELL_WIDTH + MARGIN) + MARGIN
 WINDOW_HEIGHT = ROWS * (CELL_HEIGHT + MARGIN) + MARGIN
@@ -21,7 +22,7 @@ COLOR_BLACK = (0,0,0)
 COLOR_GRAY = (50,50,50)
 COLOR_GREEN = (0,255,0)
 COLOR_PINK = (255,0,255)
-AGENT_COUNT = 100
+
 
 def random_color():
     color = list(np.random.choice(range(256), size=3))
@@ -139,10 +140,10 @@ def main():
                 if event.key == pygame.K_a:
                     sim_start_time = psutil.Process().cpu_times().user
 
-
+                    rand_list = [(5, 5), (5, 15), (15, 5), (15, 15)]
                     for count in range(AGENT_COUNT):
-                        column = random.randint(0, COLUMNS-1)
-                        row = random.randint(0, ROWS -1)
+                        row = rand_list[count][0]
+                        column = rand_list[count][1]
                         grid[row][column].agent = True
                         agent_list[count] = Agent(row,column)
                         # print("Agent",index,"is at:",row,column)
@@ -166,7 +167,6 @@ def main():
 
                     sim_end_time = psutil.Process().cpu_times().user
                     print("Tot time=", sim_end_time - sim_start_time)
-                    
                     
 
         # Set the screen background
