@@ -10,6 +10,7 @@ from src.agent import createBot
 from src.replan.random_frontier import Random_Frontier
 from src.replan.random_frontier_closest import Random_Frontier_Closest
 from src.replan.voronoi_random_frontier import Voronoi_Random_Frontier
+from src.replan.voronoi_random_frontier_help_others import Voronoi_Random_Frontier_Help_Others
 from src.replan.voronoi_random_closest_frontier import Voronoi_Random_Closest_Frontier
 from src.starting_scenario.starting_methods import *
 from src.starting_scenario.goal_starts import *
@@ -27,6 +28,7 @@ def main():
         # Random_Frontier_Closest,
         Voronoi_Random_Frontier,
         # Voronoi_Random_Closest_Frontier,
+        # Voronoi_Random_Frontier_Help_Others,
         ]
     Start_scenario_list = [
         # Edge_Start_Position,

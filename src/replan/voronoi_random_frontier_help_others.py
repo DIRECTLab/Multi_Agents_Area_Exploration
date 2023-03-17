@@ -1,6 +1,6 @@
 import numpy as np
 
-class Voronoi_Random_Frontier:
+class Voronoi_Random_Frontier_Help_Others:
     def get_random_unnknown(self):
         unknown_points = np.argwhere(self.agent_map == self.cfg.UNKNOWN)
         unknown_points_assigned = []
@@ -8,17 +8,22 @@ class Voronoi_Random_Frontier:
             if tuple(point) in self.assigned_points:
                 unknown_points_assigned.append(point)
         if len(unknown_points_assigned) == 0:
-            # return self.get_random_point()
-            # print("#get_random_unnknown(): No unknown points")
-            # set goal as current position
-            self.plan = []
-            self.area_completed = True
-            self.no_more_update = True
-            return self.grid_position_xy
+            # self.plan = []
+            # self.area_completed = True
+            print(f"The bot {self.id} finished exploration his own region... Now will help others...")
+            # return self.grid_position_xy
+            idx = np.random.randint(len(unknown_points))
+            cor_tuple = tuple(unknown_points[idx])
+            print(cor_tuple[1], cor_tuple[0])
+            return (cor_tuple[1], cor_tuple[0])
         elif len(unknown_points_assigned) == 1:
+            print(unknown_points_assigned[0][1], unknown_points_assigned[0][0])
             return (unknown_points_assigned[0][1], unknown_points_assigned[0][0])
         # choose a random UNKNOWN
         idx = np.random.randint(len(unknown_points_assigned))
+        print(idx)
+        print(unknown_points_assigned[idx][1], unknown_points_assigned[idx][0])
+
         return (unknown_points_assigned[idx][1], unknown_points_assigned[idx][0])
     
     def get_random_frontier(self):
@@ -34,9 +39,6 @@ class Voronoi_Random_Frontier:
         # choose a random frontier
         idx = np.random.randint(len(frontier_points_assigned))
         return (frontier_points_assigned[idx][1], frontier_points_assigned[idx][0])
-
-    # def base_update(self):
-    #     return self.no_more_update
     
     def get_goal_method(self):
         return self.get_random_frontier()

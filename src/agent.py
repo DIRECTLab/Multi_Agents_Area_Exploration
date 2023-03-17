@@ -44,6 +44,7 @@ def createBot(base = None):
             self.lidar_sweep_res = (np.arctan2(1, self.lidarRange)%np.pi ) * 2
             self.lidar_step_res = 1
             self.replan_count = 0
+            self.no_more_update = False
 
             self.goal_xy = None
             self.grid_position_xy = None
@@ -302,10 +303,19 @@ def createBot(base = None):
             return False
                         
         def update(self, mutual_map, draw=True):
-            if self.area_completed:
-                return 0, self.total_dist_traveled
+            # if self.area_completed:
+            #     return 0, self.total_dist_traveled
             # Update the agent's position
             # Scan the environment
+            if self.no_more_update:
+                return
+
+            # if hasattr(super(), 'base_update'):
+            #     super().base_update()
+                
+                    # no_more_update
+                    
+
             self.scan()
             # Share the agent's map with the mutual map
             self.share_map(mutual_map)
