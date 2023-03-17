@@ -1,6 +1,7 @@
 import numpy as np
+from src.agent import Agent
 
-class Voronoi_Random_Frontier:
+class Voronoi_Random_Frontier(Agent):
     def get_random_unnknown(self):
         unknown_points = np.argwhere(self.agent_map == self.cfg.UNKNOWN)
         unknown_points_assigned = []

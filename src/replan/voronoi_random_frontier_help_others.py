@@ -1,8 +1,14 @@
 import numpy as np
+from src.agent import Agent
 
-class Voronoi_Random_Frontier_Help_Others:
+class Voronoi_Random_Frontier_Help_Others(Agent):
     def get_random_unnknown(self):
         unknown_points = np.argwhere(self.agent_map == self.cfg.UNKNOWN)
+        if len(unknown_points) == 0:
+            self.plan = []
+            self.area_completed = True
+            print(f"The bot {self.id} finished ALL exploration his own region... Now will help others...")
+            return self.grid_position_xy
         unknown_points_assigned = []
         for point in unknown_points:
             if tuple(point) in self.assigned_points:

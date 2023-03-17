@@ -1,6 +1,7 @@
 import numpy as np
+from src.agent import Agent
 
-class Random_Frontier_Closest:
+class Random_Frontier_Closest(Agent):
     
     def get_closet_unknown(self):
         unknown_points = np.argwhere(self.agent_map == self.cfg.UNKNOWN)

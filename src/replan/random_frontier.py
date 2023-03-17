@@ -1,6 +1,7 @@
 import numpy as np
+from src.agent import Agent
 
-class Random_Frontier:
+class Random_Frontier(Agent):
         
     def get_random_unnknown(self):
         unknown_points = np.argwhere(self.agent_map == self.cfg.UNKNOWN)

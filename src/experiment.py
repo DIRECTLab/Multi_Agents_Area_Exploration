@@ -146,6 +146,7 @@ def setup_experiment(
             # convert list of list into list of tuples
             assigned_points = [tuple(point) for point in assigned_points]
             bot.assigned_points = assigned_points
+            assert len(assigned_points) > 0, "No points assigned to bot"
     
     mutual_map = - np.ones((ground_truth_map.shape[0], ground_truth_map.shape[1])).astype(int)
     import time
@@ -253,8 +254,7 @@ def run_experiment(process_ID,
                 # wait to update plt at FPS of 10
                 # if frame_count % 3 == 0:
                     # map_ax.matshow(mutual_map)
-                    # plt.pause(0.00001)
-                plt.pause(0.1)
+                plt.pause(0.00001)
                     # plt.pause(0.1)
                 plt.draw()
         

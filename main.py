@@ -3,10 +3,11 @@ import numpy as np
 import pandas as pd
 from multiprocessing import Pool, Manager, Process, Queue
 import itertools
+import copy
 
 from src.config import Config
 from src.experiment import run_experiment, setup_experiment
-from src.agent import createBot
+from src.agent import Agent
 from src.replan.random_frontier import Random_Frontier
 from src.replan.random_frontier_closest import Random_Frontier_Closest
 from src.replan.voronoi_random_frontier import Voronoi_Random_Frontier
@@ -26,9 +27,9 @@ def main():
     Method_list = [
         # Random_Frontier,
         # Random_Frontier_Closest,
-        Voronoi_Random_Frontier,
+        # Voronoi_Random_Frontier,
         # Voronoi_Random_Closest_Frontier,
-        # Voronoi_Random_Frontier_Help_Others,
+        Voronoi_Random_Frontier_Help_Others,
         ]
     Start_scenario_list = [
         # Edge_Start_Position,
@@ -44,46 +45,50 @@ def main():
         Distributed_Goal,
         ]
 
-    All_scenarios = [Method_list , Start_scenario_list , Start_Goal_list]
+    All_scenarios = [ Start_scenario_list , Start_Goal_list]
     
 
 
     prosses_count = 0
     for map_length in range(20,30,10):
         for agent_count in range(4,10,2):
-            for scenario_base_classes in itertools.product(*All_scenarios):
+            for start in Start_scenario_list:
+                for goal in Start_Goal_list:
+                    for Method in Method_list:
 
-                cfg = Config()
-                cfg.SEED = int(map_length )
-                cfg.N_BOTS = int(agent_count)
+                        cfg = Config()
+                        cfg.SEED = int(map_length )
+                        cfg.N_BOTS = int(agent_count)
 
-                random.seed(cfg.SEED)
-                np.random.seed(cfg.SEED)
+                        random.seed(cfg.SEED)
+                        np.random.seed(cfg.SEED)
 
-                cfg.COLS = int(map_length)
-                cfg.ROWS = int(map_length)
-                cfg.SCREEN_WIDTH = int(map_length*cfg.GRID_THICKNESS)
-                cfg.SCREEN_HEIGHT = int(map_length*cfg.GRID_THICKNESS)
+                        cfg.COLS = int(map_length)
+                        cfg.ROWS = int(map_length)
+                        cfg.SCREEN_WIDTH = int(map_length*cfg.GRID_THICKNESS)
+                        cfg.SCREEN_HEIGHT = int(map_length*cfg.GRID_THICKNESS)
 
-                # TODO Populate START_CENTROID_LIST_XY 
+                        # TODO Populate START_CENTROID_LIST_XY 
 
-                experiment_name = f"test_{agent_count}_nbots:{cfg.N_BOTS}_rows:{cfg.ROWS}_cols:{cfg.COLS}_seed:{cfg.SEED}"
-                print(f"Starting Experiment: {experiment_name}")
-   
-                Agent_Class = createBot(scenario_base_classes)
-                search_method =''.join(str(base.__name__)+'\n'  for base in Agent_Class.__bases__)
-                print("Method:", search_method)
+                        experiment_name = f"test_{agent_count}_nbots:{cfg.N_BOTS}_rows:{cfg.ROWS}_cols:{cfg.COLS}_seed:{cfg.SEED}"
+                        print(f"Starting Experiment: {experiment_name}")
 
-                set_up_data = setup_experiment(cfg, experiment_name, Agent_Class, search_method, )
+                        Agent_Class = type('Agent_Class', (Method, start, goal), {})
 
-                run_experiment(prosses_count, 
-                            return_dict,
-                            cfg,
-                            experiment_name, 
-                            search_method =search_method,
-                            set_up_data = set_up_data, 
-                            debug=True)
-                df_index += 1
+                        search_method =''.join(str(base.__name__)+'\n'  for base in Agent_Class.__bases__)
+                        search_method += Agent_Class.__name__
+                        print("Method:", search_method)
+
+                        set_up_data = setup_experiment(cfg, experiment_name, Agent_Class, search_method, )
+
+                        run_experiment(prosses_count, 
+                                    return_dict,
+                                    cfg,
+                                    experiment_name, 
+                                    search_method =search_method,
+                                    set_up_data = set_up_data, 
+                                    debug=True)
+                        df_index += 1
     
     #             # run the simulation in a new process
     #             p = Process(target=run_experiment, 

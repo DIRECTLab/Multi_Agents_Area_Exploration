@@ -1,6 +1,7 @@
 import numpy as np
+from src.agent import Agent
 
-class Voronoi_Random_Closest_Frontier():
+class Voronoi_Random_Closest_Frontier(Agent):
     def get_closet_unknown(self):
         # finds the classes unknown point
         unknown_points = np.argwhere(self.agent_map == self.cfg.UNKNOWN)
