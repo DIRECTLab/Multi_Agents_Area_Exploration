@@ -122,7 +122,7 @@ def setup_experiment(
         if 'Voronoi' in search_method:
             column = bots[i].goal_xy[0]
             row = bots[i].goal_xy[1]
-            print(f"Bot {i} target goal is at:{row}, y:{column}")
+            # print(f"Bot {i} target goal is at:{row}, y:{column}")
             grid[row][column].agent = True
             grid[row][column].agent_id = i
             grid[row][column].distance_matrix = grid[row][column].calc_distance_matrices()

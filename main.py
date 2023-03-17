@@ -2,6 +2,7 @@ import random
 import numpy as np
 import pandas as pd
 from multiprocessing import Pool, Manager, Process, Queue
+import itertools
 
 from src.config import Config
 from src.experiment import run_experiment, setup_experiment
@@ -10,13 +11,8 @@ from src.replan.random_frontier import Random_Frontier
 from src.replan.random_frontier_closest import Random_Frontier_Closest
 from src.replan.voronoi_random_frontier import Voronoi_Random_Frontier
 from src.replan.voronoi_random_closest_frontier import Voronoi_Random_Closest_Frontier
-
-# from src.starting_scenario.random_start import Rand_Start_Position
-from src.starting_scenario.starting_methods import  *
+from src.starting_scenario.starting_methods import *
 from src.starting_scenario.goal_starts import *
-
-import itertools
-
 
 def main():
     all_df = pd.DataFrame()
@@ -25,22 +21,19 @@ def main():
     process_manager = Manager()
     return_dict = process_manager.dict()
     Process_list = [] 
-    # create a pfrogress bar for each process thead
+    
     Method_list = [
         # Random_Frontier,
         # Random_Frontier_Closest,
         Voronoi_Random_Frontier,
         # Voronoi_Random_Closest_Frontier,
         ]
-    
     Start_scenario_list = [
         # Edge_Start_Position,
         Top_Left_Start_Position,
         # Rand_Start_Position,
         # Center_Start_Position,
         ]
-    
-
     Start_Goal_list= [
         # Rand_Start_Goal,
         # Center_Start_Goal,
@@ -48,6 +41,7 @@ def main():
         # Edge_Start_Goal,
         Distributed_Goal,
         ]
+
     All_scenarios = [Method_list , Start_scenario_list , Start_Goal_list]
     
 
@@ -56,8 +50,6 @@ def main():
     for map_length in range(20,30,10):
         for agent_count in range(4,10,2):
             for scenario_base_classes in itertools.product(*All_scenarios):
-            # for method_id, method in enumerate(Method_list):
-            #     for starting_scenario_id, starting_scenario in enumerate(Start_scenario_list):
 
                 cfg = Config()
                 cfg.SEED = int(map_length )
@@ -76,7 +68,7 @@ def main():
                 experiment_name = f"test_{agent_count}_nbots:{cfg.N_BOTS}_rows:{cfg.ROWS}_cols:{cfg.COLS}_seed:{cfg.SEED}"
                 print(f"Starting Experiment: {experiment_name}")
    
-                Agent_Class = createBot(scenario_base_classes)#[method, starting_scenario])
+                Agent_Class = createBot(scenario_base_classes)
                 search_method =''.join(str(base.__name__)+'\n'  for base in Agent_Class.__bases__)
                 print("Method:", search_method)
 

@@ -17,10 +17,8 @@ class Top_Left_Start_Goal:
 class Edge_Start_Goal:
     def choose_start_goal(self):
         self.goal_xy = points_on_rectangle_edge(self.cfg.ROWS, self.cfg.COLS, self.cfg.N_BOTS)[self.id]
-        print(self.goal_xy)
         self.goal_xy = (int(np.round(self.goal_xy[0])), \
                                 int(np.round(self.goal_xy[1])))
-        print(self.goal_xy)
         
         find_new_point = False
         # check if the point is in the map
@@ -39,7 +37,7 @@ class Edge_Start_Goal:
             if foundPoint:
                 return
             # at this point, all the neighbors are obstacles or your off the map warning
-            print("!!WARNING!!: All the neighbors are obstacles or your off the map current point: ", self.goal_xy,)
+            print("!!WARNING!!: All the neighbors are obstacles or your off the map current point: ", self.goal_xy)
             # get the closest point to the edge
             empty_points_rc = np.argwhere(self.ground_truth_map == self.cfg.EMPTY)
             self.goal_xy = self.get_closest_point_rc(empty_points_rc)
@@ -49,7 +47,6 @@ class Edge_Start_Goal:
 class Distributed_Goal:
     def choose_start_goal(self):
         self.goal_xy = dividegrid(self.cfg.ROWS, self.cfg.COLS, self.cfg.N_BOTS)[self.id]
-        print(self.goal_xy)
         
         find_new_point = False
         # check if the point is in the map
@@ -78,21 +75,16 @@ class Distributed_Goal:
 def points_on_rectangle_edge(rows, cols, n):
     # Calculate the center of the rectangle
     center = np.array([cols / 2, rows / 2])
-    
     # Calculate the radius of the rectangle
     radius = np.sqrt(cols**2 + rows**2) / 2
-    
     # Initialize an empty array to hold the coordinates of each point
     points = np.zeros((n, 2))
-    
     # Calculate the angle between each point on the perimeter
     angles = np.linspace(0, 2*np.pi, n, endpoint=False)
-    
     # Generate the coordinates of each point based on the angle from the center
     for i, angle in enumerate(angles):
         x = center[0] + radius * np.cos(angle)
         y = center[1] + radius * np.sin(angle)
-        
         # Shift the point to be within the rectangle
         shift =1
         # Project the point onto the perimeter of the rectangle
@@ -108,10 +100,8 @@ def points_on_rectangle_edge(rows, cols, n):
         elif y > rows:
             y = rows-shift
             x = center[0] + radius * np.cos(angle)
-        
         points[i, 0] = x
         points[i, 1] = y
-    print("points:::", points)
     return points
 
 def check_if_valid_point(point, ground_truth_map, cfg):
@@ -152,11 +142,9 @@ def calc_closest_factors(c: int):
 def dividegrid(rows, cols, n):
     agent_count = n
     turned_list = calc_closest_factors(int(agent_count))
-    # print(f"turned list is {turned_list}")
     agentrowcount = turned_list[0]
     agentcolumncount = turned_list[1]
-    # print(f"agentrowcount {agentrowcount}")
-    # print(f"agentcolumncount {agentcolumncount}")
+    
     x = np.arange(0, cols, cols/agentcolumncount)
     y = np.arange(0, rows, rows/agentrowcount)
     x_var = []
@@ -169,13 +157,7 @@ def dividegrid(rows, cols, n):
     y_offset = (y_var[1] - y_var[0])/2
     x_var = [int(x + x_offset) for x in x_var]
     y_var = [int(y + y_offset) for y in y_var]
-    print("x_var2", x_var)
-    print("y_var2", y_var)
     points = []
     for i in range(len(x_var)):
         points.append((x_var[i], y_var[i]))
-    print(points)
     return points
-    # plt.plot(x_var,y_var)
-    # plt.scatter(x_var,y_var)
-    # plt.show()
