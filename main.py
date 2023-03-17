@@ -30,22 +30,23 @@ def main():
         # Random_Frontier,
         # Random_Frontier_Closest,
         Voronoi_Random_Frontier,
-        Voronoi_Random_Closest_Frontier,
+        # Voronoi_Random_Closest_Frontier,
         ]
     
     Start_scenario_list = [
-        Edge_Start_Position,
-        # Top_Left_Start_Position,
+        # Edge_Start_Position,
+        Top_Left_Start_Position,
         # Rand_Start_Position,
         # Center_Start_Position,
         ]
     
 
     Start_Goal_list= [
-        Rand_Start_Goal,
+        # Rand_Start_Goal,
         # Center_Start_Goal,
         # Top_Left_Start_Goal,
-
+        # Edge_Start_Goal,
+        Distributed_Goal,
         ]
     All_scenarios = [Method_list , Start_scenario_list , Start_Goal_list]
     

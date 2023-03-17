@@ -86,7 +86,7 @@ def setup_experiment(
             for column in range(cfg.COLS):
                 grid[row].append(Cell(row,column))
 
-        # # Get the Starting Centroid for each agent
+        # Get the Starting Centroid for each agent
         # for centroid_xy in cfg.START_CENTROID_LIST_XY:
         #     column = centroid_xy[0]
         #     row = centroid_xy[1]
@@ -122,7 +122,7 @@ def setup_experiment(
         if 'Voronoi' in search_method:
             column = bots[i].goal_xy[0]
             row = bots[i].goal_xy[1]
-            # print(f"Bot {i} at x:{row}, y:{column}")
+            print(f"Bot {i} target goal is at:{row}, y:{column}")
             grid[row][column].agent = True
             grid[row][column].agent_id = i
             grid[row][column].distance_matrix = grid[row][column].calc_distance_matrices()

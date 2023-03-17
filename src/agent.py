@@ -50,7 +50,7 @@ def createBot(base = None):
             # Base Class will set the goal
             self.choose_start_position()
             assert self.grid_position_xy is not None, "grid_position_xy is None, the Base method is not implemented"
-            self.choose_start_gaol()
+            self.choose_start_goal()
             assert self.goal_xy is not None, "goal_xy is None, the Base method is not implemented"
 
 

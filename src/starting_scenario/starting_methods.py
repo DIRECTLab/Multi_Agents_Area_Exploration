@@ -42,8 +42,10 @@ class Top_Left_Start_Position:
 class Edge_Start_Position:
     def choose_start_position(self):
         self.grid_position_xy = points_on_rectangle_edge(self.cfg.ROWS, self.cfg.COLS, self.cfg.N_BOTS)[self.id]
+        print(self.grid_position_xy)
         self.grid_position_xy = (int(np.round(self.grid_position_xy[0])), \
                                 int(np.round(self.grid_position_xy[1])))
+        print(self.grid_position_xy)
         
         find_new_point = False
         # check if the point is in the map
