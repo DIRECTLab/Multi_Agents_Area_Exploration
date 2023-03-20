@@ -10,7 +10,64 @@ from src.planners.astar_new import astar
 # from src.replan.random_frontier import *
 # from src.replan.voronoi_random_frontier import *
 
-class Agent:
+
+class Point_Finding:
+    # def get_random_point(self):
+    #     # make sure the goal is not in the obstacle
+    #     while True:
+    #         point_rc = (np.random.randint(self.ground_truth_map.shape[0]), np.random.randint(self.ground_truth_map.shape[1]))
+    #         if self.ground_truth_map[point_rc] == self.cfg.EMPTY:
+    #             point_xy = (point_rc[1], point_rc[0])
+    #             break
+    #     return point_xy
+    
+    def get_closest_point_rc(self, pointlist):
+        '''
+        This function returns the closest point from the pointlist to the agent
+        :param pointlist: a list of points (r,c)
+        :return: the closest point from the pointlist to the agent
+        '''
+        min_dist = np.inf
+        min_point = None
+        for point_rc in pointlist:
+            dist = np.sqrt((point_rc[1] - self.grid_position_xy[0])**2 + (point_rc[0] - self.grid_position_xy[1])**2)
+            if dist < min_dist:
+                min_dist = dist
+                min_point = point_rc
+        return min_point
+    
+    def get_new_location_xy(self,map_area,  MapLocationType = None, useRandom = False):
+        '''
+        This function returns a random location from the map_area
+        :param map_area: the map area to choose from typically self.agent_map
+        :param MapLocationType: the type of location to choose from: self.cfg.FRONTIER or self.cfg.UNKNOWN
+        :return: a random location from the map_area (x,y) or None if no location is found
+        '''
+        if MapLocationType ==None:
+            raise Exception("MapLocationType is None set it to self.cfg.FRONTIER or self.cfg.UNKNOWN")
+        if len(map_area) == 0:
+            return None
+        
+        if map_area[0].shape == (2,):
+            points_array = map_area 
+        else:
+            points_array = np.argwhere(map_area == MapLocationType)
+        
+        if len(points_array) == 0:
+            return None
+        elif len(points_array) == 1:
+            return (points_array[0][1], points_array[0][0])
+        
+        if useRandom:
+            # choose a random point
+            idx = np.random.randint(len(points_array))
+            return (points_array[idx][1], points_array[idx][0])
+
+        point = self.get_closest_point_rc(list(points_array))
+        return (point[1], point[0])
+    
+    
+class Agent(Point_Finding):
     def __init__(self, 
                 cfg,
                 id, 
@@ -64,25 +121,6 @@ class Agent:
         # scan the map and build the map
         self.scan()
         self.replan()
-
-    def get_random_point(self):
-        # make sure the goal is not in the obstacle
-        while True:
-            point_rc = (np.random.randint(self.ground_truth_map.shape[0]), np.random.randint(self.ground_truth_map.shape[1]))
-            if self.ground_truth_map[point_rc] == self.cfg.EMPTY:
-                point_xy = (point_rc[1], point_rc[0])
-                break
-        return point_xy
-    
-    def get_closest_point_rc(self, pointlist):
-        min_dist = np.inf
-        min_point = None
-        for point_rc in pointlist:
-            dist = np.sqrt((point_rc[1] - self.grid_position_xy[0])**2 + (point_rc[0] - self.grid_position_xy[1])**2)
-            if dist < min_dist:
-                min_dist = dist
-                min_point = point_rc
-        return min_point
     
     def set_new_goal(self):
         self.goal_xy = self.get_goal_method()
