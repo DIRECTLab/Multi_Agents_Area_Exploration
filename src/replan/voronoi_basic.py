@@ -12,8 +12,9 @@ class Voronoi_Frontier_Closest(Agent):
     def get_goal_method(self):
 
         # find the unknown 'OR' frontier points
-        unknown_points = np.argwhere((self.agent_map == self.cfg.UNKNOWN) | ( self.agent_map == self.cfg.FRONTIER) )
-        if len(unknown_points) == 0:
+        frontier_and_unknown = np.argwhere((self.agent_map == self.cfg.UNKNOWN)\
+                                | ( self.agent_map == self.cfg.FRONTIER) )
+        if len(frontier_and_unknown) == 0:
             # this is the case when all the points are known
             self.plan = []
             self.area_completed = True
@@ -21,10 +22,10 @@ class Voronoi_Frontier_Closest(Agent):
         
         if self.area_completed:
             # now the agent can help others
-            return self.my_area_done(unknown_points)
+            return self.my_area_done(frontier_and_unknown)
         
         assigned_assigned = []
-        for point in unknown_points:
+        for point in frontier_and_unknown:
             if tuple(point) in self.assigned_points:
                 assigned_assigned.append(point)
 
@@ -40,7 +41,7 @@ class Voronoi_Frontier_Closest(Agent):
             self.plan = []
             self.area_completed = True
             # run the end of assignment function
-            return self.my_area_done(unknown_points)
+            return self.my_area_done(frontier_and_unknown)
         
         return unknown_point
 
@@ -49,7 +50,7 @@ class Voronoi_Frontier_Random(Voronoi_Frontier_Closest):
         super().__init__(*args, **kwargs)
         self.random_frontier = True
 
-class Voronoi_Frontier_Help_Others(Voronoi_Frontier_Closest):
+class Voronoi_Frontier_Help_Closest(Voronoi_Frontier_Closest):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -57,8 +58,25 @@ class Voronoi_Frontier_Help_Others(Voronoi_Frontier_Closest):
         self.area_completed = False
         if len(done_search_points) == 0:
             return self.grid_position_xy
+        
+        # find the closest point
+        min_point= self.get_closest_point_rc(done_search_points)
+
+        # return in X, Y format
+        return (min_point[1], min_point[0])
+
+
+class Voronoi_Frontier_Help_Random(Voronoi_Frontier_Help_Closest):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.random_frontier = True
+
+    def my_area_done(self, done_search_points):
+        self.area_completed = False
+        if len(done_search_points) == 0:
+            return self.grid_position_xy
+        
         idx = np.random.randint(len(done_search_points))
         point = tuple(done_search_points[idx])
         # return in X, Y format
         return (point[1], point[0])
-

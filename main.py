@@ -26,7 +26,8 @@ def main():
         # Frontier_Closest,
         Voronoi_Frontier_Random,
         Voronoi_Frontier_Closest,
-        Voronoi_Frontier_Help_Others,
+        Voronoi_Frontier_Help_Closest,
+        Voronoi_Frontier_Help_Random,
         ]
     Start_scenario_list = [
         # Edge_Start_Position,
