@@ -124,8 +124,7 @@ class Agent(Point_Finding):
     
     def set_new_goal(self):
         self.goal_xy = self.get_goal_method()
-        # assert self.goal_xy != self.grid_position_xy, "Goal and position are the same"
-        warnings.warn("Goal and position are the same")
+
         
 
     def replan(self):

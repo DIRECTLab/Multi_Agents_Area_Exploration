@@ -22,11 +22,11 @@ def main():
     Process_list = [] 
     
     Method_list = [
-        Frontier_Random,
+        # Frontier_Random,
         # Frontier_Closest,
-        # Voronoi_Frontier_Random,
-        # Voronoi_Frontier_Closest,
-        # Voronoi_Random_Frontier_Help_Others,
+        Voronoi_Frontier_Random,
+        Voronoi_Frontier_Closest,
+        Voronoi_Frontier_Help_Others,
         ]
     Start_scenario_list = [
         # Edge_Start_Position,
