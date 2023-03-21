@@ -66,8 +66,6 @@ def main():
                         cfg.SCREEN_WIDTH = int(map_length*cfg.GRID_THICKNESS)
                         cfg.SCREEN_HEIGHT = int(map_length*cfg.GRID_THICKNESS)
 
-                        # TODO Populate START_CENTROID_LIST_XY 
-
                         experiment_name = f"test_{agent_count}_nbots:{cfg.N_BOTS}_rows:{cfg.ROWS}_cols:{cfg.COLS}_seed:{cfg.SEED}"
                         print(f"Starting Experiment: {experiment_name}")
 
