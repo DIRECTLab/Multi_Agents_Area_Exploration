@@ -34,6 +34,8 @@ class Point_Finding:
             if dist < min_dist:
                 min_dist = dist
                 min_point = point_rc
+        if min_point is None:
+            raise Exception("min_point is None")
         return min_point
     
     def get_new_location_xy(self,map_area,  MapLocationType = None, useRandom = False):
@@ -106,7 +108,7 @@ class Agent(Point_Finding):
         assert self.grid_position_xy is not None, "grid_position_xy is None, the Base method is not implemented"
         self.choose_start_goal()
         assert self.goal_xy is not None, "goal_xy is None, the Base method is not implemented"
-
+        self.plan = None
 
         self.ax = ax
         self.screen = screen
@@ -335,7 +337,7 @@ class Agent(Point_Finding):
         # NO need to replan
         return False
                     
-    def update(self, mutual_map, draw=True):
+    def update(self, mutual_data, draw=True):
         # if self.area_completed:
         #     return 0, self.total_dist_traveled
         # Update the agent's position
@@ -351,9 +353,9 @@ class Agent(Point_Finding):
 
         self.scan()
         # Share the agent's map with the mutual map
-        self.share_map(mutual_map)
+        self.share_map(mutual_data['map'])
         # Update the agent's map
-        self.agent_map = mutual_map.copy()
+        self.agent_map = mutual_data['map'].copy()
 
 
 

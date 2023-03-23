@@ -12,6 +12,7 @@ from src.replan.frontier import *
 from src.replan.voronoi_basic import *
 from src.starting_scenario.starting_methods import *
 from src.starting_scenario.goal_starts import *
+from src.replan.decision import *
 
 def main():
     all_df = pd.DataFrame()
@@ -24,10 +25,11 @@ def main():
     Method_list = [
         # Frontier_Random,
         # Frontier_Closest,
-        Voronoi_Frontier_Random,
-        Voronoi_Frontier_Closest,
-        Voronoi_Frontier_Help_Closest,
-        Voronoi_Frontier_Help_Random,
+        # Voronoi_Frontier_Random,
+        # Voronoi_Frontier_Closest,
+        # Voronoi_Frontier_Help_Closest,
+        # Voronoi_Frontier_Help_Random,
+        Decision_Frontier_Closest,
         ]
     Start_scenario_list = [
         # Edge_Start_Position,
@@ -48,7 +50,7 @@ def main():
 
 
     prosses_count = 0
-    for map_length in range(20,30,10):
+    for map_length in range(50,60,10):
         for agent_count in range(4,10,2):
             for start in Start_scenario_list:
                 for goal in Start_Goal_list:

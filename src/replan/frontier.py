@@ -22,7 +22,26 @@ class Frontier_Closest(Agent):
         return unknown_point
 
 
-class Frontier_Random(Agent):
+class Frontier_Random(Frontier_Closest):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.random_frontier = True
+
+
+class Unknown_Closest(Agent):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.random_unknown = False
+
+    def get_goal_method(self):
+        unknown_point = self.get_new_location_xy(self.agent_map, self.cfg.UNKNOWN,  useRandom=self.random_unknown)
+        if unknown_point is None:
+            self.plan = []
+            self.area_completed = True
+            return self.grid_position_xy
+        return unknown_point
+    
+class Unknown_Random(Unknown_Closest):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.random_unknown = True
