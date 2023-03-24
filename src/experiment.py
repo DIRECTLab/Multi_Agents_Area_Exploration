@@ -110,7 +110,7 @@ def setup_experiment(
                     id = i,
                     body_size = 3,
                     grid_size = cfg.GRID_THICKNESS,
-                    lidar_range = ground_truth_map.shape[0]//3,
+                    lidar_range = ground_truth_map.shape[0]//6,
                     full_map = ground_truth_map,
                     ax = bot_ax[i] if cfg.DRAW_SIM else None,
                     screen = cur_world.screen if cfg.DRAW_SIM else None,
@@ -148,13 +148,14 @@ def setup_experiment(
             bot.assigned_points = assigned_points
             assert len(assigned_points) > 0, "No points assigned to bot"
     
-    mutual_map = - np.ones((ground_truth_map.shape[0], ground_truth_map.shape[1])).astype(int)
+    mutual_data = {}
+    mutual_data['map'] = - np.ones((ground_truth_map.shape[0], ground_truth_map.shape[1])).astype(int)
     import time
     folder_name =  'data/' + experiment_name+ '/' + time.strftime("%Y-%m-%d_%H:%M:%S")
     if cfg.LOG_PLOTS:
         os.makedirs(folder_name)
 
-        # log_plot_obj.plot_map(mutual_map, bots, data)
+        # log_plot_obj.plot_map(mutual_data, bots, data)
         log_plot_obj.map_ax.set_title(f"Max Known Area {ground_truth_map.size}\n {search_method} \n{experiment_name.replace('_',' ').title()}")
         if 'Voronoi' in search_method:
             log_plot_obj.map_ax.matshow(minimum_comparison_table, alpha=0.3)
@@ -163,7 +164,7 @@ def setup_experiment(
     if cfg.DRAW_SIM:
         bot_fig.savefig(folder_name + '/starting_bot.png')
     
-    return [data, bots, ground_truth_map, mutual_map, log_plot_obj, minimum_comparison_table, cur_world, map_screen, folder_name]
+    return [data, bots, ground_truth_map, mutual_data, log_plot_obj, minimum_comparison_table, cur_world, map_screen, folder_name]
 
 def run_experiment(process_ID, 
                 return_dict, 
@@ -173,7 +174,7 @@ def run_experiment(process_ID,
                 set_up_data,
                 debug=False):
 
-    [data, bots, ground_truth_map, mutual_map, log_plot_obj, 
+    [data, bots, ground_truth_map, mutual_data, log_plot_obj, 
             minimum_comparison_table, cur_world, map_screen, folder_name] = set_up_data
     if cfg.DRAW_SIM:        
         # Display the floor plan on the screen
@@ -192,14 +193,14 @@ def run_experiment(process_ID,
             start_time = psutil.Process().cpu_times().user
             # for bot in bots:
             #     # place each bot in a different thread
-            #     t = threading.Thread(target=bot.update, args=(mutual_map,cfg.DRAW_SIM ))
+            #     t = threading.Thread(target=bot.update, args=(mutual_data,cfg.DRAW_SIM ))
             #     t.start()
             #     theads.append(t)
                     
             pool = ThreadPool(processes=len(bots))
             for i, bot in enumerate(bots):
                 # place each bot in a different thread
-                t = pool.apply_async(bot.update, (mutual_map,cfg.DRAW_SIM ))
+                t = pool.apply_async(bot.update, (mutual_data,cfg.DRAW_SIM ))
                 threads.append(t)
 
 
@@ -212,7 +213,7 @@ def run_experiment(process_ID,
             # time the bot update
             start_time = psutil.Process().cpu_times().user
             for i, bot in enumerate(bots):
-                bot.update(mutual_map, draw=cfg.DRAW_SIM)
+                bot.update(mutual_data, draw=cfg.DRAW_SIM)
                 path_length += len(bot.plan)
                 replan_count += bot.replan_count
             end_time = psutil.Process().cpu_times().user
@@ -232,8 +233,8 @@ def run_experiment(process_ID,
 
         # LOG ALL THE DATA
         logging_time_start = psutil.Process().cpu_times().user
-        cur_known = np.sum(mutual_map != -1)
-        data['area_percent'].append(cur_known / mutual_map.size)
+        cur_known = np.sum(mutual_data['map'] != -1)
+        data['area_percent'].append(cur_known / mutual_data['map'].size)
         data['update_time'].append(end_time - start_time)
         data['delta_time'].append( psutil.Process().cpu_times().user - sim_start_time)
         data['plan_length'].append(path_length)
@@ -244,7 +245,7 @@ def run_experiment(process_ID,
         if debug:
             if cfg.LOG_PLOTS:
                 # update the ground_truth_map and plt
-                log_plot_obj.plot_map(mutual_map, bots, data)
+                log_plot_obj.plot_map(mutual_data['map'], bots, data)
                 log_plot_obj.map_ax.set_title(f"Max Known Area {ground_truth_map.size}\n {search_method} \n{experiment_name.replace('_',' ').title()}")
                 if 'Voronoi' in search_method:
                     log_plot_obj.map_ax.matshow(minimum_comparison_table, alpha=0.3)
@@ -253,13 +254,13 @@ def run_experiment(process_ID,
                 # update the ground_truth_map but continue 
                 # wait to update plt at FPS of 10
                 # if frame_count % 3 == 0:
-                    # map_ax.matshow(mutual_map)
+                    # map_ax.matshow(mutual_data)
                 plt.pause(0.00001)
                     # plt.pause(0.1)
                 plt.draw()
         
         frame_count += 1
-        if cur_known == mutual_map.size:
+        if cur_known == mutual_data['map'].size:
             break
 
         logging_end_time = psutil.Process().cpu_times().user
@@ -275,7 +276,7 @@ def run_experiment(process_ID,
 
     if cfg.LOG_PLOTS:
         # update the ground_truth_map and plt
-        log_plot_obj.plot_map(mutual_map, bots, data)
+        log_plot_obj.plot_map(mutual_data['map'], bots, data)
         log_plot_obj.map_ax.set_title(f"Max Known Area {ground_truth_map.size}")
         if 'Voronoi' in search_method:
             log_plot_obj.map_ax.matshow(minimum_comparison_table, alpha=0.3)

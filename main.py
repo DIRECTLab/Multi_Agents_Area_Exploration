@@ -8,13 +8,11 @@ import copy
 from src.config import Config
 from src.experiment import run_experiment, setup_experiment
 from src.agent import Agent
-from src.replan.random_frontier import Random_Frontier
-from src.replan.random_frontier_closest import Random_Frontier_Closest
-from src.replan.voronoi_random_frontier import Voronoi_Random_Frontier
-from src.replan.voronoi_random_frontier_help_others import Voronoi_Random_Frontier_Help_Others
-from src.replan.voronoi_random_closest_frontier import Voronoi_Random_Closest_Frontier
+from src.replan.frontier import *
+from src.replan.voronoi_basic import *
 from src.starting_scenario.starting_methods import *
 from src.starting_scenario.goal_starts import *
+from src.replan.decision import *
 
 def main():
     all_df = pd.DataFrame()
@@ -25,11 +23,13 @@ def main():
     Process_list = [] 
     
     Method_list = [
-        # Random_Frontier,
-        # Random_Frontier_Closest,
-        # Voronoi_Random_Frontier,
-        # Voronoi_Random_Closest_Frontier,
-        Voronoi_Random_Frontier_Help_Others,
+        # Frontier_Random,
+        # Frontier_Closest,
+        # Voronoi_Frontier_Random,
+        # Voronoi_Frontier_Closest,
+        # Voronoi_Frontier_Help_Closest,
+        # Voronoi_Frontier_Help_Random,
+        Decision_Frontier_Closest,
         ]
     Start_scenario_list = [
         # Edge_Start_Position,
@@ -50,7 +50,7 @@ def main():
 
 
     prosses_count = 0
-    for map_length in range(20,30,10):
+    for map_length in range(50,60,10):
         for agent_count in range(4,10,2):
             for start in Start_scenario_list:
                 for goal in Start_Goal_list:
@@ -67,8 +67,6 @@ def main():
                         cfg.ROWS = int(map_length)
                         cfg.SCREEN_WIDTH = int(map_length*cfg.GRID_THICKNESS)
                         cfg.SCREEN_HEIGHT = int(map_length*cfg.GRID_THICKNESS)
-
-                        # TODO Populate START_CENTROID_LIST_XY 
 
                         experiment_name = f"test_{agent_count}_nbots:{cfg.N_BOTS}_rows:{cfg.ROWS}_cols:{cfg.COLS}_seed:{cfg.SEED}"
                         print(f"Starting Experiment: {experiment_name}")
