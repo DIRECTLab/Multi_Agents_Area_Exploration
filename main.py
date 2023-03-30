@@ -2,8 +2,6 @@ import random
 import numpy as np
 import pandas as pd
 from multiprocessing import Pool, Manager, Process, Queue
-import itertools
-import copy
 
 from src.config import Config
 from src.experiment import run_experiment, setup_experiment
@@ -13,6 +11,7 @@ from src.replan.voronoi_basic import *
 from src.starting_scenario.starting_methods import *
 from src.starting_scenario.goal_starts import *
 from src.replan.decision import *
+from src.darp.darp import *
 
 def main():
     all_df = pd.DataFrame()
@@ -26,23 +25,24 @@ def main():
         # Frontier_Random,
         # Frontier_Closest,
         # Voronoi_Frontier_Random,
-        # Voronoi_Frontier_Closest,
+        Voronoi_Frontier_Closest,
         # Voronoi_Frontier_Help_Closest,
         # Voronoi_Frontier_Help_Random,
-        Decision_Frontier_Closest,
+        # Decision_Frontier_Closest,
+        # Darp,                                   # Requires the DRAW_SIM in config file to be True.
         ]
     Start_scenario_list = [
         # Edge_Start_Position,
-        Top_Left_Start_Position,
-        # Rand_Start_Position,
+        # Top_Left_Start_Position,
+        Rand_Start_Position,
         # Center_Start_Position,
         ]
     Start_Goal_list= [
-        # Rand_Start_Goal,
+        Rand_Start_Goal,
         # Center_Start_Goal,
         # Top_Left_Start_Goal,
         # Edge_Start_Goal,
-        Distributed_Goal,
+        # Distributed_Goal,
         ]
 
     All_scenarios = [ Start_scenario_list , Start_Goal_list]

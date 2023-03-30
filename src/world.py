@@ -65,7 +65,7 @@ class World:
             # cur_room.doors.append((rect.x, random.randint(rect.y-self.cfg.GRID_THICKNESS, rect.y + rect.h - self.cfg.GRID_THICKNESS)))
             # add door on the top side
             # cur_room.doors.append((random.randint(rect.x-self.cfg.GRID_THICKNESS, rect.x + rect.w - self.cfg.GRID_THICKNESS), rect.y))
-               
+
             return [cur_room]
 
         if rect.w > rect.h:

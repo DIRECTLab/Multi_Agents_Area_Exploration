@@ -50,6 +50,11 @@ class Voronoi_Frontier_Random(Voronoi_Frontier_Closest):
         super().__init__(*args, **kwargs)
         self.random_frontier = True
 
+class Darp(Voronoi_Frontier_Closest):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.random_frontier = False
+
 class Voronoi_Frontier_Help_Closest(Voronoi_Frontier_Closest):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
