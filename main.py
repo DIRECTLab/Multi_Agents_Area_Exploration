@@ -25,16 +25,16 @@ def main():
     ratio_list = [(50,50),(25,75)]
     
     Method_list = [
-        Frontier_Random,
-        Frontier_Closest,
-        Voronoi_Frontier_Random,
+        # Frontier_Random,
+        # Frontier_Closest,
+        # Voronoi_Frontier_Random,
         # Voronoi_Frontier_Closest,
         # Voronoi_Frontier_Help_Closest,
         # Voronoi_Frontier_Help_Random,
         # Decision_Frontier_Closest,
-        # Darp,  
+        Darp,  
         # {'Voronoi_Frontier_Random', 'Frontier_Random'}                                 # Requires the DRAW_SIM in config file to be True.
-        "Heterogenus"
+        # "Heterogenus"
         ]
     Start_scenario_list = [
         # Edge_Start_Position,
@@ -55,7 +55,7 @@ def main():
 
 
     prosses_count = 0
-    for map_length in range(50,60,10):
+    for map_length in range(50,100,50):
         for agent_count in range(4,10,2):
             print(f"map_length: {map_length} agent_count: {agent_count}")
             for start in Start_scenario_list:

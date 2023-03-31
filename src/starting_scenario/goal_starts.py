@@ -1,6 +1,10 @@
 import numpy as np
+import random
 
 class Rand_Start_Goal:
+    def __init__(self):
+        print("hello from random start")
+        # random.seed(cfg.SEED)
     def choose_start_goal(self):
         self.goal_xy = self.get_random_point()
 

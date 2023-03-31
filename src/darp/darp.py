@@ -88,7 +88,7 @@ class DARP:
                 obstacle_positions,             # [7, 8]
                 equal_portions=False,           # default
                 portions=[0.2, 0.3, 0.5],       # default (0.33, 0.33, 0.33)
-                visualization=True,            # False
+                visualization=False,            # False
                 MaxIter=80000,                  # default
                 CCvariation=0.01,               # default
                 randomLevel=0.0001,             # default

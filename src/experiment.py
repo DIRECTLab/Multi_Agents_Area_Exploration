@@ -188,16 +188,50 @@ def setup_experiment(
         for i in range(len(bots)):
             column = bots[i].grid_position_xy[0]
             row = bots[i].grid_position_xy[1]
-            agent_locations.append((column, row))
+            agent_locations.append((column//2, row//2))
         print("here is the agent locations...", agent_locations)
         
         
-        obstacle_locations = np.argwhere(ground_truth_map == False)
+        # create a low resolution map by halving the size of the map
+        # side a convolutional over the map and if any of the 4 pixels are occupied then the new pixel is occupied
+        down_sampled_map = np.ones((ground_truth_map.shape[0]//2, ground_truth_map.shape[1]//2))
+        for i in range(ground_truth_map.shape[0]//2):
+            for j in range(ground_truth_map.shape[1]//2):
+                convolution = ground_truth_map[2*i:2*i+2, 2*j:2*j+2]
+                for cell in convolution:
+                    if cfg.OBSTACLE in cell:
+                        down_sampled_map[i][j] = cfg.OBSTACLE
+                        break
+
+        # add the doors back in to the down sampled map
+        for door in cur_world.doors:
+            if door[0] == 0 or door[1] == 0:
+                continue
+            door_x = int((door[0]/cfg.GRID_THICKNESS) //2)
+            door_y = int((door[1]/cfg.GRID_THICKNESS) //2)
+            down_sampled_map[door_y,door_x] = cfg.EMPTY
+
+            # if horizontal door
+            if door[2] > 0:
+                down_sampled_map[door_y,door_x+1] = cfg.EMPTY
+            # if vertical door
+            else:
+                down_sampled_map[door_y+1,door_x] = cfg.EMPTY
+
+        fig, ax = plt.subplots()
+        ax.matshow(down_sampled_map)
+        obstacle_locations = np.argwhere(down_sampled_map == False)
+
+        # obstacle_locations = np.argwhere(ground_truth_map == False)
         tuple_obst = tuple(map(tuple, obstacle_locations))
+
         # print("here are the obstacles...", tuple_obst)
-        darp_instance = DARP(cfg.ROWS, cfg.COLS, agent_locations, tuple_obst)
+        darp_instance = DARP(cfg.ROWS//2, cfg.COLS//2, agent_locations, tuple_obst)
 
         darp_success , iterations = darp_instance.divideRegions()
+
+
+
         end_time = time.time()
         it_took = end_time - start_time
         if darp_success:
@@ -207,6 +241,12 @@ def setup_experiment(
             # print("darp_instance.rows", darp_instance.rows)
             # print("darp_instance.cols", darp_instance.cols)
 
+            for bot in bots:
+                assigned_points = np.argwhere(darp_instance.A == bot.id)
+                # convert list of list into list of tuples
+                assigned_points = [tuple(point) for point in assigned_points]
+                bot.assigned_points = assigned_points
+                assert len(assigned_points) > 0, "No points assigned to bot"
 
             mode_to_drone_turns = []
             AllRealPaths_dict = {}
