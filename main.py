@@ -11,7 +11,7 @@ from src.replan.voronoi_basic import *
 from src.starting_scenario.starting_methods import *
 from src.starting_scenario.goal_starts import *
 from src.replan.decision import *
-from src.darp.darp import *
+# from src.darp.darp import *
 
 import itertools
 
@@ -22,11 +22,12 @@ def main():
     process_manager = Manager()
     return_dict = process_manager.dict()
     Process_list = []
-    ratio_list = [(50,50),(25,75)]
+    ratio_list = [(.50,.50),(.25,.75),(.75,.25)]
     
     Method_list = [
+        "Heterogenus",
         Frontier_Random,
-        Frontier_Closest,
+        # Frontier_Closest,
         Voronoi_Frontier_Random,
         # Voronoi_Frontier_Closest,
         # Voronoi_Frontier_Help_Closest,
@@ -34,7 +35,6 @@ def main():
         # Decision_Frontier_Closest,
         # Darp,  
         # {'Voronoi_Frontier_Random', 'Frontier_Random'}                                 # Requires the DRAW_SIM in config file to be True.
-        "Heterogenus"
         ]
     Start_scenario_list = [
         # Edge_Start_Position,
@@ -55,26 +55,12 @@ def main():
 
 
     prosses_count = 0
-    for map_length in range(50,60,10):
-        for agent_count in range(4,10,2):
+    for map_length in range(20,30,10):
+        for agent_count in range(4,6,2):
             print(f"map_length: {map_length} agent_count: {agent_count}")
             for start in Start_scenario_list:
                 for goal in Start_Goal_list:
                     for Method in Method_list:
-                        # if Method == "Heterogenus":
-                        #     cur_Method_list = Method_list[:-1]
-                        #     print("\n\n")
-                        #     # get every combo of all the methods starting from 2 to the number of methods
-                            
-                        #     for combo in itertools.combinations(cur_Method_list, 2):
-                        #         print(f"combo {len(combo)} {combo}")
-                        #         method1 = combo[0]
-                        #         method2 = combo[1]
-
-                        #         # ratio assinment of the agents
-                        #         for ratio in ratio_list:
-                        #             method1_couint =  ratio[0]
-                        #             method2_couint =  ratio[1]
 
                         # continue
                         cfg = Config()
@@ -92,14 +78,57 @@ def main():
                         experiment_name = f"test_{agent_count}_nbots:{cfg.N_BOTS}_rows:{cfg.ROWS}_cols:{cfg.COLS}_seed:{cfg.SEED}"
                         print(f"Starting Experiment: {experiment_name}")
 
-                        Agent_Class = type('Agent_Class', (Method, start, goal), {})
                         
 
+                        Agent_Class_list = []
+
+                        if Method == "Heterogenus":
+                            # remove the heterogenus from the list
+                            cur_Method_list = Method_list.copy()
+                            cur_Method_list.remove("Heterogenus")
+
+                            print("\n\n")
+                            # get every combo of all the methods starting from 2 to the number of methods
+                            
+                            for combo in itertools.combinations(cur_Method_list, 2):
+                                print(f"combo {len(combo)} {combo}")
+                                method1 = type(combo[0].__name__, (combo[0], start, goal), {})
+                                method2 = type(combo[1].__name__, (combo[1], start, goal), {})
+
+                                # ratio assinment of the agents
+                                for ratio in [(.50,.50), (.25,.75), (.75,.25)]:
+                                    method1_couint =  int(cfg.N_BOTS * ratio[0]) # % of the agents
+                                    method2_couint =  int(cfg.N_BOTS * ratio[1])
+
+                                    Agent_Class_list = [method1] * method1_couint
+                                    Agent_Class_list += [method2] * method2_couint
+
+                                    search_method =''
+                                    for i , name in enumerate(Agent_Class_list):
+                                        search_method += str(i) +' '+str(name).replace("<class '__main__.","").replace("'>","").replace(" ", "") + '\n'
+
+                                    print("Method:", search_method)
+
+                                    set_up_data = setup_experiment(cfg, experiment_name, Agent_Class_list, search_method, )
+
+                                    run_experiment(prosses_count, 
+                                                return_dict,
+                                                cfg,
+                                                experiment_name, 
+                                                search_method =search_method,
+                                                set_up_data = set_up_data, 
+                                                debug=True)
+                                    df_index += 1
+                                    continue                                    
+
+                        Agent_Class = type('Agent_Class', (Method, start, goal), {})
                         search_method =''.join(str(base.__name__)+'\n'  for base in Agent_Class.__bases__)
                         search_method += Agent_Class.__name__
                         print("Method:", search_method)
+                        Agent_Class_list = [Agent_Class] * cfg.N_BOTS
 
-                        set_up_data = setup_experiment(cfg, experiment_name, Agent_Class, search_method, )
+
+                        set_up_data = setup_experiment(cfg, experiment_name, Agent_Class_list, search_method, )
 
                         run_experiment(prosses_count, 
                                     return_dict,

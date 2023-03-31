@@ -14,11 +14,11 @@ import time
 import src.world as world
 import src.agent as agent
 import src.log_plot as log_plot
-from src.darp.darp import *
-from src.darp.kruskal import Kruskal
-from src.darp.CalculateTrajectories import CalculateTrajectories
-from src.darp.turns import turns
-from src.darp.Visualization import visualize_paths
+# from src.darp.darp import *
+# from src.darp.kruskal import Kruskal
+# from src.darp.CalculateTrajectories import CalculateTrajectories
+# from src.darp.turns import turns
+# from src.darp.Visualization import visualize_paths
 
 #  related to our first voronoi calculation method
 def generate_vor_cells_over_world(cfg):
@@ -43,18 +43,26 @@ def generate_vor_cells_over_world(cfg):
     return grid, matrix_list, agent_locs
 
 #  related to our first voronoi calculation method
-def generate_voronoi_division_grid(grid, bots, matrix_list, agent_locs, log_plot_obj):
-    for i in range(len(bots)):
-        column = bots[i].goal_xy[0]
-        row = bots[i].goal_xy[1]
+def generate_voronoi_division_grid(grid, bots, matrix_list, agent_locs, log_plot_obj = None):
+    for bot in bots:
+        if not 'Voronoi' in bot.__class__.__name__:
+            # create np.inf matrix for non-voronoi agents
+            distance_matrix = np.full((20, 20), np.inf)
+            matrix_list.append(distance_matrix)
+            continue
+
+        column = bot.goal_xy[0]
+        row = bot.goal_xy[1]
         grid[row][column].agent = True
-        grid[row][column].agent_id = i
+        grid[row][column].agent_id = bot.id
         grid[row][column].distance_matrix = grid[row][column].calc_distance_matrices()
         matrix_list.append(grid[row][column].distance_matrix)
         agent_locs.add((row, column))
-        log_plot_obj.map_ax.scatter(x=column, y=row, c='r', s=100)
-        log_plot_obj.map_ax.text(column, row, f"(x:{column},y:{row})", fontsize=10, color='g', ha='center', va='center')
-    vor_region_over_grid = np.argmin((matrix_list), 0)
+        if log_plot_obj is not None:
+            log_plot_obj.map_ax.scatter(x=column, y=row, c='r', s=100)
+            log_plot_obj.map_ax.text(column, row, f"(x:{column},y:{row})", fontsize=10, color='g', ha='center', va='center')
+    # vor_region_over_grid = np.argmin((matrix_list), 0)
+    vor_region_over_grid = np.argmin((matrix_list), 0) 
     return vor_region_over_grid
 
 #  related to darp algorithm
@@ -83,7 +91,7 @@ def CalcRealBinaryReg(BinaryRobotRegion, rows, cols):
 def setup_experiment(
                 cfg,
                 experiment_name,
-                Agent_Class,
+                Agent_Class_list,
                 search_method):
     
     if cfg.DRAW_SIM:
@@ -110,6 +118,7 @@ def setup_experiment(
         'known_area' : [],
         }
 
+    log_plot_obj = None
     if cfg.LOG_PLOTS:
         # create Log_plot object
         log_plot_obj = log_plot.LogPlot(cfg, data)
@@ -153,29 +162,53 @@ def setup_experiment(
 
     assert cfg.USE_THREADS != True, "The use of the threads is not enabled"
     
-    for i in range(cfg.N_BOTS):
-        bots.append(Agent_Class(
-                    cfg = cfg,
-                    id = i,
-                    body_size = 3,
-                    grid_size = cfg.GRID_THICKNESS,
-                    lidar_range = ground_truth_map.shape[0]//6,
-                    full_map = ground_truth_map,
-                    ax = bot_ax[i] if cfg.DRAW_SIM else None,
-                    screen = cur_world.screen if cfg.DRAW_SIM else None,
-                    lock= lock,
+    # Agent_Class_list
+    for i, agent_class in enumerate(Agent_Class_list):
+        bots.append(agent_class(
+            cfg = cfg,
+            id = i,
+            body_size = 3,
+            grid_size = cfg.GRID_THICKNESS,
+            lidar_range = ground_truth_map.shape[0]//6,
+            full_map = ground_truth_map,
+            ax = bot_ax[i] if cfg.DRAW_SIM else None,
+            screen = cur_world.screen if cfg.DRAW_SIM else None,
+            lock= lock,
                 )
             )
-    
+
         if cfg.DRAW_SIM:
             bot_ax[i].set_title(f"Bot {i}")
             bot_ax[i].matshow(bots[i].agent_map)
 
+    # for i in range(cfg.N_BOTS):
+    #     bots.append(Agent_Class(
+    #                 cfg = cfg,
+    #                 id = i,
+    #                 body_size = 3,
+    #                 grid_size = cfg.GRID_THICKNESS,
+    #                 lidar_range = ground_truth_map.shape[0]//6,
+    #                 full_map = ground_truth_map,
+    #                 ax = bot_ax[i] if cfg.DRAW_SIM else None,
+    #                 screen = cur_world.screen if cfg.DRAW_SIM else None,
+    #                 lock= lock,
+    #             )
+    #         )
+    
+    #     if cfg.DRAW_SIM:
+    #         bot_ax[i].set_title(f"Bot {i}")
+    #         bot_ax[i].matshow(bots[i].agent_map)
+
     if 'Voronoi' in search_method:
-        minimum_comparison_table = generate_voronoi_division_grid(grid, bots, matrix_list, agent_locs, log_plot_obj)
-        log_plot_obj.map_ax.matshow(minimum_comparison_table, alpha=0.6)
+        if cfg.LOG_PLOTS:
+            minimum_comparison_table = generate_voronoi_division_grid(grid, bots, matrix_list, agent_locs, log_plot_obj)
+            log_plot_obj.map_ax.matshow(minimum_comparison_table, alpha=0.6)
+        else:
+            minimum_comparison_table = generate_voronoi_division_grid(grid, bots, matrix_list, agent_locs)
         # assign each robot one voronoi region using assigned_points
         for bot in bots:
+            if not bot.id in minimum_comparison_table:
+                continue
             assigned_points = np.argwhere(minimum_comparison_table == bot.id)
             # convert list of list into list of tuples
             assigned_points = [tuple(point) for point in assigned_points]

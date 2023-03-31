@@ -338,26 +338,16 @@ class Agent(Point_Finding):
         return False
                     
     def update(self, mutual_data, draw=True):
-        # if self.area_completed:
-        #     return 0, self.total_dist_traveled
         # Update the agent's position
         # Scan the environment
         if self.no_more_update:
             return
-
-        # if hasattr(super(), 'base_update'):
-        #     super().base_update()
-            
-                # no_more_update
-                
 
         self.scan()
         # Share the agent's map with the mutual map
         self.share_map(mutual_data['map'])
         # Update the agent's map
         self.agent_map = mutual_data['map'].copy()
-
-
 
         if self.check_should_replan():
             self.replan()

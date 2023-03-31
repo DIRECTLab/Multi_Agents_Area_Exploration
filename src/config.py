@@ -1,6 +1,6 @@
 class Config:
     def __init__(self):
-        self.DRAW_SIM = True
+        self.DRAW_SIM = False
         self.LOG_PLOTS = True
         self.USE_THREADS = False
         
