@@ -241,6 +241,12 @@ def setup_experiment(
             # print("darp_instance.rows", darp_instance.rows)
             # print("darp_instance.cols", darp_instance.cols)
 
+            #  undo the convolutional by doubling the size of the map
+            # for i in range(ground_truth_map.shape[0]//2):
+            #     for j in range(ground_truth_map.shape[1]//2):
+            #         convolution = ground_truth_map[2*i:2*i+2, 2*j:2*j+2]
+            #         for cell in convolution:
+
             for bot in bots:
                 assigned_points = np.argwhere(darp_instance.A == bot.id)
                 # convert list of list into list of tuples
