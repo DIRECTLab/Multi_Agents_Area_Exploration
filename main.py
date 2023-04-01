@@ -22,10 +22,10 @@ def main():
     Process_list = [] 
     
     Method_list = [
-        Frontier_Random,
+        # Frontier_Random,
         # Frontier_Closest,
         # Voronoi_Frontier_Random,
-        # Voronoi_Frontier_Closest,
+        Voronoi_Frontier_Closest,
         # Voronoi_Frontier_Help_Closest,
         # Voronoi_Frontier_Help_Random,
         # Decision_Frontier_Closest,
