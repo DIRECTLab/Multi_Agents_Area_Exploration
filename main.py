@@ -32,7 +32,7 @@ def main():
         # Voronoi_Frontier_Help_Closest,
         # Voronoi_Frontier_Help_Random,
         # Decision_Frontier_Closest,
-        Darp,  
+        Darp,
         # {'Voronoi_Frontier_Random', 'Frontier_Random'}                                 # Requires the DRAW_SIM in config file to be True.
         # "Heterogenus"
         ]
