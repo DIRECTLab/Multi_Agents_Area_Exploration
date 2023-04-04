@@ -109,6 +109,11 @@ def setup_experiment(
         'frame_count': [],
         'known_area' : [],
         }
+    
+    if 'Epsilon' in search_method:
+        for i in range(cfg.N_BOTS):
+            data[f'epsilon_{i}'] = []
+        
 
     if cfg.LOG_PLOTS:
         # create Log_plot object
@@ -406,8 +411,12 @@ def run_experiment(process_ID,
             start_time = psutil.Process().cpu_times().user
             for i, bot in enumerate(bots):
                 bot.update(mutual_data, draw=cfg.DRAW_SIM)
+                bot.frame_count =frame_count
                 path_length += len(bot.plan)
                 replan_count += bot.replan_count
+                if 'Epsilon' in search_method:
+                    data['epsilon_'+str(bot.id)].append(bot.epsilon)
+
             end_time = psutil.Process().cpu_times().user
 
 
@@ -433,6 +442,7 @@ def run_experiment(process_ID,
         data['replan_count'].append(replan_count)
         data['frame_count'].append(frame_count)
         data['known_area'].append(cur_known)
+
 
         if debug:
             if cfg.LOG_PLOTS:

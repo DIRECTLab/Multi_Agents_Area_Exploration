@@ -119,6 +119,7 @@ class Agent(Point_Finding):
         self.dy= 0
         self.total_dist_traveled = 0
         self.past_traversed_locations =[self.grid_position_xy]
+        self.frame_count = 0
 
         # scan the map and build the map
         self.scan()
