@@ -6,6 +6,10 @@ import time
 import random
 import os
 from numba import njit
+from src.darp.CalculateTrajectories import CalculateTrajectories
+from src.darp.kruskal import Kruskal
+from src.darp.turns import turns
+from src.darp.Visualization import visualize_paths
 
 np.set_printoptions(threshold=sys.maxsize)
 
@@ -389,8 +393,228 @@ class DARP:
 
     # assign paths to robots
 
+#  related to darp algorithm
+def calculateMSTs(BinaryRobotRegions, droneNo, rows, cols, mode):
+    MSTs = []
+    for r in range(droneNo):
+        k = Kruskal(rows, cols)
+        k.initializeGraph(BinaryRobotRegions[r, :, :], True, mode)
+        k.performKruskal()
+        MSTs.append(k.mst)
+    return MSTs
+
+#  related to darp algorithm
+def CalcRealBinaryReg(BinaryRobotRegion, rows, cols):
+    temp = np.zeros((2*rows, 2*cols))
+    RealBinaryRobotRegion = np.zeros((2 * rows, 2 * cols), dtype=bool)
+    for i in range(2*rows):
+        for j in range(2*cols):
+            temp[i, j] = BinaryRobotRegion[(int(i / 2))][(int(j / 2))]
+            if temp[i, j] == 0:
+                RealBinaryRobotRegion[i, j] = False
+            else:
+                RealBinaryRobotRegion[i, j] = True
+    return RealBinaryRobotRegion
+
+def run_mst(iterations, bots, darp_instance):
+    start_time = time.time()
+    print("Success...", "Iteration count is:", iterations) #"\ncalculating this took:", it_took, "seconds...")
 
 
+    # print("Agents", darp_instance.BinaryRobotRegions)
+    # print("darp_instance.robotNumber", darp_instance.robotNumber)
+    # print("darp_instance.rows", darp_instance.rows)
+    # print("darp_instance.cols", darp_instance.cols)
+
+    # undo the convolutional by doubling the size of the map
+    # for i in range(down_sampled_map.shape[0]):
+    #     for j in range(down_sampled_map.shape[1]):
+    #         convolution2 = down_sampled_map[i, j]
+    #         if convolution2 == 0:
+    #             ground_truth_map[i*2, j*2] = cfg.OBSTACLE
+    #             ground_truth_map[i*2, j*2+1] = cfg.OBSTACLE
+    #             ground_truth_map[i*2+1, j*2] = cfg.OBSTACLE
+    #             ground_truth_map[i*2+1, j*2+1] = cfg.OBSTACLE
+    #         elif convolution2 == 1:
+    #             ground_truth_map[i*2, j*2] = cfg.EMPTY
+    #             ground_truth_map[i*2, j*2+1] = cfg.EMPTY
+    #             ground_truth_map[i*2+1, j*2] = cfg.EMPTY
+    #             ground_truth_map[i*2+1, j*2+1] = cfg.EMPTY
+            
+    # print(darp_instance.A)
+    for bot in bots:
+        assigned_points = np.argwhere(darp_instance.A == bot.id)
+        # convert list of list into list of tuples
+        assigned_points = [tuple(point) for point in assigned_points]
+        new_four_points = []
+        for point in assigned_points:
+            new_four_points.extend(((point[0]*2, point[1]*2), (point[0]*2, point[1]*2+1), (point[0]*2+1, point[1]*2), (point[0]*2+1, point[1]*2+1)))
+        bot.assigned_points = new_four_points
+        assert len(new_four_points) > 0, "No points assigned to bot"
+
+    mode_to_drone_turns = []
+    AllRealPaths_dict = {}
+    subCellsAssignment_dict = {}
+    for mode in range(4):
+        # print("mode", mode)
+        MSTs = calculateMSTs(darp_instance.BinaryRobotRegions, darp_instance.robotNumber, darp_instance.rows, darp_instance.cols, mode)
+        # print("MSTs", MSTs)
+        
+        
+        AllRealPaths = []
+        for r in range(darp_instance.robotNumber):
+            ct = CalculateTrajectories(darp_instance.rows, darp_instance.cols, MSTs[r])
+            ct.initializeGraph(CalcRealBinaryReg(darp_instance.BinaryRobotRegions[r], darp_instance.rows, darp_instance.cols), True)
+            ct.RemoveTheAppropriateEdges()
+            ct.CalculatePathsSequence(4 * darp_instance.initial_positions[r][0] * darp_instance.cols + 2 * darp_instance.initial_positions[r][1])
+            AllRealPaths.append(ct.PathSequence)
+        # print("AllRealPaths", AllRealPaths)
+        TypesOfLines = np.zeros((darp_instance.rows*2, darp_instance.cols*2, 2))
+        
+
+        for r in range(darp_instance.robotNumber):
+            flag = False
+            for connection in AllRealPaths[r]:
+                if flag:
+                    if TypesOfLines[connection[0]][connection[1]][0] == 0:
+                        indxadd1 = 0
+                    else:
+                        indxadd1 = 1
+
+                    if TypesOfLines[connection[2]][connection[3]][0] == 0 and flag:
+                        indxadd2 = 0
+                    else:
+                        indxadd2 = 1
+                else:
+                    if not (TypesOfLines[connection[0]][connection[1]][0] == 0):
+                        indxadd1 = 0
+                    else:
+                        indxadd1 = 1
+                    if not (TypesOfLines[connection[2]][connection[3]][0] == 0 and flag):
+                        indxadd2 = 0
+                    else:
+                        indxadd2 = 1
+
+                flag = True
+                if connection[0] == connection[2]:
+                    if connection[1] > connection[3]:
+                        TypesOfLines[connection[0]][connection[1]][indxadd1] = 2
+                        TypesOfLines[connection[2]][connection[3]][indxadd2] = 3
+                    else:
+                        TypesOfLines[connection[0]][connection[1]][indxadd1] = 3
+                        TypesOfLines[connection[2]][connection[3]][indxadd2] = 2
+
+                else:
+                    if (connection[0] > connection[2]):
+                        TypesOfLines[connection[0]][connection[1]][indxadd1] = 1
+                        TypesOfLines[connection[2]][connection[3]][indxadd2] = 4
+                    else:
+                        TypesOfLines[connection[0]][connection[1]][indxadd1] = 4
+                        TypesOfLines[connection[2]][connection[3]][indxadd2] = 1
+
+        subCellsAssignment = np.zeros((2*darp_instance.rows, 2*darp_instance.cols))
+        for i in range(darp_instance.rows):
+            for j in range(darp_instance.cols):
+                subCellsAssignment[2 * i][2 * j] = darp_instance.A[i][j]
+                subCellsAssignment[2 * i + 1][2 * j] = darp_instance.A[i][j]
+                subCellsAssignment[2 * i][2 * j + 1] = darp_instance.A[i][j]
+                subCellsAssignment[2 * i + 1][2 * j + 1] = darp_instance.A[i][j]
+
+        drone_turns = turns(AllRealPaths)
+        drone_turns.count_turns()
+        drone_turns.find_avg_and_std()
+        mode_to_drone_turns.append(drone_turns)
+
+        AllRealPaths_dict[mode] = AllRealPaths
+        subCellsAssignment_dict[mode] = subCellsAssignment
+
+
+    # Find mode with the smaller number of turns
+    averge_turns = [x.avg for x in mode_to_drone_turns]
+    min_mode = averge_turns.index(min(averge_turns))
+    
+    # Retrieve number of cells per robot for the configuration with the smaller number of turns
+    min_mode_num_paths = [len(x) for x in AllRealPaths_dict[min_mode]]
+    min_mode_returnPaths = AllRealPaths_dict[min_mode]
+
+    # Uncomment if you want to visualize all available modes
+    # if self.darp_instance.visualization:
+    #     for mode in range(4):
+    #         image = visualize_paths(AllRealPaths_dict[mode], subCellsAssignment_dict[mode],
+    #                                 self.darp_instance.droneNo, self.darp_instance.color)
+    #         image.visualize_paths(mode)
+    #     print("Best Mode:", self.min_mode)
+
+    #Combine all modes to get one mode with the least available turns for each drone
+    combined_modes_paths = []
+    combined_modes_turns = []
+    
+    for r in range(darp_instance.robotNumber):
+        min_turns = sys.maxsize
+        temp_path = []
+        for mode in range(4):
+            if mode_to_drone_turns[mode].turns[r] < min_turns:
+                temp_path = mode_to_drone_turns[mode].paths[r]
+                min_turns = mode_to_drone_turns[mode].turns[r]
+        combined_modes_paths.append(temp_path)
+        combined_modes_turns.append(min_turns)
+
+    best_case = turns(combined_modes_paths)
+    best_case.turns = combined_modes_turns
+    best_case.find_avg_and_std()
+    
+    # Retrieve number of cells per robot for the best case configuration
+    best_case_num_paths = [len(x) for x in best_case.paths]
+    best_case_returnPaths = best_case.paths
+
+    
+    
+
+
+
+
+
+    
+    
+    paths_same_as_astar_path_type = []
+    for each_robot_full_path in range(len(best_case.paths)):
+        paths_same_as_astar_path_type.append([])
+        for y in best_case.paths[each_robot_full_path]:
+            new_tuple_s = (y[1], y[0])
+            # add tuple if not in list
+            if new_tuple_s not in paths_same_as_astar_path_type[each_robot_full_path]:
+                paths_same_as_astar_path_type[each_robot_full_path].append(new_tuple_s)
+        # print("robot 1 path", paths_same_as_astar_path_type[each_robot_full_path])
+        
+    for bot in bots:
+        # print("bot", bot.id)
+        bot.plan = paths_same_as_astar_path_type[bot.id]
+        # print("bot plan", bot.plan)
+
+    
+
+
+
+
+
+
+
+    
+    #visualize best case
+    if darp_instance.visualization:
+        image = visualize_paths(best_case.paths, subCellsAssignment_dict[min_mode],
+                                darp_instance.robotNumber, darp_instance.color)
+        image.visualize_paths("Combined Modes")
+
+    execution_time = time.time() - start_time
+    
+    print(f'\nResults:')
+    print(f'Number of cells per robot: {best_case_num_paths}')
+    print(f'Minimum number of cells in robots paths: {min(best_case_num_paths)}')
+    print(f'Maximum number of cells in robots paths: {max(best_case_num_paths)}')
+    print(f'Average number of cells in robots paths: {np.mean(np.array(best_case_num_paths))}')
+    print(f'\nTurns Analysis: {best_case}')
+    print(f'\nTime it take: {execution_time}')
 
 
 if __name__ == '__main__':
