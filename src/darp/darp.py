@@ -84,7 +84,7 @@ class DARP:
     def __init__(self,
                 grid_row,                       # 5
                 grid_column,                    # 5
-                robot_initial_positions,        # [0, 2, 4]
+                agent_locations_rc,        # [0, 2, 4]
                 obstacle_positions,             # [7, 8]
                 equal_portions=False,           # default
                 portions=[0.2, 0.3, 0.5],       # default (0.33, 0.33, 0.33)
@@ -97,7 +97,7 @@ class DARP:
 
         self.rows = grid_row
         self.cols = grid_column
-        self.initial_positions, self.obstacles_positions, self.portions = self.sanity_check(robot_initial_positions, portions, obstacle_positions, equal_portions)
+        self.initial_positions, self.obstacles_positions, self.portions = self.sanity_check(agent_locations_rc, portions, obstacle_positions, equal_portions)
         # print("self.initial_positions, self.obstacles_positions, self.portions", self.initial_positions, self.obstacles_positions, self.portions)
         self.equal_portions = equal_portions
         self.visualization = visualization
@@ -146,20 +146,14 @@ class DARP:
             self.assignment_matrix_visualization = darp_area_visualization(self.A, self.robotNumber, self.color, self.initial_positions)
 
 
-
-
-
-
-
-
     # converting the agent, obstacle and portions into something which is more clear to continue running on
-    def sanity_check(self, given_initial_positions, given_portions, obs_pos, equal_portions):
+    def sanity_check(self, agent_locations_rc, given_portions, obs_pos, equal_portions):
         initial_positions = []
-        for position in given_initial_positions:
-            if position[0] < 0 or position[1] < 0 or position[0] >= self.rows or position[1] >= self.cols:
+        for position_rc in agent_locations_rc:
+            if position_rc[0] < 0 or position_rc[1] < 0 or position_rc[0] >= self.rows or position_rc[1] >= self.cols:
                 print("Initial positions should be inside the Grid.")
                 sys.exit(1)
-            initial_positions.append(position)
+            initial_positions.append(position_rc)
 
         obstacles_positions = []
         for obstacle in obs_pos:
@@ -184,9 +178,9 @@ class DARP:
             print("Sum of portions should be equal to 1.")
             sys.exit(4)
 
-        for position in initial_positions:
+        for position_rc in initial_positions:
             for obstacle in obstacles_positions:
-                if position[0] == obstacle[0] and position[1] == obstacle[1]:
+                if position_rc[0] == obstacle[0] and position_rc[1] == obstacle[1]:
                     print("Initial positions should not be on obstacles")
                     sys.exit(5)
 
@@ -265,14 +259,6 @@ class DARP:
                         min_importance_fer[r] = cell_importance_values[r, x, y]
 
         return distance_matrices, threshold_value, number_of_cells, desirable_cell_count_fer, cell_importance_values, min_importance_fer, max_importance_fer
-
-
-
-
-
-
-
-
 
 
 
@@ -401,7 +387,7 @@ class DARP:
             distRobot = (distRobot - MinV)*(1/(MaxV-MinV))
         return distRobot
 
-
+    # assign paths to robots
 
 
 
