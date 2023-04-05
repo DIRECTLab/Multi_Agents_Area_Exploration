@@ -13,7 +13,7 @@ class Epsilon_Greedy_Unknown(Unknown_Random):
         if p > self.epsilon:
           self.choose_random = False
         else:
-           self.choose_random = True
+          self.choose_random = True
 
         return super().get_goal_method()
 
@@ -24,11 +24,10 @@ class Epsilon_Greedy_Frontier(Frontier_Random):
 
     def get_goal_method(self):
         p = np.random.random()
-        # if p > self.epsilon:
-        #   self.choose_random_unknown = False
-        # else:
-        #    self.choose_random_unknown = True
-        self.choose_random = False
+        if p > self.epsilon:
+          self.choose_random = False
+        else:
+          self.choose_random = True
 
         return super().get_goal_method()
 
