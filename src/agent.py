@@ -120,9 +120,9 @@ class Agent(Point_Finding):
         self.total_dist_traveled = 0
         self.past_traversed_locations =[self.grid_position_xy]
 
-        # scan the map and build the map
-        self.scan()
-        self.replan()
+        if self.check_should_replan():
+            self.scan()
+            self.replan()
     
     def set_new_goal(self):
         self.goal_xy = self.get_goal_method()
@@ -315,10 +315,17 @@ class Agent(Point_Finding):
                     #     mutual_map[r,c] = cur_cell
 
     def check_should_replan(self):
+        
+        # this is for the initial case when no plan has been set
+        # but we dsont wanna create a new goal
+        if self.plan == None:
+            return True
+
         # check if the plan is empty, if so replan
         if len(self.plan) <= 2:
             self.set_new_goal()
             return True
+        
         else:
             for path_point in self.plan:
                 if self.agent_map[path_point[1], path_point[0]] == self.cfg.KNOWN_WALL:
