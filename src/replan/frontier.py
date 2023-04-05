@@ -4,16 +4,16 @@ from src.agent import Agent
 class Frontier_Closest(Agent):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.choose_random_frontier = False
+        self.choose_random = False
         
     def get_goal_method(self):
         # Get a random frontier point
-        frontier_point = self.get_new_location_xy(self.agent_map, self.cfg.FRONTIER, useRandom=self.choose_random_frontier)
+        frontier_point = self.get_new_location_xy(self.agent_map, self.cfg.FRONTIER, useRandom=self.choose_random)
         if frontier_point:
             return frontier_point
         
         # Get a random unknown point
-        unknown_point = self.get_new_location_xy(self.agent_map, self.cfg.UNKNOWN,  useRandom=self.choose_random_frontier)
+        unknown_point = self.get_new_location_xy(self.agent_map, self.cfg.UNKNOWN,  useRandom=self.choose_random)
         if unknown_point is None:
             self.plan = []
             self.area_completed = True
@@ -25,16 +25,16 @@ class Frontier_Closest(Agent):
 class Frontier_Random(Frontier_Closest):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.choose_random_frontier = True
+        self.choose_random = True
 
 
 class Unknown_Closest(Agent):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.random_unknown = False
+        self.choose_random = False
 
     def get_goal_method(self):
-        unknown_point = self.get_new_location_xy(self.agent_map, self.cfg.UNKNOWN,  useRandom=self.random_unknown)
+        unknown_point = self.get_new_location_xy(self.agent_map, self.cfg.UNKNOWN,  useRandom=self.choose_random)
         if unknown_point is None:
             self.plan = []
             self.area_completed = True
@@ -44,4 +44,4 @@ class Unknown_Closest(Agent):
 class Unknown_Random(Unknown_Closest):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.choose_random_unknown = True
+        self.choose_random = True

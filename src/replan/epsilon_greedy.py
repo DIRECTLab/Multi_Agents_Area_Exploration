@@ -11,7 +11,9 @@ class Epsilon_Greedy_Unknown(Unknown_Random):
     def get_goal_method(self):
         p = np.random.random()
         if p > self.epsilon:
-          self.choose_random_unknown = not self.choose_random_unknown
+          self.choose_random = False
+        else:
+           self.choose_random = True
 
         return super().get_goal_method()
 
@@ -22,8 +24,11 @@ class Epsilon_Greedy_Frontier(Frontier_Random):
 
     def get_goal_method(self):
         p = np.random.random()
-        if p > self.epsilon:
-          self.choose_random_frontier = not self.choose_random_frontier
+        # if p > self.epsilon:
+        #   self.choose_random_unknown = False
+        # else:
+        #    self.choose_random_unknown = True
+        self.choose_random = False
 
         return super().get_goal_method()
 
@@ -33,9 +38,8 @@ class Decay_Epsilon_Greedy_Unknown(Epsilon_Greedy_Unknown):
         self.epsilon = 1.0
 
       def get_goal_method(self):
-        decay_rate = 1.0 / (self.frame_count * self.ground_truth_map.shape[0] * self.ground_truth_map.shape[1])
-
-        self.epsilon -= decay_rate
+        decay_rate = 1.0 / self.frame_count + 0.00001
+        self.epsilon = decay_rate
         return super().get_goal_method()
 
 
@@ -44,9 +48,7 @@ class Decay_Epsilon_Greedy_Frontier(Epsilon_Greedy_Frontier):
         super().__init__(*args, **kwargs)
         self.epsilon = 1.0
 
-
       def get_goal_method(self):
-        decay_rate = 1.0 / (self.frame_count * self.ground_truth_map.shape[0] * self.ground_truth_map.shape[1])
-
-        self.epsilon -= decay_rate
+        self.epsilon = np.where(self.agent_map == self.cfg.UNKNOWN, 1, 0).sum() / self.agent_map.size     
         return super().get_goal_method()
+      

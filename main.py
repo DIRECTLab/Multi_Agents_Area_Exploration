@@ -31,10 +31,10 @@ def main():
         # Voronoi_Frontier_Help_Random,
         # Decision_Frontier_Closest,
         # Darp,                                   # Requires the DRAW_SIM in config file to be True.
-        Decay_Epsilon_Greedy_Unknown,
+        # Decay_Epsilon_Greedy_Unknown,
         Decay_Epsilon_Greedy_Frontier,
-        Epsilon_Greedy_Unknown,
-        Epsilon_Greedy_Frontier,
+        # Epsilon_Greedy_Unknown,
+        # Epsilon_Greedy_Frontier,
         ]
     Start_scenario_list = [
         # Edge_Start_Position,
