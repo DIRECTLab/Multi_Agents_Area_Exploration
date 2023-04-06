@@ -169,8 +169,8 @@ def setup_experiment(
         print("here is the goal locations1...", goal_locations_rc)
 
 
-        fig, ax = plt.subplots()
-        ax.matshow(ground_truth_map)
+        # fig, ax = plt.subplots()
+        # ax.matshow(ground_truth_map)
         # obstacle_locations = np.argwhere(down_sampled_map == False)
 
         obstacle_locations = np.argwhere(ground_truth_map == False)
@@ -233,8 +233,8 @@ def setup_experiment(
             else:
                 down_sampled_map[door_y+1,door_x] = cfg.EMPTY
 
-        fig, ax = plt.subplots()
-        ax.matshow(down_sampled_map)
+        # fig, ax = plt.subplots()
+        # ax.matshow(down_sampled_map)
         obstacle_locations = np.argwhere(down_sampled_map == False)
 
         # obstacle_locations = np.argwhere(ground_truth_map == False)

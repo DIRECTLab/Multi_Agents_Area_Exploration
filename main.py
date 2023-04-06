@@ -25,7 +25,7 @@ def main():
     ratio_list = [(50,50),(25,75)]
     
     Method_list = [
-        Frontier_Random,
+        # Frontier_Random,
         # Frontier_Closest,
         # Voronoi_Frontier_Random,
         # Voronoi_Frontier_Closest,
