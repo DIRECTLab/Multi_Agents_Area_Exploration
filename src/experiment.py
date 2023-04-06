@@ -72,6 +72,7 @@ def setup_experiment(
     map_screen = cur_world.screen.copy()
     # cur_world.get_map(show_grid=True)
     minimum_comparison_table = None
+    upscaling_down_sampled_map_for_vis = None
 
     data= {
         'area_percent' : [],

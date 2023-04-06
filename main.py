@@ -25,7 +25,7 @@ def main():
     ratio_list = [(50,50),(25,75)]
     
     Method_list = [
-        Frontier_Random,
+        # Frontier_Random,
         # Frontier_Closest,
         # Voronoi_Frontier_Random,
         # Voronoi_Frontier_Closest,
@@ -33,8 +33,8 @@ def main():
         # Voronoi_Frontier_Help_Random,
         # Decision_Frontier_Closest,
         # DarpMST,
-        # DarpVorOnly,
-        # {'Voronoi_Frontier_Random', 'Frontier_Random'}                                 # Requires the DRAW_SIM in config file to be True.
+        DarpVorOnly,
+        # {'Voronoi_Frontier_Random', 'Frontier_Random'}
         # "Heterogenus"
         ]
     Start_scenario_list = [
