@@ -9,6 +9,7 @@ dependencies:
   - argon2-cffi-bindings=21.2.0
   - asttokens=2.0.5
   - attrs=22.1.0
+  - autopep8=1.6.0
   - babel=2.11.0
   - backcall=0.2.0
   - beautifulsoup4=4.11.1
@@ -93,7 +94,7 @@ dependencies:
   - notebook-shim=0.2.2
   - nspr=4.33
   - nss=3.74
-  - openssl=1.1.1s
+  - openssl=1.1.1t
   - packaging=22.0
   - pandocfilters=1.5.0
   - parso=0.8.3
@@ -109,6 +110,7 @@ dependencies:
   - psutil=5.9.0
   - ptyprocess=0.7.0
   - pure_eval=0.2.2
+  - pycodestyle=2.10.0
   - pycparser=2.21
   - pygments=2.11.2
   - pyopenssl=22.0.0
@@ -160,10 +162,15 @@ dependencies:
       - cycler==0.11.0
       - fonttools==4.38.0
       - imageio-ffmpeg==0.4.8
+      - joblib==1.2.0
       - kiwisolver==1.4.4
-      - matplotlib==3.6.3
-      - numpy==1.24.2
-      - opencv-python==4.7.0.68
+      - llvmlite==0.39.1
+      - matplotlib==3.7.1
+      - numba==0.56.4
+      - numpy==1.23.5
+      - opencv-contrib-python==4.7.0.72
+      - opencv-contrib-python-headless==4.7.0.72
+      - opencv-python-headless==4.7.0.72
       - pandas==1.5.3
       - pillow==9.4.0
       - pygame==2.1.2
@@ -172,6 +179,8 @@ dependencies:
       - pypng==0.20220715.0
       - pyqt5-sip==12.11.0
       - pyqtgraph==0.13.1
+      - scikit-learn==1.2.2
       - scipy==1.10.1
+      - threadpoolctl==3.1.0
       - tqdm==4.64.1
 prefix: /home/hmk/.miniconda3/envs/jupyterpath

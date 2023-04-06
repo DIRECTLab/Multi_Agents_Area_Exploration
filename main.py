@@ -14,13 +14,16 @@ from src.replan.decision import *
 from src.darp.darp import *
 from src.replan.epsilon_greedy import *
 
+import itertools
+
 def main():
     all_df = pd.DataFrame()
     df_index = 0
     
     process_manager = Manager()
     return_dict = process_manager.dict()
-    Process_list = [] 
+    Process_list = []
+    ratio_list = [(50,50),(25,75)]
     
     Method_list = [
         # Frontier_Random,
@@ -37,12 +40,14 @@ def main():
         # Epsilon_Greedy_Frontier,
         ]
     Start_scenario_list = [
+        # Manual_Start,
         # Edge_Start_Position,
         # Top_Left_Start_Position,
         Rand_Start_Position,
         # Center_Start_Position,
         ]
     Start_Goal_list= [
+        # Manual_Goal,
         Rand_Start_Goal,
         # Center_Start_Goal,
         # Top_Left_Start_Goal,
@@ -55,12 +60,28 @@ def main():
 
 
     prosses_count = 0
-    for map_length in range(20,30,10):
+    for map_length in range(50,100,50):
         for agent_count in range(4,10,2):
+            print(f"map_length: {map_length} agent_count: {agent_count}")
             for start in Start_scenario_list:
                 for goal in Start_Goal_list:
                     for Method in Method_list:
+                        # if Method == "Heterogenus":
+                        #     cur_Method_list = Method_list[:-1]
+                        #     print("\n\n")
+                        #     # get every combo of all the methods starting from 2 to the number of methods
+                            
+                        #     for combo in itertools.combinations(cur_Method_list, 2):
+                        #         print(f"combo {len(combo)} {combo}")
+                        #         method1 = combo[0]
+                        #         method2 = combo[1]
 
+                        #         # ratio assinment of the agents
+                        #         for ratio in ratio_list:
+                        #             method1_couint =  ratio[0]
+                        #             method2_couint =  ratio[1]
+
+                        # continue
                         cfg = Config()
                         cfg.SEED = int(map_length )
                         cfg.N_BOTS = int(agent_count)
@@ -77,6 +98,7 @@ def main():
                         print(f"Starting Experiment: {experiment_name}")
 
                         Agent_Class = type('Agent_Class', (Method, start, goal), {})
+                        
 
                         search_method =''.join(str(base.__name__)+'\n'  for base in Agent_Class.__bases__)
                         search_method += Agent_Class.__name__
