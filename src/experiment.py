@@ -158,12 +158,12 @@ def setup_experiment(
 
     elif 'DarpVorOnly' in search_method:
         start_time = time.time()
-        agent_locations_rc = []
+        # agent_locations_rc = []
         goal_locations_rc = []
         for i in range(len(bots)):
-            agent_locations_rc.append((bots[i].grid_position_xy[0], bots[i].grid_position_xy[1]))
-            goal_locations_rc.append((bots[i].goal_xy[0], bots[i].goal_xy[1]))
-        print("here is the agent locations...", agent_locations_rc)
+            # agent_locations_rc.append((bots[i].grid_position_xy[0], bots[i].grid_position_xy[1]))
+            goal_locations_rc.append((bots[i].goal_xy[1], bots[i].goal_xy[0]))
+        # print("here is the agent locations...", agent_locations_rc)
         print("here is the goal locations1...", goal_locations_rc)
 
 
