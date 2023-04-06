@@ -25,6 +25,8 @@ class Voronoi_Frontier_Closest(Agent):
             return self.my_area_done(frontier_and_unknown)
         
         assigned_assigned = []
+        assert len(self.assigned_points) > 0, "assigned points is empty"
+
         for point in frontier_and_unknown:
             if tuple(point) in self.assigned_points:
                 assigned_assigned.append(point)
@@ -50,13 +52,7 @@ class Voronoi_Frontier_Random(Voronoi_Frontier_Closest):
         super().__init__(*args, **kwargs)
         self.random_frontier = True
 
-class Darp(Voronoi_Frontier_Closest):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.random_frontier = False
 
-    def check_should_replan(self):
-        return False
 
 class Voronoi_Frontier_Help_Closest(Voronoi_Frontier_Closest):
     def __init__(self, *args, **kwargs):
@@ -88,3 +84,17 @@ class Voronoi_Frontier_Help_Random(Voronoi_Frontier_Help_Closest):
         point = tuple(done_search_points[idx])
         # return in X, Y format
         return (point[1], point[0])
+
+
+class DarpVorOnly(Voronoi_Frontier_Help_Closest):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.random_frontier = False
+
+class DarpMST(Voronoi_Frontier_Help_Closest):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.random_frontier = False
+
+    def check_should_replan(self):
+        return False

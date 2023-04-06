@@ -32,17 +32,20 @@ def main():
         # Voronoi_Frontier_Help_Closest,
         # Voronoi_Frontier_Help_Random,
         # Decision_Frontier_Closest,
-        Darp,
+        DarpMST,
+        # DarpVorOnly,
         # {'Voronoi_Frontier_Random', 'Frontier_Random'}                                 # Requires the DRAW_SIM in config file to be True.
         # "Heterogenus"
         ]
     Start_scenario_list = [
+        # Manual_Start,
         # Edge_Start_Position,
         # Top_Left_Start_Position,
         Rand_Start_Position,
         # Center_Start_Position,
         ]
     Start_Goal_list= [
+        # Manual_Goal,
         Rand_Start_Goal,
         # Center_Start_Goal,
         # Top_Left_Start_Goal,

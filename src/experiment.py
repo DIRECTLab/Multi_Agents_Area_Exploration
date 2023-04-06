@@ -155,8 +155,47 @@ def setup_experiment(
             assigned_points = [tuple(point) for point in assigned_points]
             bot.assigned_points = assigned_points
             assert len(assigned_points) > 0, "No points assigned to bot"
+
+    elif 'DarpVorOnly' in search_method:
+        start_time = time.time()
+        agent_locations_rc = []
+        goal_locations_rc = []
+        for i in range(len(bots)):
+            agent_locations_rc.append((bots[i].grid_position_xy[0], bots[i].grid_position_xy[1]))
+            goal_locations_rc.append((bots[i].goal_xy[0], bots[i].goal_xy[1]))
+        print("here is the agent locations...", agent_locations_rc)
+        print("here is the goal locations1...", goal_locations_rc)
+
+
+        fig, ax = plt.subplots()
+        ax.matshow(ground_truth_map)
+        # obstacle_locations = np.argwhere(down_sampled_map == False)
+
+        obstacle_locations = np.argwhere(ground_truth_map == False)
+        tuple_obst = tuple(map(tuple, obstacle_locations))
+
+        # print("here are the obstacles...", tuple_obst)
+        darp_instance = DARP(cfg.ROWS, cfg.COLS, goal_locations_rc, tuple_obst)
+
+        darp_success , iterations = darp_instance.divideRegions()
+
+        end_time = time.time()
+        it_took = end_time - start_time
+        print("total time it take to divide the map using darp:", it_took, "this many iterations:", iterations)
+
+        for bot in bots:
+            assigned_points = np.argwhere(darp_instance.A == bot.id)
+            # convert list of list into list of tuples
+            assigned_points = [tuple(point) for point in assigned_points]
+            # new_four_points = []
+            # for point in assigned_points:
+            #     new_four_points.extend(((point[0]*2, point[1]*2), (point[0]*2, point[1]*2+1), (point[0]*2+1, point[1]*2), (point[0]*2+1, point[1]*2+1)))
+            # bot.assigned_points = new_four_points
+            bot.assigned_points = assigned_points
+            assert len(assigned_points) > 0, "No points assigned to bot"
+
     
-    elif 'Darp' in search_method:
+    elif 'DarpMST' in search_method:
         start_time = time.time()
         agent_locations_rc = []
         for i in range(len(bots)):
@@ -225,7 +264,7 @@ def setup_experiment(
     if cfg.DRAW_SIM:
         bot_fig.savefig(folder_name + '/starting_bot.png')
     
-    return [data, bots, ground_truth_map, mutual_data, log_plot_obj, minimum_comparison_table, cur_world, map_screen, folder_name]
+    return [data, bots, ground_truth_map, mutual_data, log_plot_obj, minimum_comparison_table, cur_world, map_screen, folder_name, darp_instance]
 
 def run_experiment(process_ID, 
                 return_dict, 
@@ -236,8 +275,8 @@ def run_experiment(process_ID,
                 debug=False):
 
     [data, bots, ground_truth_map, mutual_data, log_plot_obj, 
-            minimum_comparison_table, cur_world, map_screen, folder_name] = set_up_data
-    if cfg.DRAW_SIM:        
+            minimum_comparison_table, cur_world, map_screen, folder_name, darp_instance] = set_up_data
+    if cfg.DRAW_SIM:
         # Display the floor plan on the screen
         pygame.display.update()
         FPS = 10
@@ -308,8 +347,12 @@ def run_experiment(process_ID,
                 # update the ground_truth_map and plt
                 log_plot_obj.plot_map(mutual_data['map'], bots, data)
                 log_plot_obj.map_ax.set_title(f"Max Known Area {ground_truth_map.size}\n {search_method} \n{experiment_name.replace('_',' ').title()}")
-                if 'Voronoi' in search_method:
+                if 'Voronoi' in search_method :
                     log_plot_obj.map_ax.matshow(minimum_comparison_table, alpha=0.3)
+
+                if "Darp" in search_method: #or "DarpVorOnly" in search_method:
+                    log_plot_obj.map_ax.matshow(darp_instance.A, alpha=0.3)
+
 
             if cfg.DRAW_SIM or cfg.LOG_PLOTS:
                 # update the ground_truth_map but continue 
