@@ -28,14 +28,15 @@ def main():
     Method_list = [
         # Frontier_Random,
         # Frontier_Closest,
-        Voronoi_Frontier_Random,
-        Voronoi_Frontier_Closest,
-        Voronoi_Frontier_Help_Closest,
-        Voronoi_Frontier_Help_Random,
-        Decision_Frontier_Closest,
-        # Darp,                                   # Requires the DRAW_SIM in config file to be True.
+        # Voronoi_Frontier_Random,
+        # Voronoi_Frontier_Closest,
+        # Voronoi_Frontier_Help_Closest,
+        # Voronoi_Frontier_Help_Random,
+        # Decision_Frontier_Closest,
+        DarpVorOnly,
+        # DarpMST,
         # Decay_Epsilon_Greedy_Unknown,
-        Decay_Epsilon_Greedy_Frontier,
+        # Decay_Epsilon_Greedy_Frontier,
         # Epsilon_Greedy_Unknown,
         # Epsilon_Greedy_Frontier,
         ]
