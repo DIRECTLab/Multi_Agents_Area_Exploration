@@ -7,8 +7,8 @@ import numpy as np
 import matplotlib.pyplot as plt
 import warnings
 from src.planners.astar_new import astar
-# from src.replan.random_frontier import *
-# from src.replan.voronoi_random_frontier import *
+# from src.replan.choose_random import *
+# from src.replan.voronoi_choose_random import *
 
 
 class Point_Finding:

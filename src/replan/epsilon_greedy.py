@@ -37,8 +37,7 @@ class Decay_Epsilon_Greedy_Unknown(Epsilon_Greedy_Unknown):
         self.epsilon = 1.0
 
       def get_goal_method(self):
-        decay_rate = 1.0 / self.frame_count + 0.00001
-        self.epsilon = decay_rate
+        self.epsilon = np.where(self.agent_map == self.cfg.UNKNOWN, 1, 0).sum() / self.agent_map.size  
         return super().get_goal_method()
 
 

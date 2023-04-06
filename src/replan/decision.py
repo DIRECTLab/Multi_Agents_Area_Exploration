@@ -46,13 +46,13 @@ class Decision_Frontier_Closest(Unknown_Random):
                     # we have a shorter plan, we can take the goal0
                     # we need to pick a new goal for self
                     self.save_to_mutual_data(mutual_data)
-                    self.random_unknown = False
+                    self.choose_random = False
                     return super().update(mutual_data, draw)
                 else:
                     # we have a longer plan, we loose the goal
                     self.plan= []
                     self.goal_xy = None
-                    self.random_unknown = True
+                    self.choose_random = True
                     # mutual_data['Agent_Data'][self.id]['plan'] = []
                     # mutual_data['Agent_Data'][self.id]['goal_xy'] = None
                     # mutual_data['Agent_Data'][self.id]['grid_position_xy'] = self.grid_position_xy

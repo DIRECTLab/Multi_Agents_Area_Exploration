@@ -4,7 +4,7 @@ from src.agent import Agent
 class Voronoi_Frontier_Closest(Agent):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs) 
-        self.random_frontier = False
+        self.choose_random = False
 
     def my_area_done(self, done_search_points):
         return self.grid_position_xy
@@ -30,13 +30,13 @@ class Voronoi_Frontier_Closest(Agent):
                 assigned_assigned.append(point)
 
         # Get a random frontier point
-        frontier_point = self.get_new_location_xy(assigned_assigned, self.cfg.FRONTIER, useRandom=self.random_frontier)
+        frontier_point = self.get_new_location_xy(assigned_assigned, self.cfg.FRONTIER, useRandom=self.choose_random)
         if frontier_point:
             # Found a frontier point
             return frontier_point
         
         # Get a random unknown point
-        unknown_point = self.get_new_location_xy(np.array(assigned_assigned), self.cfg.UNKNOWN, useRandom=self.random_frontier)
+        unknown_point = self.get_new_location_xy(np.array(assigned_assigned), self.cfg.UNKNOWN, useRandom=self.choose_random)
         if unknown_point is None:
             self.plan = []
             self.area_completed = True
@@ -48,12 +48,12 @@ class Voronoi_Frontier_Closest(Agent):
 class Voronoi_Frontier_Random(Voronoi_Frontier_Closest):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.random_frontier = True
+        self.choose_random = True
 
 class Darp(Voronoi_Frontier_Closest):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.random_frontier = False
+        self.choose_random = False
 
 class Voronoi_Frontier_Help_Closest(Voronoi_Frontier_Closest):
     def __init__(self, *args, **kwargs):
@@ -74,7 +74,7 @@ class Voronoi_Frontier_Help_Closest(Voronoi_Frontier_Closest):
 class Voronoi_Frontier_Help_Random(Voronoi_Frontier_Help_Closest):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.random_frontier = True
+        self.choose_random = True
 
     def my_area_done(self, done_search_points):
         self.area_completed = False
