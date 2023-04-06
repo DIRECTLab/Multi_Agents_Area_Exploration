@@ -99,6 +99,7 @@ def setup_experiment(
         row = int(np.sqrt(cfg.N_BOTS))
         col = int(np.ceil(cfg.N_BOTS/row))
         bot_fig, bot_ax = plt.subplots(row, col, )#figsize=(10, 10))
+        bot_fig.set_facecolor('gray')
 
         if cfg.N_BOTS == 1:
             bot_ax = [bot_ax]
