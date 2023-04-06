@@ -9,6 +9,11 @@ class Center_Start_Position:
         center_xy = (int(self.cfg.COLS//2), int(self.cfg.ROWS//2))
         self.grid_position_xy = center_xy
 
+class Manual_Start:
+    four_start_pos = [(14, 4), (26, 27), (43, 20), (19, 6)]
+    def choose_start_position(self):
+        self.grid_position_xy = self.four_start_pos[self.id]
+
 class Top_Left_Start_Position:
     def choose_start_position(self):
         top_left_xy = (1, 1)

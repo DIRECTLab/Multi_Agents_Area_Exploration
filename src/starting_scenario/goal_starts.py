@@ -1,6 +1,10 @@
 import numpy as np
+import random
 
 class Rand_Start_Goal:
+    def __init__(self):
+        print("hello from random start")
+        # random.seed(cfg.SEED)
     def choose_start_goal(self):
         self.goal_xy = self.get_random_point()
 
@@ -8,6 +12,11 @@ class Center_Start_Goal:
     def choose_start_goal(self):
         center_xy = (int(self.cfg.COLS//2), int(self.cfg.ROWS//2))
         self.goal_xy = center_xy
+
+class Manual_Goal:
+    four_goal_pos = [(10,10), (20,20), (30,30), (45,45)]
+    def choose_start_goal(self):
+        self.goal_xy = self.four_goal_pos[self.id]
 
 class Top_Left_Start_Goal:
     def choose_start_goal(self):
