@@ -193,6 +193,8 @@ def setup_experiment(
             # bot.assigned_points = new_four_points
             bot.assigned_points = assigned_points
             assert len(assigned_points) > 0, "No points assigned to bot"
+        
+        upscaling_down_sampled_map_for_vis = darp_instance.A
 
     
     elif 'DarpMST' in search_method:
@@ -244,6 +246,15 @@ def setup_experiment(
         end_time = time.time()
         it_took = end_time - start_time
 
+        upscaling_down_sampled_map_for_vis = np.zeros((cfg.ROWS, cfg.COLS))
+        for i in range(len(darp_instance.A)):
+            for j in range(len(darp_instance.A[0])):
+                point = darp_instance.A[i][j]
+                upscaling_down_sampled_map_for_vis[i*2, j*2] = point
+                upscaling_down_sampled_map_for_vis[i*2, j*2+1] = point
+                upscaling_down_sampled_map_for_vis[i*2+1, j*2] = point
+                upscaling_down_sampled_map_for_vis[i*2+1, j*2+1] = point
+
         if darp_success:
             run_mst(iterations, bots, darp_instance)
             
@@ -264,7 +275,7 @@ def setup_experiment(
     if cfg.DRAW_SIM:
         bot_fig.savefig(folder_name + '/starting_bot.png')
     
-    return [data, bots, ground_truth_map, mutual_data, log_plot_obj, minimum_comparison_table, cur_world, map_screen, folder_name, darp_instance]
+    return [data, bots, ground_truth_map, mutual_data, log_plot_obj, minimum_comparison_table, cur_world, map_screen, folder_name, upscaling_down_sampled_map_for_vis]
 
 def run_experiment(process_ID, 
                 return_dict, 
@@ -275,7 +286,7 @@ def run_experiment(process_ID,
                 debug=False):
 
     [data, bots, ground_truth_map, mutual_data, log_plot_obj, 
-            minimum_comparison_table, cur_world, map_screen, folder_name, darp_instance] = set_up_data
+            minimum_comparison_table, cur_world, map_screen, folder_name, upscaling_down_sampled_map_for_vis] = set_up_data
     if cfg.DRAW_SIM:
         # Display the floor plan on the screen
         pygame.display.update()
@@ -351,7 +362,7 @@ def run_experiment(process_ID,
                     log_plot_obj.map_ax.matshow(minimum_comparison_table, alpha=0.3)
 
                 if "Darp" in search_method: #or "DarpVorOnly" in search_method:
-                    log_plot_obj.map_ax.matshow(darp_instance.A, alpha=0.3)
+                    log_plot_obj.map_ax.matshow(upscaling_down_sampled_map_for_vis, alpha=0.3)
 
 
             if cfg.DRAW_SIM or cfg.LOG_PLOTS:
