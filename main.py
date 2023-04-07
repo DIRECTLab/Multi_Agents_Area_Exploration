@@ -119,7 +119,8 @@ def main():
                                                 set_up_data = set_up_data, 
                                                 debug=True)
                                     df_index += 1
-                                    continue                                    
+                                    continue
+                            continue
 
                         Agent_Class = type('Agent_Class', (Method, start, goal), {})
                         search_method =''.join(str(base.__name__)+'\n'  for base in Agent_Class.__bases__)
