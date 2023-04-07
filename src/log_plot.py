@@ -5,6 +5,7 @@ class LogPlot:
     def __init__(self,cfg, data, split_plot=True):
         self.cfg = cfg
         map_fig = plt.figure(figsize=(10, 10))
+        map_fig.set_facecolor('gray')
         # map_fig, (map_ax, ax2) = plt.subplots(1, 2,)
         map_ax = plt.subplot2grid((1, 3), (0, 0), rowspan=3, colspan=1)
         ax2 = plt.subplot2grid((3, 3), (0, 1), rowspan=3, colspan=2)
@@ -15,7 +16,7 @@ class LogPlot:
         self.split_plot = split_plot
 
         for i, data_key in enumerate(list(data.keys())[0:plot_rows]):
-            self.color_dict[data_key] = f"C{i}"
+            self.color_dict[data_key] = f"C{i*2}"
             if self.split_plot:
                     self.ax_dict[data_key] = plt.subplot2grid((plot_rows, 3), (i, 1), rowspan=1, colspan=2)
             else:

@@ -11,7 +11,8 @@ from src.replan.voronoi_basic import *
 from src.starting_scenario.starting_methods import *
 from src.starting_scenario.goal_starts import *
 from src.replan.decision import *
-# from src.darp.darp import *
+from src.darp.darp import *
+from src.replan.epsilon_greedy import *
 
 import itertools
 
@@ -29,20 +30,31 @@ def main():
         Frontier_Random,
         # Frontier_Closest,
         Voronoi_Frontier_Random,
+        # Frontier_Random,
+        # Frontier_Closest,
+        # Voronoi_Frontier_Random,
         # Voronoi_Frontier_Closest,
         # Voronoi_Frontier_Help_Closest,
         # Voronoi_Frontier_Help_Random,
         # Decision_Frontier_Closest,
         # Darp,  
         # {'Voronoi_Frontier_Random', 'Frontier_Random'}                                 # Requires the DRAW_SIM in config file to be True.
+        DarpVorOnly,
+        # DarpMST,
+        # Decay_Epsilon_Greedy_Unknown,
+        # Decay_Epsilon_Greedy_Frontier,
+        # Epsilon_Greedy_Unknown,
+        # Epsilon_Greedy_Frontier,
         ]
     Start_scenario_list = [
+        # Manual_Start,
         # Edge_Start_Position,
         # Top_Left_Start_Position,
         Rand_Start_Position,
         # Center_Start_Position,
         ]
     Start_Goal_list= [
+        # Manual_Goal,
         Rand_Start_Goal,
         # Center_Start_Goal,
         # Top_Left_Start_Goal,
@@ -55,8 +67,8 @@ def main():
 
 
     prosses_count = 0
-    for map_length in range(20,30,10):
-        for agent_count in range(4,6,2):
+    for map_length in range(50,100,50):
+        for agent_count in range(4,10,2):
             print(f"map_length: {map_length} agent_count: {agent_count}")
             for start in Start_scenario_list:
                 for goal in Start_Goal_list:
