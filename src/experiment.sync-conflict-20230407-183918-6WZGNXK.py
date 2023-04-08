@@ -57,7 +57,7 @@ def generate_voronoi_division_grid(grid, bots, matrix_list, agent_locs, log_plot
 def setup_experiment(
                 cfg,
                 experiment_name,
-                Agent_Class_list,
+                Agent_Class,
                 search_method):
     
     if cfg.DRAW_SIM:
@@ -134,9 +134,8 @@ def setup_experiment(
 
     assert cfg.USE_THREADS != True, "The use of the threads is not enabled"
     
-    # Agent_Class_list
-    for i, agent_class in enumerate(Agent_Class_list):
-        bots.append(agent_class(
+    for i in range(cfg.N_BOTS):
+        bots.append(Agent_Class(
                     cfg = cfg,
                     id = i,
                     body_size = 3,

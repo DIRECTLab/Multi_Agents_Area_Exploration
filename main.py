@@ -26,14 +26,15 @@ def main():
     ratio_list = [(50,50),(25,75)]
     
     Method_list = [
-        # Frontier_Random,
+        "Heterogenus",
+        Frontier_Random,
         # Frontier_Closest,
-        # Voronoi_Frontier_Random,
+        Voronoi_Frontier_Random,
         # Voronoi_Frontier_Closest,
         # Voronoi_Frontier_Help_Closest,
         # Voronoi_Frontier_Help_Random,
         # Decision_Frontier_Closest,
-        DarpVorOnly,
+        # DarpVorOnly,
         # DarpMST,
         # Decay_Epsilon_Greedy_Unknown,
         # Decay_Epsilon_Greedy_Frontier,
@@ -61,8 +62,8 @@ def main():
 
 
     prosses_count = 0
-    for map_length in range(50,100,50):
-        for agent_count in range(4,10,2):
+    for map_length in range(20,30,10):
+        for agent_count in range(4,8,2):
             print(f"map_length: {map_length} agent_count: {agent_count}")
             for start in Start_scenario_list:
                 for goal in Start_Goal_list:
@@ -98,14 +99,57 @@ def main():
                         experiment_name = f"test_{agent_count}_nbots:{cfg.N_BOTS}_rows:{cfg.ROWS}_cols:{cfg.COLS}_seed:{cfg.SEED}"
                         print(f"Starting Experiment: {experiment_name}")
 
+                        Agent_Class_list = []
+
+                        if Method == "Heterogenus":
+                            # remove the heterogenus from the list
+                            cur_Method_list = Method_list.copy()
+                            cur_Method_list.remove("Heterogenus")
+
+                            print("\n\n")
+                            # get every combo of all the methods starting from 2 to the number of methods
+                            
+                            for combo in itertools.combinations(cur_Method_list, 2):
+                                print(f"combo {len(combo)} {combo}")
+                                method1 = type(combo[0].__name__, (combo[0], start, goal), {})
+                                method2 = type(combo[1].__name__, (combo[1], start, goal), {})
+
+                                # ratio assinment of the agents
+                                for ratio in [(.50,.50), (.25,.75), (.75,.25)]:
+                                    method1_couint =  int(cfg.N_BOTS * ratio[0]) # % of the agents
+                                    method2_couint =  int(cfg.N_BOTS * ratio[1])
+
+                                    Agent_Class_list = [method1] * method1_couint
+                                    Agent_Class_list += [method2] * method2_couint
+
+                                    search_method =''
+                                    for i , name in enumerate(Agent_Class_list):
+                                        search_method += str(i) +' '+str(name).replace("<class '__main__.","").replace("'>","").replace(" ", "") + '\n'
+
+                                    print("Method:", search_method)
+
+                                    set_up_data = setup_experiment(cfg, experiment_name, Agent_Class_list, search_method, )
+
+                                    run_experiment(prosses_count, 
+                                                return_dict,
+                                                cfg,
+                                                experiment_name, 
+                                                search_method =search_method,
+                                                set_up_data = set_up_data, 
+                                                debug=True)
+                                    df_index += 1
+                                    continue
+                            continue
+
                         Agent_Class = type('Agent_Class', (Method, start, goal), {})
                         
 
                         search_method =''.join(str(base.__name__)+'\n'  for base in Agent_Class.__bases__)
                         search_method += Agent_Class.__name__
                         print("Method:", search_method)
+                        Agent_Class_list = [Agent_Class] * cfg.N_BOTS
 
-                        set_up_data = setup_experiment(cfg, experiment_name, Agent_Class, search_method, )
+                        set_up_data = setup_experiment(cfg, experiment_name, Agent_Class_list, search_method, )
 
                         run_experiment(prosses_count, 
                                     return_dict,
