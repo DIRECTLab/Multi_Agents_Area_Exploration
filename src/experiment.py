@@ -65,6 +65,10 @@ def setup_experiment(
         pygame.init()
     else:
         os.environ["SDL_VIDEODRIVER"] = "dummy"
+    
+    # Set the random seed for reproducibility
+    random.seed(cfg.SEED)
+    np.random.seed(cfg.SEED)
     # Define the size of the screen
     cur_world = world.World(cfg)
     # Generate the floor plan
