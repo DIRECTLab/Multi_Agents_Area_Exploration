@@ -123,7 +123,7 @@ class Experiment:
                 bot_ax = [bot_ax]
             else:
                 bot_ax = bot_ax.flatten()
-            plt.ion()
+            # plt.ion()
         
 
         if 'Voronoi' in search_method:
@@ -309,23 +309,8 @@ class Experiment:
         self.frame_count = 0
         self.sim_start_time = psutil.Process().cpu_times().user
 
-    def run_experiment(self, pre_functions=None, post_functions=None):
-        self.setup_run_now()
-        done = False
-        while not done:
-            if pre_functions:
-                for func in pre_functions:
-                    func()
 
-            done = self.env_step()
-
-            if post_functions:
-                for func in post_functions:
-                    func()
-        
-        self.clean_up_experament()
-
-    def clean_up_experament(self):
+    def clean_up_experiment(self):
             
         print(f"Simulation Complete: {self.experiment_name} in {self.data['delta_time'][-1]} seconds")
         
@@ -373,32 +358,58 @@ class Experiment:
         self.return_dict[self.process_ID] = [df, self.cfg, self.ground_truth_map]
         return df, self.cfg, self.ground_truth_map
 
+    def render(self):
+        if self.cfg.DRAW_SIM:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    pygame.quit()
+                    quit()
+            self.clock.tick(self.FPS)
+            # update the scrren
+            pygame.display.update()
+            self.cur_world.screen.blit(self.map_screen, (0, 0))
+            print("clock.get_fps()",self.clock.get_fps(), end='\r')
+
+        if self.cfg.LOG_PLOTS:
+            # update the ground_truth_map and plt
+            self.log_plot_obj.plot_map(self.mutual_data['map'], self.bots, self.data)
+            self.log_plot_obj.map_ax.set_title(f"Max Known Area {self.ground_truth_map.size}\n {self.search_method} \n{self.experiment_name.replace('_',' ').title()}")
+            if 'Voronoi' in self.search_method :
+                self.log_plot_obj.map_ax.matshow(self.minimum_comparison_table, alpha=0.3)
+
+            if "Darp" in self.search_method: #or "DarpVorOnly" in search_method:
+                self.log_plot_obj.map_ax.matshow(self.upscaling_down_sampled_map_for_vis, alpha=0.3)
+
+
+        if self.cfg.DRAW_SIM or self.cfg.LOG_PLOTS:
+            # update the ground_truth_map but continue 
+            # wait to update plt at FPS of 10
+            # if frame_count % 3 == 0:
+                # map_ax.matshow(mutual_data)
+            plt.pause(0.00001)
+                # plt.pause(0.1)
+            plt.draw()
+
+    def spawn_update_thread(self):
+        threads = []
+        start_time = psutil.Process().cpu_times().user
+        pool = ThreadPool(processes=len(self.bots))
+        for i, bot in enumerate(self.bots):
+            # place each bot in a different thread
+            t = pool.apply_async(bot.update, (self.mutual_data,self.cfg.DRAW_SIM ))
+            threads.append(t)
+        for i, (t, bot)  in enumerate(zip(threads,self.bots)):
+            [length, dist] = t.get()
+            path_length += length
+
 
     def env_step(self):
         # This is the main loop of the simulation
         path_length = 0
         replan_count = 0
         if self.cfg.USE_THREADS:
-            threads = []
-            start_time = psutil.Process().cpu_times().user
-            # for bot in bots:
-            #     # place each bot in a different thread
-            #     t = threading.Thread(target=bot.update, args=(mutual_data,cfg.DRAW_SIM ))
-            #     t.start()
-            #     theads.append(t)
-                    
-            pool = ThreadPool(processes=len(self.bots))
-            for i, bot in enumerate(self.bots):
-                # place each bot in a different thread
-                t = pool.apply_async(bot.update, (self.mutual_data,self.cfg.DRAW_SIM ))
-                threads.append(t)
-
-
-            for i, (t, bot)  in enumerate(zip(threads,self.bots)):
-                [length, dist] = t.get()
-                path_length += length
+            self.spawn_update_thread()
             end_time = psutil.Process().cpu_times().user
-
         else:
             # time the bot update
             start_time = psutil.Process().cpu_times().user
@@ -411,19 +422,7 @@ class Experiment:
                     self.data['epsilon_'+str(bot.id)].append(bot.epsilon)
 
             end_time = psutil.Process().cpu_times().user
-
-
-
-        if self.cfg.DRAW_SIM:
-            for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    pygame.quit()
-                    quit()
-            self.clock.tick(self.FPS)
-            # update the scrren
-            pygame.display.update()
-            self.cur_world.screen.blit(self.map_screen, (0, 0))
-            print("clock.get_fps()",self.clock.get_fps(), end='\r')
+  
 
         # LOG ALL THE DATA
         logging_time_start = psutil.Process().cpu_times().user
@@ -437,26 +436,8 @@ class Experiment:
         self.data['known_area'].append(cur_known)
 
 
-        if self.debug:
-            if self.cfg.LOG_PLOTS:
-                # update the ground_truth_map and plt
-                self.log_plot_obj.plot_map(self.mutual_data['map'], self.bots, self.data)
-                self.log_plot_obj.map_ax.set_title(f"Max Known Area {self.ground_truth_map.size}\n {self.search_method} \n{self.experiment_name.replace('_',' ').title()}")
-                if 'Voronoi' in self.search_method :
-                    self.log_plot_obj.map_ax.matshow(self.minimum_comparison_table, alpha=0.3)
-
-                if "Darp" in self.search_method: #or "DarpVorOnly" in search_method:
-                    self.log_plot_obj.map_ax.matshow(self.upscaling_down_sampled_map_for_vis, alpha=0.3)
-
-
-            if self.cfg.DRAW_SIM or self.cfg.LOG_PLOTS:
-                # update the ground_truth_map but continue 
-                # wait to update plt at FPS of 10
-                # if frame_count % 3 == 0:
-                    # map_ax.matshow(mutual_data)
-                plt.pause(0.00001)
-                    # plt.pause(0.1)
-                plt.draw()
+        # if self.debug:
+        #     self.render()
         
         self.frame_count += 1
         if cur_known == self.mutual_data['map'].size:
@@ -464,3 +445,19 @@ class Experiment:
 
         logging_end_time = psutil.Process().cpu_times().user
         self.data['logging_time'].append(logging_end_time - logging_time_start)
+
+
+    def run_experiment(self, func_arr, *args , **kwargs):
+        self.setup_run_now()
+        done = False
+        while not done:
+            if func_arr:
+                for func, func_args in zip(func_arr, args):
+                    # append self to the args
+                    func_args = list(func_args)
+                    func_args.append(self)
+                    func( *func_args, **kwargs) 
+
+            done = self.env_step()
+        
+        self.clean_up_experiment()
