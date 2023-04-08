@@ -67,7 +67,7 @@ def main():
     DEBUG = False
     
     Method_list = [
-        "Heterogenus",
+        # "Heterogenus",
         # Frontier_Random,
         # Frontier_Closest,
         Voronoi_Frontier_Random,
@@ -81,7 +81,7 @@ def main():
         # Darp,  
         # {'Voronoi_Frontier_Random', 'Frontier_Random'}                                 # Requires the DRAW_SIM in config file to be True.
         # DarpVorOnly,
-        Decision_Frontier_Closest,
+        # Decision_Frontier_Closest,
         # DarpVorOnly,
         # DarpMST,
         # Decay_Epsilon_Greedy_Unknown,
