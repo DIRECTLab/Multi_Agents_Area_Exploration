@@ -59,6 +59,7 @@ class Experiment:
                 experiment_name,
                 Agent_Class_list,
                 search_method, 
+                return_dict,
                 process_ID,
                 debug=False,
                 figs=[]):
@@ -66,6 +67,7 @@ class Experiment:
         self.experiment_name = experiment_name
         self.Agent_Class_list = Agent_Class_list
         self.search_method = search_method
+        self.return_dict = return_dict
         self.debug = debug
         self.process_ID = process_ID
         self.return_dict = {}
