@@ -4,7 +4,7 @@ import pandas as pd
 from multiprocessing import Pool, Manager, Process, Queue
 
 from src.config import Config
-from src.experiment import run_experiment, setup_experiment
+from src.experiment import Experiment
 from src.agent import Agent
 from src.replan.frontier import *
 from src.replan.voronoi_basic import *
@@ -64,15 +64,17 @@ def main():
     process_manager = Manager()
     return_dict = process_manager.dict()
     Process_list = []
-    DEBUG = False
+    DEBUG = True
+    USE_PROCESS = False
+    assert not (DEBUG and USE_PROCESS), "Can't use process and debug at the same time"
     
     Method_list = [
         # "Heterogenus",
         # Frontier_Random,
         # Frontier_Closest,
-        Voronoi_Frontier_Random,
-        # Frontier_Random,
-        # Frontier_Closest,
+        Unknown_Random,
+        Unknown_Closest,
+        # Voronoi_Frontier_Random,
         # Voronoi_Frontier_Random,
         # Voronoi_Frontier_Closest,
         # Voronoi_Frontier_Help_Closest,
@@ -147,34 +149,31 @@ def main():
                         Agent_Class_list = [Agent_Class] * cfg.N_BOTS
 
 
-                        set_up_data = setup_experiment(cfg, experiment_name, Agent_Class_list, search_method, )
 
-                        run_experiment(prosses_count, 
-                                    return_dict,
-                                    cfg,
-                                    experiment_name, 
-                                    search_method =search_method,
-                                    set_up_data = set_up_data, 
-                                    debug=DEBUG)
-                        prosses_count += 1
+                        cur_experiment = Experiment(cfg, 
+                                                    experiment_name, 
+                                                    Agent_Class_list, 
+                                                    search_method,
+                                                    prosses_count,
+                                                    debug=DEBUG,
+                                                    )
+                        if USE_PROCESS:
+                            # run the simulation in a new process
+                            p = Process(target=cur_experiment.run_experiment, 
+                                        args=([None],))
+                            p.start()
+                            Process_list.append(p)
+                            prosses_count += 1
+                        else:
+                            cur_experiment.run_experiment([None], )
+                            prosses_count += 1
     
-    #             # run the simulation in a new process
-    #             p = Process(target=run_experiment, 
-    #                         args=(
-    #                                 prosses_count, 
-    #                                 return_dict,
-    #                                 cfg,
-    #                                 experiment_name, 
-    #                                 search_method ,
-    #                                 set_up_data , 
-    #                             ))
-    #             p.start()
-    #             Process_list.append(p)
-    #             prosses_count += 1
 
-    # for p in Process_list:
-    #     p.join()
-    #     print("Joined Process: ", p.pid)
+
+    if USE_PROCESS:
+        for p in Process_list:
+            p.join()
+            print("Joined Process: ", p.pid)
     
     # collect all the data
     for [df, cfg, full_map] in return_dict.values():

@@ -60,7 +60,8 @@ class Experiment:
                 Agent_Class_list,
                 search_method, 
                 process_ID,
-                debug=False):
+                debug=False,
+                figs=[]):
         self.cfg = cfg
         self.experiment_name = experiment_name
         self.Agent_Class_list = Agent_Class_list
@@ -105,8 +106,10 @@ class Experiment:
 
         if cfg.LOG_PLOTS:
             # create Log_plot object
-            self.log_plot_obj = log_plot.LogPlot(cfg, self.data)
-            
+            if figs == []:
+                self.log_plot_obj = log_plot.LogPlot(cfg, self.data)
+            else:
+                self.log_plot_obj = log_plot.LogPlot(cfg, self.data, map_fig=figs[0], plot_fig=figs[1])
             # space out the subplots
             self.log_plot_obj.map_fig.tight_layout()
             # create a grid of subplots 
@@ -167,11 +170,11 @@ class Experiment:
                 bot_ax[i].matshow(self.bots[i].agent_map)
 
         if 'Voronoi' in search_method:
-            minimum_comparison_table = generate_voronoi_division_grid(grid, bots, matrix_list, agent_locs, self.log_plot_obj)
-            self.log_plot_obj.map_ax.matshow(minimum_comparison_table, alpha=0.6)
+            self.minimum_comparison_table = generate_voronoi_division_grid(grid, self.bots, matrix_list, agent_locs, self.log_plot_obj)
+            self.log_plot_obj.map_ax.matshow(self.minimum_comparison_table, alpha=0.6)
             # assign each robot one voronoi region using assigned_points
             for bot in self.bots:
-                assigned_points = np.argwhere(minimum_comparison_table == bot.id)
+                assigned_points = np.argwhere(self.minimum_comparison_table == bot.id)
                 # convert list of list into list of tuples
                 assigned_points = [tuple(point) for point in assigned_points]
                 bot.assigned_points = assigned_points
@@ -290,13 +293,13 @@ class Experiment:
             # self.log_plot_obj.plot_map(mutual_data, bots, data)
             self.log_plot_obj.map_ax.set_title(f"Max Known Area {self.ground_truth_map.size}\n {search_method} \n{experiment_name.replace('_',' ').title()}")
             if 'Voronoi' in search_method:
-                self.log_plot_obj.map_ax.matshow(minimum_comparison_table, alpha=0.3)
+                self.log_plot_obj.map_ax.matshow(self.minimum_comparison_table, alpha=0.3)
             self.log_plot_obj.map_fig.savefig(self.folder_name + '/starting_map.png')
 
         if cfg.DRAW_SIM:
             bot_fig.savefig(self.folder_name + '/starting_bot.png')
     
-    # return [data, bots, ground_truth_map, mutual_data, self.log_plot_obj, minimum_comparison_table, cur_world, map_screen, self.folder_name, upscaling_down_sampled_map_for_vis]
+    # return [data, bots, ground_truth_map, mutual_data, self.log_plot_obj, self.minimum_comparison_table, cur_world, map_screen, self.folder_name, upscaling_down_sampled_map_for_vis]
     
     def setup_run_now(self):
         if self.cfg.DRAW_SIM:
@@ -356,6 +359,10 @@ class Experiment:
         df.to_csv(f"{self.folder_name}/data.csv")
         print(f"Done {self.experiment_name}")
         self.return_dict[self.process_ID] = [df, self.cfg, self.ground_truth_map]
+
+        # close all plots
+        plt.close('all')
+
         return df, self.cfg, self.ground_truth_map
 
     def render(self):
@@ -436,8 +443,8 @@ class Experiment:
         self.data['known_area'].append(cur_known)
 
 
-        # if self.debug:
-        #     self.render()
+        if self.debug:
+            self.render()
         
         self.frame_count += 1
         if cur_known == self.mutual_data['map'].size:
