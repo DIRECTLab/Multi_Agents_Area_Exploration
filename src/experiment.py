@@ -70,7 +70,6 @@ class Experiment:
         self.return_dict = return_dict
         self.debug = debug
         self.process_ID = process_ID
-        self.return_dict = {}
 
         if cfg.DRAW_SIM:
             # Initialize pygame
