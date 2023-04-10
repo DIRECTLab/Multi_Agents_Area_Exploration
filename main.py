@@ -64,13 +64,13 @@ def main():
     process_manager = Manager()
     return_dict = process_manager.dict()
     Process_list = []
-    DEBUG = False
+    DEBUG = True
     
     Method_list = [
         # "Heterogenus",
         # Frontier_Random,
         # Frontier_Closest,
-        Voronoi_Frontier_Random,
+        # Voronoi_Frontier_Random,
         # Frontier_Random,
         # Frontier_Closest,
         # Voronoi_Frontier_Random,
@@ -88,6 +88,7 @@ def main():
         # Decay_Epsilon_Greedy_Frontier,
         # Epsilon_Greedy_Unknown,
         # Epsilon_Greedy_Frontier,
+        GameTheory,
         ]
     Start_scenario_list = [
         # Manual_Start,
