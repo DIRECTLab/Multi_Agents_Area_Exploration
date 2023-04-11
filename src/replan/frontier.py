@@ -46,8 +46,3 @@ class Unknown_Random(Unknown_Closest):
         super().__init__(*args, **kwargs)
         self.choose_random = True
 
-class GameTheory(Frontier_Closest):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.choose_random = False
-    

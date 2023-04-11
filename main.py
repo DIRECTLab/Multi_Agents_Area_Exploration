@@ -13,6 +13,7 @@ from src.starting_scenario.goal_starts import *
 from src.replan.decision import *
 from src.darp.darp import *
 from src.replan.epsilon_greedy import *
+from src.replan.game_theory import *
 
 import itertools
 
