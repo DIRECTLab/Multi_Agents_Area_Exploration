@@ -33,8 +33,8 @@ def run_heterogenus(start, goal, cfg, experiment_name, return_dict, Method_list,
         for ratio in [(.50,.50), (.25,.75), (.75,.25)]:
             method1_couint =  int(cfg.N_BOTS * ratio[0]) # % of the agents
             method2_couint =  int(cfg.N_BOTS * ratio[1])
-            cur_experiment_name = experiment_name + f"method1:{method1.__name__}_count:{method1_couint}_method2:{method2.__name__}__count:{method2_couint}/" 
-            cur_experiment_name += f'nbots:{cfg.N_BOTS}_map_length:{cfg.ROWS}_seed:{cfg.SEED}'
+            cur_experiment_name = experiment_name + f"method1:{method1.__name__}_count:{method1_couint}\nmethod2:{method2.__name__}_count:{method2_couint}/" 
+            cur_experiment_name += f'\nnbots:{cfg.N_BOTS}_map_length:{cfg.ROWS}_seed:{cfg.SEED}'
 
             Agent_Class_list = [method1] * method1_couint
             Agent_Class_list += [method2] * method2_couint
@@ -66,32 +66,31 @@ def main():
     process_manager = Manager()
     return_dict = process_manager.dict()
     Process_list = []
-    DEBUG = False
+    DEBUG = True
     USE_PROCESS = False
+    CREATE_GIF = True
     assert not (DEBUG and USE_PROCESS), "Can't use process and debug at the same time"
     
     Method_list = [
-        "Heterogenus",
+        # "Heterogenus",
         Frontier_Random,
-        Frontier_Closest,
-        Unknown_Random,
-        Unknown_Closest,
+        # Frontier_Closest,
+        # Unknown_Random,
+        # Unknown_Closest,
         # Voronoi_Frontier_Random,
         # Voronoi_Frontier_Random,
         # Voronoi_Frontier_Closest,
         # Voronoi_Frontier_Help_Closest,
         # Voronoi_Frontier_Help_Random,
         # Decision_Frontier_Closest,
-        # Darp,  
-        # {'Voronoi_Frontier_Random', 'Frontier_Random'}                                 # Requires the DRAW_SIM in config file to be True.
-        # DarpVorOnly,
         # Decision_Frontier_Closest,
         # DarpVorOnly,
         # DarpMST,
-        # Decay_Epsilon_Greedy_Unknown,
-        # Decay_Epsilon_Greedy_Frontier,
-        # Epsilon_Greedy_Unknown,
-        # Epsilon_Greedy_Frontier,
+        Decay_Epsilon_Greedy_Unknown,
+        Decay_Epsilon_Greedy_Frontier,
+        Epsilon_Greedy_Unknown,
+        Epsilon_Greedy_Frontier,
+        # "Heterogenus",
         ]
     Start_scenario_list = [
         # Manual_Start,
@@ -111,10 +110,11 @@ def main():
 
     All_scenarios = [ Start_scenario_list , Start_Goal_list]
     
-
+    # remove duplicates:
+    Method_list = list(dict.fromkeys(Method_list))
 
     prosses_count = 0
-    for map_length in range(20,30,10):
+    for map_length in range(20,60,10):
         for agent_count in range(4,6,2):
             print(f"map_length: {map_length} agent_count: {agent_count}")
             for start in Start_scenario_list:
@@ -131,7 +131,7 @@ def main():
                         cfg.ROWS = int(map_length)
                         cfg.SCREEN_WIDTH = int(map_length*cfg.GRID_THICKNESS)
                         cfg.SCREEN_HEIGHT = int(map_length*cfg.GRID_THICKNESS)
-
+                        cfg.CREATE_GIF = CREATE_GIF
                         Agent_Class_list = []
 
                         if Method == "Heterogenus":
@@ -140,7 +140,7 @@ def main():
                             run_heterogenus(start, goal, cfg, experiment_name, return_dict, Method_list, prosses_count, debug =DEBUG)
                             continue
 
-                        experiment_name = f"{Method.__name__}/nbots:{cfg.N_BOTS}_rows:{cfg.ROWS}_cols:{cfg.COLS}_seed:{cfg.SEED}"
+                        experiment_name = f"{Method.__name__}/nbots-{cfg.N_BOTS}_length-{cfg.ROWS}_seed-{cfg.SEED}"
                         print(f"Starting Experiment: {experiment_name}")
                         Agent_Class = type('Agent_Class', (Method, start, goal), {})
                         search_method =''.join(str(base.__name__)+'\n'  for base in Agent_Class.__bases__)

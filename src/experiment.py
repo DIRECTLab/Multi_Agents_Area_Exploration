@@ -96,13 +96,16 @@ class Experiment:
             'plan_length' : [],
             'replan_count' : [],
             'logging_time' : [0],
+            }
+        non_plot_data ={
             'frame_count': [],
             'known_area' : [],
             }
         
         if 'Epsilon' in search_method:
-            for i in range(cfg.N_BOTS):
-                self.data[f'epsilon_{i}'] = []
+            for i, agent in enumerate(self.Agent_Class_list):
+                if 'Epsilon' in agent.__name__:
+                    self.data[f'epsilon_{i}'] = []
             
 
         if cfg.LOG_PLOTS:
@@ -116,6 +119,8 @@ class Experiment:
             # create a grid of subplots 
             self.log_plot_obj.map_ax.matshow(self.ground_truth_map)
 
+        # add non_plot_data to data
+        self.data = {**self.data, **non_plot_data}
 
         if cfg.DRAW_SIM:
             row = int(np.sqrt(cfg.N_BOTS))
@@ -292,7 +297,9 @@ class Experiment:
             os.makedirs(self.folder_name)
 
             # self.log_plot_obj.plot_map(mutual_data, bots, data)
-            self.log_plot_obj.map_ax.set_title(f"Max Known Area {self.ground_truth_map.size}\n {search_method} \n{experiment_name.replace('_',' ').title()}")
+            self.log_plot_obj.map_ax.set_title(f"Max Known Area {self.ground_truth_map.size} \n {search_method}")
+            # ensure the Title is not cut off
+            self.log_plot_obj.map_fig.tight_layout()
             if 'Voronoi' in search_method:
                 self.log_plot_obj.map_ax.matshow(self.minimum_comparison_table, alpha=0.3)
             self.log_plot_obj.map_fig.savefig(self.folder_name + '/starting_map.png')
@@ -364,6 +371,9 @@ class Experiment:
         # close all plots
         plt.close('all')
 
+        if self.cfg.MAKE_GIF:
+            self.make_gif(self.folder_name)
+            
         return df, self.cfg, self.ground_truth_map
 
     def render(self):
@@ -426,7 +436,7 @@ class Experiment:
                 bot.frame_count =self.frame_count
                 path_length += len(bot.plan)
                 replan_count += bot.replan_count
-                if 'Epsilon' in self.search_method:
+                if 'Epsilon' in self.search_method and dir(bot).count('epsilon'):
                     self.data['epsilon_'+str(bot.id)].append(bot.epsilon)
 
             end_time = psutil.Process().cpu_times().user
@@ -455,6 +465,27 @@ class Experiment:
         self.data['logging_time'].append(logging_end_time - logging_time_start)
 
 
+    def make_gif(self, frame_folder):
+        frame_folder = self.folder_name + "/gif"
+        import glob
+        from PIL import Image
+
+        # get all image files in the folder in order
+        frames = []
+        imgs = glob.glob(frame_folder + "/*.png")
+        # sort the image name scring numerically
+        imgs.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
+        for i in imgs:
+            print(i)
+            new_frame = Image.open(i)
+            frames.append(new_frame)
+
+
+        frame_one = frames[0]
+        save_path = frame_folder + "/my_awesome.gif"
+        frame_one.save(save_path, format="GIF", append_images=frames,
+                save_all=True, duration=100, loop=0)
+
     def run_experiment(self, func_arr, *args , **kwargs):
         self.setup_run_now()
         done = False
@@ -465,6 +496,14 @@ class Experiment:
                     func_args = list(func_args)
                     func_args.append(self)
                     func( *func_args, **kwargs) 
+
+            # Save the Figure
+            if self.cfg.CREATE_GIF:
+                assert self.cfg.LOG_PLOTS, "Must log plots to create gif"
+                # check if the folder exists
+                if not os.path.exists(self.folder_name + '/gif'):
+                    os.makedirs(self.folder_name + '/gif')
+                self.log_plot_obj.map_fig.savefig(self.folder_name +f'/gif/{self.frame_count}.png', dpi=100)
 
             done = self.env_step()
         
