@@ -121,6 +121,8 @@ class Agent(Point_Finding):
         self.past_traversed_locations =[self.grid_position_xy]
         self.frame_count = 0
 
+        self.disabled = False
+
         self.scan()
         self.replan()
     
@@ -224,6 +226,10 @@ class Agent(Point_Finding):
             # self.dy = velocity * direction[1] / np.sqrt(direction[0]**2 + direction[1]**2)    self.grid_position = next_path_point
             pass
 
+        if self.ground_truth_map[next_path_point[0], next_path_point[1]] == self.cfg.MINE:
+            # raise Exception("Agent collided with mine")
+            self.disabled = True
+            return
         self.total_dist_traveled += np.sqrt((next_path_point[0] - cur_x)**2 + (next_path_point[1] - cur_y)**2)
         self.grid_position_xy = next_path_point
         self.past_traversed_locations.append(self.grid_position_xy)
@@ -342,7 +348,7 @@ class Agent(Point_Finding):
     def update(self, mutual_data, draw=True):
         # Update the agent's position
         # Scan the environment
-        if self.no_more_update:
+        if self.no_more_update or self.disabled:
             return
 
         self.scan()

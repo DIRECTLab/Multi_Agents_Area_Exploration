@@ -22,8 +22,9 @@ class Config:
         self.MAX_ROOM_SIZE = 20 * self.GRID_THICKNESS
 
         # The Ground truth map is a 2D array of booleans
-        self.EMPTY = True
-        self.OBSTACLE = False
+        self.MINE = 2.0
+        self.EMPTY = 1.0
+        self.OBSTACLE = 0.0
 
         # Map location definitions for agent_map
         self.UNKNOWN = -1
@@ -31,7 +32,9 @@ class Config:
         self.KNOWN_EMPTY = 1
         self.FRONTIER = 2
 
-
+        # Types of robot loss
+        self.ROBOT_LOSS_TYPE = "NoLoss"
+        self.MINE_DENSITY = .1
 
         # Define the colors to be used in the drawing
         self.BACKGROUND_COLOR = (78, 157, 157)

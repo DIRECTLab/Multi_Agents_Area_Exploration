@@ -24,6 +24,7 @@ class World:
         self.walls = []
         self.doors = []
         self.rooms = []
+        self.mines = []
         self.room_count = 0
 
         # create col list
@@ -107,11 +108,28 @@ class World:
                 else:
                     self.draw_door(x, y, x + self.cfg.GRID_THICKNESS*2, y )
 
+
         # Generate the walls of the outer boundary of the floor plan
         pygame.draw.rect(self.screen, self.cfg.WALL_COLOR, (0, 0, self.cfg.SCREEN_WIDTH, self.cfg.SCREEN_HEIGHT), self.cfg.GRID_THICKNESS)
         self.draw_grid()
         self.map = self.get_map()
+        if self.cfg.ROBOT_LOSS_TYPE != "NoLoss":
+            self.place_mines()
         return self.map.copy()
+
+    def place_mines(self):
+        # place mines randomly
+        self.mines = []
+        num_mines = self.cfg.MINE_DENSITY * self.cfg.SCREEN_WIDTH * self.cfg.SCREEN_HEIGHT // 1000
+        for i in range((int)(num_mines)):
+            while True:
+                x = np.random.randint(0, self.cfg.COLS)
+                y = np.random.randint(0, self.cfg.ROWS)
+                if self.map[x][y] == self.cfg.EMPTY:
+                    self.mines.append((x, y))
+                    self.map[x][y] = 2
+                    break
+
 
     def draw_grid(self, color=(150, 150, 150)):
         # draw a thin grid 
@@ -123,7 +141,7 @@ class World:
 
     def get_map(self, show_grid=False):
         # show the floor plan in matplotlib
-        world_grid = np.zeros((self.cfg.SCREEN_HEIGHT//self.cfg.GRID_THICKNESS, self.cfg.SCREEN_WIDTH//self.cfg.GRID_THICKNESS)).astype(bool)
+        world_grid = np.zeros((self.cfg.SCREEN_HEIGHT//self.cfg.GRID_THICKNESS, self.cfg.SCREEN_WIDTH//self.cfg.GRID_THICKNESS))
         world_grid.fill(self.cfg.EMPTY)
         
         for wall in self.walls:
