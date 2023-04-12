@@ -355,7 +355,10 @@ class Experiment:
         df['MAX_ROOM_SIZE'.lower()] = self.cfg.MAX_ROOM_SIZE
         # area densely
         df['wall_ratio'] = np.sum(self.ground_truth_map == 0) / self.ground_truth_map.size
-        df['mathod'] = self.search_method
+        df['method'] = self.search_method.split('\n')[0]
+        df['start_scenario'] = self.search_method.split('\n')[1]
+        df['goal_scenario'] = self.search_method.split('\n')[2]
+        
 
         df.to_csv(f"{self.folder_name}/data.csv")
         print(f"Done {self.experiment_name}")
