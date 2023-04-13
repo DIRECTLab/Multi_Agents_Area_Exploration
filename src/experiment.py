@@ -371,7 +371,7 @@ class Experiment:
         # close all plots
         plt.close('all')
 
-        if self.cfg.MAKE_GIF:
+        if self.cfg.CREATE_GIF:
             self.make_gif(self.folder_name)
             
         return df, self.cfg, self.ground_truth_map
