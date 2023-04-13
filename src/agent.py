@@ -125,8 +125,7 @@ class Agent(Point_Finding):
         self.disabled = False
 
         self.scan()
-        fake_mutual_data = {'disabled_bots':[]}
-        self.replan(fake_mutual_data)
+        self.replan({})
     
     def set_new_goal(self):
         self.goal_xy = self.get_goal_method()
