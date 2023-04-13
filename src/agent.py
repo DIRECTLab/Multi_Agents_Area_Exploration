@@ -120,6 +120,7 @@ class Agent(Point_Finding):
         self.total_dist_traveled = 0
         self.past_traversed_locations =[self.grid_position_xy]
         self.frame_count = 0
+        self.choose_random = None
 
         self.disabled = False
 
@@ -316,6 +317,19 @@ class Agent(Point_Finding):
             #                     color=RED,
             #                     center=(self.grid_position[0]*self.grid_size, self.grid_position[1]*self.grid_size),
             #                     radius=self.grid_size//2)
+    def save_to_mutual_data(self, mutual_data):
+        if 'Agent_Data' not in mutual_data:
+            mutual_data['Agent_Data'] = {} 
+        if self.id not in mutual_data['Agent_Data']:
+            mutual_data['Agent_Data'][self.id] = {}
+        
+        mutual_data['Agent_Data'][self.id]['plan'] = self.plan
+        mutual_data['Agent_Data'][self.id]['goal_xy'] = self.goal_xy
+        mutual_data['Agent_Data'][self.id]['grid_position_xy'] = self.grid_position_xy
+        mutual_data['Agent_Data'][self.id]['choose_random'] = self.choose_random
+
+        self.share_map(mutual_data['map'])
+
 
     def share_map(self, mutual_map):
         # 1st method will be to look at all the cells and chooses what to assine in the returned map
@@ -379,7 +393,8 @@ class Agent(Point_Finding):
         
         self.scan()
         # Share the agent's map with the mutual map
-        self.share_map(mutual_data['map'])
+        # self.share_map(mutual_data['map'])
+        self.save_to_mutual_data(mutual_data)
         # Update the agent's map
         self.agent_map = mutual_data['map'].copy()
 

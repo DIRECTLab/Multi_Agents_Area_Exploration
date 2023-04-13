@@ -45,3 +45,4 @@ class Unknown_Random(Unknown_Closest):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.choose_random = True
+
