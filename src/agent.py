@@ -124,14 +124,21 @@ class Agent(Point_Finding):
         self.disabled = False
 
         self.scan()
-        self.replan()
+        fake_mutual_data = {'disabled_bots':[]}
+        self.replan(fake_mutual_data)
     
     def set_new_goal(self):
         self.goal_xy = self.get_goal_method()
 
         
 
-    def replan(self):
+    def replan(self, mutual_data):
+        if len(mutual_data['disabled_bots']) > 0:
+            self.plan = astar( np.where(self.agent_map == self.cfg.KNOWN_WALL, self.cfg.KNOWN_WALL, self.cfg.KNOWN_EMPTY), 
+                            (int(np.round(self.grid_position_xy[0])), int(np.round(self.grid_position_xy[1]))),
+                            mutual_data['disabled_bots'][0])
+            return
+
         if self.area_completed:
             return
         self.replan_count += 1
@@ -202,7 +209,7 @@ class Agent(Point_Finding):
             warnings.warn("No drawing method is set, please set ax or screen")
 
 
-    def move(self):
+    def move(self, mutual_data):
         # Update the agent's position
         cur_x = self.grid_position_xy[0]
         cur_y = self.grid_position_xy[1]
@@ -226,10 +233,17 @@ class Agent(Point_Finding):
             # self.dy = velocity * direction[1] / np.sqrt(direction[0]**2 + direction[1]**2)    self.grid_position = next_path_point
             pass
 
-        if self.ground_truth_map[next_path_point[0], next_path_point[1]] == self.cfg.MINE:
+
+        
+        if len(mutual_data['disabled_bots']) > 0 and mutual_data['disabled_bots'][0] == next_path_point:
+            mutual_data['disabled_bots'].pop(0)
+        elif self.ground_truth_map[next_path_point[0], next_path_point[1]] == self.cfg.MINE:
             # raise Exception("Agent collided with mine")
+            mutual_data['disabled_bots'].append(next_path_point)
             self.disabled = True
+            self.ground_truth_map[next_path_point[0], next_path_point[1]] = self.cfg.EMPTY
             return
+
         self.total_dist_traveled += np.sqrt((next_path_point[0] - cur_x)**2 + (next_path_point[1] - cur_y)**2)
         self.grid_position_xy = next_path_point
         self.past_traversed_locations.append(self.grid_position_xy)
@@ -320,7 +334,7 @@ class Agent(Point_Finding):
                     # if cur_cell != mutual_cell:
                     #     mutual_map[r,c] = cur_cell
 
-    def check_should_replan(self):
+    def check_should_replan(self, mutual_data):
 
         # check if the plan is empty, if so replan
         if len(self.plan) <= 2:
@@ -331,6 +345,9 @@ class Agent(Point_Finding):
             for path_point in self.plan:
                 if self.agent_map[path_point[1], path_point[0]] == self.cfg.KNOWN_WALL:
                     return True
+
+        if len(mutual_data['disabled_bots']) > 0 and self.plan[-1] != mutual_data['disabled_bots'][0]:
+            return True
 
         # check if the goal_xy is known to be empty, if so replan
         if self.agent_map[self.goal_xy[1], self.goal_xy[0]] == self.cfg.KNOWN_EMPTY or \
@@ -348,21 +365,30 @@ class Agent(Point_Finding):
     def update(self, mutual_data, draw=True):
         # Update the agent's position
         # Scan the environment
-        if self.no_more_update or self.disabled:
+        if self.no_more_update:
             return
-
+        if self.disabled:
+            found = False
+            for i in range(len(mutual_data['disabled_bots'])):
+                if mutual_data['disabled_bots'][i] == self.plan[0]:
+                    found = True
+                    break
+            if not found:
+                self.disabled = False
+            return
+        
         self.scan()
         # Share the agent's map with the mutual map
         self.share_map(mutual_data['map'])
         # Update the agent's map
         self.agent_map = mutual_data['map'].copy()
 
-        if self.check_should_replan():
-            self.replan()
+        if self.check_should_replan(mutual_data):
+            self.replan(mutual_data)
             if self.area_completed:
                 return 0, self.total_dist_traveled
             
-        self.move()
+        self.move(mutual_data)
         # self.draw()
         if draw:
             self.draw()

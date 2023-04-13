@@ -287,6 +287,7 @@ class Experiment:
         self.frame_count = 0
         self.mutual_data = {}
         self.mutual_data['map'] = - np.ones((self.ground_truth_map.shape[0], self.ground_truth_map.shape[1])).astype(int)
+        self.mutual_data['disabled_bots'] = [] 
         self.folder_name =  'data/' + experiment_name+ '/' + time.strftime("%Y-%m-%d_%H-%M-%S")
         if cfg.LOG_PLOTS:
             os.makedirs(self.folder_name)
