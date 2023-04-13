@@ -33,7 +33,7 @@ class Config:
         self.FRONTIER = 2
 
         # Types of robot loss
-        self.ROBOT_LOSS_TYPE = "NoLoss"
+        self.ROBOT_LOSS_TYPE = "None"
         self.MINE_DENSITY = .1
 
         # Define the colors to be used in the drawing

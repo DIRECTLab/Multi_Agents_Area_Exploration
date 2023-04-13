@@ -114,7 +114,7 @@ def main():
     Robot_Loss = [
         "Disrepair",
         # "Unrecoverable",
-        # "NoLoss"
+        # "None"
     ]
 
     All_scenarios = [ Start_scenario_list , Start_Goal_list]
