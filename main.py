@@ -72,10 +72,10 @@ def main():
     USE_PROCESS = False
     CREATE_GIF = True
     assert not (DEBUG and USE_PROCESS), "Can't use process and debug at the same time"
-    repeat_count =30
+    repeat_count =1
 
     Method_list = [
-        # "Heterogenus",
+        "Heterogenus",
         Frontier_Random,
         # Frontier_Closest,
         # Unknown_Random,
@@ -87,23 +87,23 @@ def main():
         # Voronoi_Frontier_Help_Random,
         # Decision_Frontier_Closest,
         # Decision_Frontier_Closest,
-        Frontier_Closest,
-        Unknown_Random,
-        Unknown_Closest,
-        Voronoi_Frontier_Random,
-        Voronoi_Frontier_Closest,
-        Voronoi_Frontier_Help_Closest,
-        Voronoi_Frontier_Help_Random,
-        Decision_Frontier_Closest,
+        # Frontier_Closest,
+        # Unknown_Random,
+        # Unknown_Closest,
+        # Voronoi_Frontier_Random,
+        # Voronoi_Frontier_Closest,
+        # Voronoi_Frontier_Help_Closest,
+        # Voronoi_Frontier_Help_Random,
+        # Decision_Frontier_Closest,
         # Darp,  
         # {'Voronoi_Frontier_Random', 'Frontier_Random'}                                 # Requires the DRAW_SIM in config file to be True.
         # DarpVorOnly,
         # DarpVorOnly,
         # DarpMST,
         Decay_Epsilon_Greedy_Unknown,
-        Decay_Epsilon_Greedy_Frontier,
-        Epsilon_Greedy_Unknown,
-        Epsilon_Greedy_Frontier,
+        # Decay_Epsilon_Greedy_Frontier,
+        # Epsilon_Greedy_Unknown,
+        # Epsilon_Greedy_Frontier,
         ]
     Start_scenario_list = [
         # Manual_Start,
@@ -127,7 +127,7 @@ def main():
     Method_list = list(dict.fromkeys(Method_list))
 
     prosses_count = 0
-    for map_length in range(40,50,10):
+    for map_length in range(60,70,10):
         for agent_count in range(4,6,2):
             print(f"map_length: {map_length} agent_count: {agent_count}")
             for start in Start_scenario_list:
@@ -144,23 +144,25 @@ def main():
                             cfg.SCREEN_WIDTH = int(map_length*cfg.GRID_THICKNESS)
                             cfg.SCREEN_HEIGHT = int(map_length*cfg.GRID_THICKNESS)
                             cfg.CREATE_GIF = CREATE_GIF
-                            Agent_Class_list = []
 
-                            experiment_name = f"{Method.__name__}/nbots-{cfg.N_BOTS}_length-{cfg.ROWS}_seed-{cfg.SEED}"
-                            print(f"Starting Experiment: {experiment_name}")
+                            if Method == "Heterogenus":
+                                # remove the heterogenus from the list
+                                experiment_name = f"{Method}/"
+                                run_heterogenus(start, goal, cfg, experiment_name, return_dict, Method_list, prosses_count, debug =DEBUG)
+                                continue
+
+                            # experiment_name = f"{Method.__name__}/nbots-{cfg.N_BOTS}_length-{cfg.ROWS}_seed-{cfg.SEED}"
+                            # print(f"Starting Experiment: {experiment_name}")
+                            # Agent_Class = type(Method.__name__, (Method, start, goal), {})
+                            Agent_Class_list = []
+                            Agent_Class_list = [Agent_Class] * cfg.N_BOTS
                             Agent_Class = type('Agent_Class', (Method, start, goal), {})
                             search_method =''.join(str(base.__name__)+'\n'  for base in Agent_Class.__bases__)
                             search_method += Agent_Class.__name__
                             print("Method:", search_method)
-                            Agent_Class_list = [Agent_Class] * cfg.N_BOTS
-                            # if Method == "Heterogenus":
-                            #     # remove the heterogenus from the list
-                            #     experiment_name = f"{Method}/"
-                            #     run_heterogenus(start, goal, cfg, experiment_name, return_dict, Method_list, prosses_count, debug =DEBUG)
-                            #     continue
 
-                            # experiment_name = f"{Method.__name__}/nbots:{cfg.N_BOTS}_rows:{cfg.ROWS}_cols:{cfg.COLS}_seed:{cfg.SEED}"
-                            # print(f"🟢 Starting Experiment: {experiment_name}")
+                            experiment_name = f"{Method.__name__}/nbots:{cfg.N_BOTS}_rows:{cfg.ROWS}_cols:{cfg.COLS}_seed:{cfg.SEED}"
+                            print(f"🟢 Starting Experiment: {experiment_name}")
                             # Agent_Class = type('Agent_Class', (Method, start, goal), {})
                             # search_method =''.join(str(base.__name__)+'\n'  for base in Agent_Class.__bases__)
                             # search_method += Agent_Class.__name__
