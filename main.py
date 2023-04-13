@@ -75,8 +75,8 @@ def main():
     repeat_count =1
 
     Method_list = [
-        "Heterogenus",
-        Frontier_Random,
+        # "Heterogenus",
+        # Frontier_Random,
         # Frontier_Closest,
         # Unknown_Random,
         # Unknown_Closest,
@@ -100,10 +100,11 @@ def main():
         # DarpVorOnly,
         # DarpVorOnly,
         # DarpMST,
-        Decay_Epsilon_Greedy_Unknown,
+        # Decay_Epsilon_Greedy_Unknown,
         # Decay_Epsilon_Greedy_Frontier,
         # Epsilon_Greedy_Unknown,
         # Epsilon_Greedy_Frontier,
+        GameTheory
         ]
     Start_scenario_list = [
         # Manual_Start,
@@ -153,7 +154,7 @@ def main():
 
                             # experiment_name = f"{Method.__name__}/nbots-{cfg.N_BOTS}_length-{cfg.ROWS}_seed-{cfg.SEED}"
                             # print(f"Starting Experiment: {experiment_name}")
-                            # Agent_Class = type(Method.__name__, (Method, start, goal), {})
+                            Agent_Class = type(Method.__name__, (Method, start, goal), {})
                             Agent_Class_list = []
                             Agent_Class_list = [Agent_Class] * cfg.N_BOTS
                             Agent_Class = type('Agent_Class', (Method, start, goal), {})
