@@ -8,10 +8,10 @@ class Decision_Frontier_Closest(Unknown_Random):
         super().__init__(*args, **kwargs)
 
 
-    def save_to_mutual_data(self, mutual_data):
-        mutual_data['Agent_Data'][self.id]['plan'] = self.plan
-        mutual_data['Agent_Data'][self.id]['goal_xy'] = self.goal_xy
-        mutual_data['Agent_Data'][self.id]['grid_position_xy'] = self.grid_position_xy
+    # def save_to_mutual_data(self, mutual_data):
+    #     mutual_data['Agent_Data'][self.id]['plan'] = self.plan
+    #     mutual_data['Agent_Data'][self.id]['goal_xy'] = self.goal_xy
+    #     mutual_data['Agent_Data'][self.id]['grid_position_xy'] = self.grid_position_xy
     
     def update(self, mutual_data, draw=True):
         if 'Agent_Data' not in mutual_data:

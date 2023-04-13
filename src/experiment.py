@@ -219,7 +219,7 @@ class Experiment:
                 bot.assigned_points = assigned_points
                 assert len(assigned_points) > 0, "No points assigned to bot"
             
-            upscaling_down_sampled_map_for_vis = darp_instance.A
+            self.upscaling_down_sampled_map_for_vis = darp_instance.A
 
         
         elif 'DarpMST' in search_method:
@@ -271,14 +271,14 @@ class Experiment:
             end_time = time.time()
             it_took = end_time - start_time
 
-            upscaling_down_sampled_map_for_vis = np.zeros((cfg.ROWS, cfg.COLS))
+            self.upscaling_down_sampled_map_for_vis = np.zeros((cfg.ROWS, cfg.COLS))
             for i in range(len(darp_instance.A)):
                 for j in range(len(darp_instance.A[0])):
                     point = darp_instance.A[i][j]
-                    upscaling_down_sampled_map_for_vis[i*2, j*2] = point
-                    upscaling_down_sampled_map_for_vis[i*2, j*2+1] = point
-                    upscaling_down_sampled_map_for_vis[i*2+1, j*2] = point
-                    upscaling_down_sampled_map_for_vis[i*2+1, j*2+1] = point
+                    self.upscaling_down_sampled_map_for_vis[i*2, j*2] = point
+                    self.upscaling_down_sampled_map_for_vis[i*2, j*2+1] = point
+                    self.upscaling_down_sampled_map_for_vis[i*2+1, j*2] = point
+                    self.upscaling_down_sampled_map_for_vis[i*2+1, j*2+1] = point
 
             if darp_success:
                 run_mst(iterations, self.bots, darp_instance)
