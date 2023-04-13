@@ -69,7 +69,7 @@ class Experiment:
         self.search_method = search_method
         self.return_dict = return_dict
         self.debug = debug
-        self.process_ID = process_ID
+        self.experiment_ID = process_ID
 
         if cfg.DRAW_SIM:
             # Initialize pygame
@@ -355,11 +355,14 @@ class Experiment:
         df['MAX_ROOM_SIZE'.lower()] = self.cfg.MAX_ROOM_SIZE
         # area densely
         df['wall_ratio'] = np.sum(self.ground_truth_map == 0) / self.ground_truth_map.size
-        df['mathod'] = self.search_method
+        df['method'] = self.search_method.split('\n')[0]
+        df['start_scenario'] = self.search_method.split('\n')[1]
+        df['goal_scenario'] = self.search_method.split('\n')[2]
+        df['experiment_ID'] = self.experiment_ID
 
         df.to_csv(f"{self.folder_name}/data.csv")
         print(f"Done {self.experiment_name}")
-        self.return_dict[self.process_ID] = [df, self.cfg, self.ground_truth_map]
+        self.return_dict[self.experiment_ID] = [df, self.cfg, self.ground_truth_map]
 
         # close all plots
         plt.close('all')

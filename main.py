@@ -16,6 +16,7 @@ from src.replan.epsilon_greedy import *
 from src.replan.game_theory import *
 
 import itertools
+import tqdm
 
 def run_heterogenus(start, goal, cfg, experiment_name, return_dict, Method_list, prosses_count, debug=False):
     cur_Method_list = Method_list.copy()
@@ -70,30 +71,28 @@ def main():
     DEBUG = False
     USE_PROCESS = False
     assert not (DEBUG and USE_PROCESS), "Can't use process and debug at the same time"
-    
+    repeat_count =30
+
     Method_list = [
-        "Heterogenus",
+        # "Heterogenus",
         Frontier_Random,
         Frontier_Closest,
         Unknown_Random,
         Unknown_Closest,
-        # Voronoi_Frontier_Random,
-        # Voronoi_Frontier_Random,
-        # Voronoi_Frontier_Closest,
-        # Voronoi_Frontier_Help_Closest,
-        # Voronoi_Frontier_Help_Random,
-        # Decision_Frontier_Closest,
+        Voronoi_Frontier_Random,
+        Voronoi_Frontier_Closest,
+        Voronoi_Frontier_Help_Closest,
+        Voronoi_Frontier_Help_Random,
+        Decision_Frontier_Closest,
         # Darp,  
         # {'Voronoi_Frontier_Random', 'Frontier_Random'}                                 # Requires the DRAW_SIM in config file to be True.
         # DarpVorOnly,
-        # Decision_Frontier_Closest,
         # DarpVorOnly,
         # DarpMST,
-        # Decay_Epsilon_Greedy_Unknown,
-        # Decay_Epsilon_Greedy_Frontier,
-        # Epsilon_Greedy_Unknown,
-        # Epsilon_Greedy_Frontier,
-        GameTheory,
+        Decay_Epsilon_Greedy_Unknown,
+        Decay_Epsilon_Greedy_Frontier,
+        Epsilon_Greedy_Unknown,
+        Epsilon_Greedy_Frontier,
         ]
     Start_scenario_list = [
         # Manual_Start,
@@ -116,60 +115,62 @@ def main():
 
 
     prosses_count = 0
-    for map_length in range(20,30,10):
+    for map_length in range(40,50,10):
         for agent_count in range(4,6,2):
             print(f"map_length: {map_length} agent_count: {agent_count}")
             for start in Start_scenario_list:
                 for goal in Start_Goal_list:
                     for Method in Method_list:
-                        cfg = Config()
-                        cfg.SEED = int(map_length )
-                        cfg.N_BOTS = int(agent_count)
+                        for iteration in tqdm.tqdm(range(repeat_count)):
 
-                        random.seed(cfg.SEED)
-                        np.random.seed(cfg.SEED)
+                            cfg = Config()
+                            cfg.SEED = int(map_length + iteration)
+                            cfg.N_BOTS = int(agent_count)
 
-                        cfg.COLS = int(map_length)
-                        cfg.ROWS = int(map_length)
-                        cfg.SCREEN_WIDTH = int(map_length*cfg.GRID_THICKNESS)
-                        cfg.SCREEN_HEIGHT = int(map_length*cfg.GRID_THICKNESS)
+                            random.seed(cfg.SEED)
+                            np.random.seed(cfg.SEED)
 
-                        Agent_Class_list = []
+                            cfg.COLS = int(map_length)
+                            cfg.ROWS = int(map_length)
+                            cfg.SCREEN_WIDTH = int(map_length*cfg.GRID_THICKNESS)
+                            cfg.SCREEN_HEIGHT = int(map_length*cfg.GRID_THICKNESS)
 
-                        if Method == "Heterogenus":
-                            # remove the heterogenus from the list
-                            experiment_name = f"{Method}/"
-                            run_heterogenus(start, goal, cfg, experiment_name, return_dict, Method_list, prosses_count, debug =DEBUG)
-                            continue
+                            Agent_Class_list = []
 
-                        experiment_name = f"{Method.__name__}/nbots:{cfg.N_BOTS}_rows:{cfg.ROWS}_cols:{cfg.COLS}_seed:{cfg.SEED}"
-                        print(f"Starting Experiment: {experiment_name}")
-                        Agent_Class = type('Agent_Class', (Method, start, goal), {})
-                        search_method =''.join(str(base.__name__)+'\n'  for base in Agent_Class.__bases__)
-                        search_method += Agent_Class.__name__
-                        print("Method:", search_method)
-                        Agent_Class_list = [Agent_Class] * cfg.N_BOTS
+                            if Method == "Heterogenus":
+                                # remove the heterogenus from the list
+                                experiment_name = f"{Method}/"
+                                run_heterogenus(start, goal, cfg, experiment_name, return_dict, Method_list, prosses_count, debug =DEBUG)
+                                continue
+
+                            experiment_name = f"{Method.__name__}/nbots:{cfg.N_BOTS}_rows:{cfg.ROWS}_cols:{cfg.COLS}_seed:{cfg.SEED}"
+                            print(f"🟢 Starting Experiment: {experiment_name}")
+                            Agent_Class = type('Agent_Class', (Method, start, goal), {})
+                            search_method =''.join(str(base.__name__)+'\n'  for base in Agent_Class.__bases__)
+                            search_method += Agent_Class.__name__
+                            print("Method:", search_method)
+                            Agent_Class_list = [Agent_Class] * cfg.N_BOTS
 
 
 
-                        cur_experiment = Experiment(cfg, 
-                                                    experiment_name, 
-                                                    Agent_Class_list, 
-                                                    search_method,
-                                                    return_dict,
-                                                    prosses_count,
-                                                    debug=DEBUG,
-                                                    )
-                        if USE_PROCESS:
-                            # run the simulation in a new process
-                            p = Process(target=cur_experiment.run_experiment, 
-                                        args=([None],))
-                            p.start()
-                            Process_list.append(p)
-                            prosses_count += 1
-                        else:
-                            cur_experiment.run_experiment([None], )
-                            prosses_count += 1
+                            cur_experiment = Experiment(cfg, 
+                                                        experiment_name, 
+                                                        Agent_Class_list, 
+                                                        search_method,
+                                                        return_dict,
+                                                        prosses_count,
+                                                        debug=DEBUG,
+                                                        )
+                            if USE_PROCESS:
+                                # run the simulation in a new process
+                                p = Process(target=cur_experiment.run_experiment, 
+                                            args=([None],))
+                                p.start()
+                                Process_list.append(p)
+                                prosses_count += 1
+                            else:
+                                cur_experiment.run_experiment([None], )
+                                prosses_count += 1
     
 
 
