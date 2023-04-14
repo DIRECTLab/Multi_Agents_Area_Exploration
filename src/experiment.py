@@ -69,7 +69,7 @@ class Experiment:
         self.search_method = search_method
         self.return_dict = return_dict
         self.debug = debug
-        self.process_ID = process_ID
+        self.experiment_ID = process_ID
 
         if cfg.DRAW_SIM:
             # Initialize pygame
@@ -219,7 +219,7 @@ class Experiment:
                 bot.assigned_points = assigned_points
                 assert len(assigned_points) > 0, "No points assigned to bot"
             
-            upscaling_down_sampled_map_for_vis = darp_instance.A
+            self.upscaling_down_sampled_map_for_vis = darp_instance.A
 
         
         elif 'DarpMST' in search_method:
@@ -271,14 +271,14 @@ class Experiment:
             end_time = time.time()
             it_took = end_time - start_time
 
-            upscaling_down_sampled_map_for_vis = np.zeros((cfg.ROWS, cfg.COLS))
+            self.upscaling_down_sampled_map_for_vis = np.zeros((cfg.ROWS, cfg.COLS))
             for i in range(len(darp_instance.A)):
                 for j in range(len(darp_instance.A[0])):
                     point = darp_instance.A[i][j]
-                    upscaling_down_sampled_map_for_vis[i*2, j*2] = point
-                    upscaling_down_sampled_map_for_vis[i*2, j*2+1] = point
-                    upscaling_down_sampled_map_for_vis[i*2+1, j*2] = point
-                    upscaling_down_sampled_map_for_vis[i*2+1, j*2+1] = point
+                    self.upscaling_down_sampled_map_for_vis[i*2, j*2] = point
+                    self.upscaling_down_sampled_map_for_vis[i*2, j*2+1] = point
+                    self.upscaling_down_sampled_map_for_vis[i*2+1, j*2] = point
+                    self.upscaling_down_sampled_map_for_vis[i*2+1, j*2+1] = point
 
             if darp_success:
                 run_mst(iterations, self.bots, darp_instance)
@@ -355,11 +355,14 @@ class Experiment:
         df['MAX_ROOM_SIZE'.lower()] = self.cfg.MAX_ROOM_SIZE
         # area densely
         df['wall_ratio'] = np.sum(self.ground_truth_map == 0) / self.ground_truth_map.size
-        df['mathod'] = self.search_method
+        df['method'] = self.search_method.split('\n')[0]
+        df['start_scenario'] = self.search_method.split('\n')[1]
+        df['goal_scenario'] = self.search_method.split('\n')[2]
+        df['experiment_ID'] = self.experiment_ID
 
         df.to_csv(f"{self.folder_name}/data.csv")
         print(f"Done {self.experiment_name}")
-        self.return_dict[self.process_ID] = [df, self.cfg, self.ground_truth_map]
+        self.return_dict[self.experiment_ID] = [df, self.cfg, self.ground_truth_map]
 
         # close all plots
         plt.close('all')

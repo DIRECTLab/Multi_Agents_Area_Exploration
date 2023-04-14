@@ -16,6 +16,7 @@ from src.replan.epsilon_greedy import *
 from src.replan.game_theory import *
 
 import itertools
+import tqdm
 
 def run_heterogenus(start, goal, cfg, experiment_name, return_dict, Method_list, prosses_count, debug=False):
     cur_Method_list = Method_list.copy()
@@ -67,33 +68,29 @@ def main():
     process_manager = Manager()
     return_dict = process_manager.dict()
     Process_list = []
-    DEBUG = False
+    DEBUG = True
     USE_PROCESS = False
     assert not (DEBUG and USE_PROCESS), "Can't use process and debug at the same time"
-    
+    repeat_count =1
+
     Method_list = [
-        "Heterogenus",
-        Frontier_Random,
-        Frontier_Closest,
-        Unknown_Random,
-        Unknown_Closest,
-        # Voronoi_Frontier_Random,
+        # "Heterogenus",
+        # Frontier_Random,
+        # Frontier_Closest,
+        # Unknown_Random,
+        # Unknown_Closest,
         # Voronoi_Frontier_Random,
         # Voronoi_Frontier_Closest,
         # Voronoi_Frontier_Help_Closest,
         # Voronoi_Frontier_Help_Random,
         # Decision_Frontier_Closest,
-        # Darp,  
-        # {'Voronoi_Frontier_Random', 'Frontier_Random'}                                 # Requires the DRAW_SIM in config file to be True.
         # DarpVorOnly,
-        # Decision_Frontier_Closest,
-        # DarpVorOnly,
-        # DarpMST,
+        DarpMST,
         # Decay_Epsilon_Greedy_Unknown,
         # Decay_Epsilon_Greedy_Frontier,
         # Epsilon_Greedy_Unknown,
         # Epsilon_Greedy_Frontier,
-        GameTheory,
+        # GameTheory
         ]
     Start_scenario_list = [
         # Manual_Start,
@@ -121,8 +118,8 @@ def main():
     
 
 
-    prosses_count = 0
-    for map_length in range(20,30,10):
+    prosses_count = 1
+    for map_length in range(50,100,50):
         for agent_count in range(4,6,2):
             print(f"map_length: {map_length} agent_count: {agent_count}")
             for start in Start_scenario_list:
