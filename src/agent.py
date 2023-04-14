@@ -122,15 +122,26 @@ class Agent(Point_Finding):
         self.frame_count = 0
         self.choose_random = None
 
+        self.disabled = False
+
         self.scan()
-        self.replan()
+        self.replan({})
     
     def set_new_goal(self):
         self.goal_xy = self.get_goal_method()
 
-        
+    def replan_to_help(self, mutual_data):        
+        if 'Agent_Data' in mutual_data and len(mutual_data['Agent_Data'][self.id]['help']) > 0:
+            self.plan = astar( np.where(self.agent_map == self.cfg.KNOWN_WALL, self.cfg.KNOWN_WALL, self.cfg.KNOWN_EMPTY), 
+                            (int(np.round(self.grid_position_xy[0])), int(np.round(self.grid_position_xy[1]))),
+                            mutual_data['Agent_Data'][self.id]['help'][0][1])
+            return True
+        return False
 
-    def replan(self):
+    def replan(self, mutual_data):
+        if self.cfg.ROBOT_LOSS_TYPE == "Disrepair" and self.replan_to_help(mutual_data):
+            return
+
         if self.area_completed:
             return
         self.replan_count += 1
@@ -144,7 +155,7 @@ class Agent(Point_Finding):
             assert self.replan_count < 200, "Replan count is too high 200"
 
             self.set_new_goal()
-            self.replan()
+            self.replan(mutual_data)
             return
 
         # remove the current position
@@ -201,7 +212,49 @@ class Agent(Point_Finding):
             warnings.warn("No drawing method is set, please set ax or screen")
 
 
-    def move(self):
+    def help_teammate(self, mutual_data):
+        if len(mutual_data['Agent_Data'][self.id]['help']) > 0:
+            next_help = mutual_data['Agent_Data'][self.id]['help'][0][1]
+            if abs(next_help[0] - self.grid_position_xy[0]) <= 2 and abs(next_help[1] - self.grid_position_xy[1]) <= 2:
+                id = mutual_data['Agent_Data'][self.id]['help'][0][0]
+                mutual_data['Agent_Data'][id]['disabled'] = False
+                mutual_data['Agent_Data'][self.id]['help'].pop(0)
+
+    def check_for_hit_mine(self, mutual_data):
+        cur_x = self.grid_position_xy[0]
+        cur_y = self.grid_position_xy[1]
+        next_path_point = self.plan[0]
+        if self.ground_truth_map[next_path_point[0], next_path_point[1]] == self.cfg.MINE:
+            # If we are unrecoverable, then no one can help us
+            if self.cfg.ROBOT_LOSS_TYPE == 'Unrecoverable':
+                self.disabled = True
+                return
+
+            # Another non-disabled teammate can come help us
+            agent_locations = []
+            for agent_id in mutual_data['Agent_Data']:
+                if self.id == agent_id or mutual_data['Agent_Data'][agent_id]['disabled']:
+                    continue
+                agent_locations.append(mutual_data['Agent_Data'][agent_id]['grid_position_xy'])
+
+            # Find the closest teammate
+            closest = self.get_closest_point_rc(agent_locations)
+            agent_locations.remove(closest)
+            closest = (closest[0], closest[1])
+            for agent_id in mutual_data['Agent_Data']:
+                if mutual_data['Agent_Data'][agent_id]['grid_position_xy'] == closest:
+                    # If a teammate is right next to us, then they can just help us
+                    if abs(closest[0] - cur_x) <= 1 and abs(closest[1] - cur_y) <= 1:
+                        break
+                    cur_pos = (self.grid_position_xy[0], self.grid_position_xy[1])
+                    mutual_data['Agent_Data'][agent_id]['help'].append((self.id, cur_pos))
+                    self.disabled = True
+                    mutual_data['Agent_Data'][self.id]['disabled'] = True
+                    self.ground_truth_map[next_path_point[0], next_path_point[1]] = self.cfg.EMPTY
+                    return True
+        return False
+
+    def move(self, mutual_data):
         # Update the agent's position
         cur_x = self.grid_position_xy[0]
         cur_y = self.grid_position_xy[1]
@@ -224,6 +277,13 @@ class Agent(Point_Finding):
             # self.dx = velocity * direction[0] / np.sqrt(direction[0]**2 + direction[1]**2)
             # self.dy = velocity * direction[1] / np.sqrt(direction[0]**2 + direction[1]**2)    self.grid_position = next_path_point
             pass
+
+        # Robot Loss 
+        if self.cfg.ROBOT_LOSS_TYPE == "Disrepair":
+            self.help_teammate(mutual_data)
+        if self.cfg.ROBOT_LOSS_TYPE != "None": 
+           if self.check_for_hit_mine(mutual_data):
+               return
 
         self.total_dist_traveled += np.sqrt((next_path_point[0] - cur_x)**2 + (next_path_point[1] - cur_y)**2)
         self.grid_position_xy = next_path_point
@@ -302,11 +362,14 @@ class Agent(Point_Finding):
             mutual_data['Agent_Data'] = {} 
         if self.id not in mutual_data['Agent_Data']:
             mutual_data['Agent_Data'][self.id] = {}
+        if 'help' not in mutual_data['Agent_Data'][self.id]:
+            mutual_data['Agent_Data'][self.id]['help'] = []
         
         mutual_data['Agent_Data'][self.id]['plan'] = self.plan
         mutual_data['Agent_Data'][self.id]['goal_xy'] = self.goal_xy
         mutual_data['Agent_Data'][self.id]['grid_position_xy'] = self.grid_position_xy
         mutual_data['Agent_Data'][self.id]['choose_random'] = self.choose_random
+        mutual_data['Agent_Data'][self.id]['disabled'] = self.disabled
 
         self.share_map(mutual_data['map'])
 
@@ -328,7 +391,7 @@ class Agent(Point_Finding):
                     # if cur_cell != mutual_cell:
                     #     mutual_map[r,c] = cur_cell
 
-    def check_should_replan(self):
+    def check_should_replan(self, mutual_data):
 
         # check if the plan is empty, if so replan
         if len(self.plan) <= 2:
@@ -339,6 +402,12 @@ class Agent(Point_Finding):
             for path_point in self.plan:
                 if self.agent_map[path_point[1], path_point[0]] == self.cfg.KNOWN_WALL:
                     return True
+
+
+        if self.cfg.ROBOT_LOSS_TYPE == "Disrepair":
+            # check if a disabled agent has notified us and needs help
+            if len(mutual_data['Agent_Data'][self.id]['help']) > 0 and self.plan[-1] != mutual_data['Agent_Data'][self.id]['help'][0][1]:
+                return True
 
         # check if the goal_xy is known to be empty, if so replan
         if self.agent_map[self.goal_xy[1], self.goal_xy[0]] == self.cfg.KNOWN_EMPTY or \
@@ -352,11 +421,19 @@ class Agent(Point_Finding):
 
         # NO need to replan
         return False
+    
+    def still_disabled(self, mutual_data):
+        if self.cfg.ROBOT_LOSS_TYPE == "Disrepair" and 'Agent_Data' in mutual_data and self.id in mutual_data['Agent_Data']:
+            self.disabled = mutual_data['Agent_Data'][self.id]['disabled']
+        return self.disabled
                     
     def update(self, mutual_data, draw=True):
         # Update the agent's position
         # Scan the environment
         if self.no_more_update:
+            return
+        
+        if self.cfg.ROBOT_LOSS_TYPE != "None" and self.still_disabled(mutual_data):
             return
 
         self.scan()
@@ -366,12 +443,12 @@ class Agent(Point_Finding):
         # Update the agent's map
         self.agent_map = mutual_data['map'].copy()
 
-        if self.check_should_replan():
-            self.replan()
+        if self.check_should_replan(mutual_data):
+            self.replan(mutual_data)
             if self.area_completed:
                 return 0, self.total_dist_traveled
             
-        self.move()
+        self.move(mutual_data)
         # self.draw()
         if draw:
             self.draw()

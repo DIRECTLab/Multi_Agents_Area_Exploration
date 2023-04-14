@@ -287,7 +287,7 @@ class Experiment:
         self.frame_count = 0
         self.mutual_data = {}
         self.mutual_data['map'] = - np.ones((self.ground_truth_map.shape[0], self.ground_truth_map.shape[1])).astype(int)
-        self.folder_name =  'data/' + experiment_name+ '/' + time.strftime("%Y-%m-%d_%H:%M:%S")
+        self.folder_name =  'data/' + experiment_name+ '/' + time.strftime("%Y-%m-%d_%H-%M-%S")
         if cfg.LOG_PLOTS:
             os.makedirs(self.folder_name)
 
@@ -451,7 +451,12 @@ class Experiment:
             self.render()
         
         self.frame_count += 1
-        if cur_known == self.mutual_data['map'].size:
+        disabled_bots = 0
+        for bot in self.bots:
+            if bot.disabled:
+                disabled_bots += 1
+        
+        if cur_known == self.mutual_data['map'].size or disabled_bots == len(self.bots):
             return True
 
         logging_end_time = psutil.Process().cpu_times().user
