@@ -69,6 +69,11 @@ class LogPlot:
         self.draw_bots(bots)
 
         for i, data_key in enumerate(list(data.keys())[0:self.plot_rows]):
+            if len(data[data_key]) ==0:
+                # print warning
+                print("\033[91m{}\033[00m" .format("WARNING: No data to plot for key: " + data_key))
+                continue
+
 
             self.ax_dict[data_key].plot(range(start, stop),
                                     data[data_key][start:stop],
