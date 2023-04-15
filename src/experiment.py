@@ -16,6 +16,31 @@ import src.agent as agent
 import src.log_plot as log_plot
 from src.darp.darp import *
 
+def downsampled_empty_point(point, downsampled_map, cfg):
+    point = point
+    # choose a fandome point from the 8 neighbors
+    neighbors = [(point[0]+1, point[1]), \
+                (point[0]-1, point[1]), \
+                (point[0], point[1]+1), \
+                (point[0], point[1]-1), \
+                (point[0]+1, point[1]+1), \
+                (point[0]-1, point[1]+1), \
+                (point[0]+1, point[1]-1), \
+                (point[0]-1, point[1]-1)]
+
+    
+    # shuffle the neighbors
+    np.random.shuffle(neighbors)
+    for cur_point in neighbors:
+        # check if the point is in the map
+        if cur_point[0] < 0 or cur_point[0] >= cfg.COLS//2 or \
+            cur_point[1] < 0 or cur_point[1] >= cfg.ROWS//2:
+            continue
+        if downsampled_map[cur_point[1], cur_point[0]] == cfg.EMPTY:
+            point = cur_point
+            return point
+    return False
+
 #  related to our first voronoi calculation method
 def generate_vor_cells_over_world(cfg):
     matrix_list, grid = list(), list()
@@ -133,18 +158,6 @@ class Experiment:
         if 'Voronoi' in search_method:
             grid, matrix_list, agent_locs = generate_vor_cells_over_world(cfg)
 
-            # Get the Starting Centroid for each agent
-            # for centroid_xy in cfg.START_CENTROID_LIST_XY:
-            #     column = centroid_xy[0]
-            #     row = centroid_xy[1]
-            #     # print(f"Bot {i} at x:{row}, y:{column}")
-            #     grid[row][column].agent = True
-            #     grid[row][column].agent_id = i
-            #     grid[row][column].distance_matrix = grid[row][column].calc_distance_matrices()
-            #     matrix_list.append(grid[row][column].distance_matrix)
-            #     agent_locs.add((row,column))
-            #     self.log_plot_obj.map_ax.scatter(x=column, y=row, c='r', s=100)
-            #     self.log_plot_obj.map_ax.text(column, row, f"(x:{column},y:{row})", fontsize=10, color='g', ha='center', va='center')
 
         self.bots = []
         self.lock = threading.Lock()
@@ -197,10 +210,10 @@ class Experiment:
             # obstacle_locations = np.argwhere(down_sampled_map == False)
 
             obstacle_locations = np.argwhere(self.ground_truth_map == False)
-            tuple_obst = tuple(map(tuple, obstacle_locations))
+            tuple_obst_rc = tuple(map(tuple, obstacle_locations))
 
             # print("here are the obstacles...", tuple_obst)
-            darp_instance = DARP(cfg.ROWS, cfg.COLS, goal_locations_rc, tuple_obst)
+            darp_instance = DARP(cfg.ROWS, cfg.COLS, goal_locations_rc, tuple_obst_rc)
 
             darp_success , iterations = darp_instance.divideRegions()
 
@@ -224,11 +237,6 @@ class Experiment:
         
         elif 'DarpMST' in search_method:
             start_time = time.time()
-            agent_locations_rc = []
-            for i in range(len(self.bots)):
-                agent_locations_rc.append((self.bots[i].grid_position_xy[1]//2, self.bots[i].grid_position_xy[0]//2))
-            print("here is the agent locations...", agent_locations_rc)
-            
             
             # create a low resolution map by halving the size of the map
             # side a convolutional over the map and if any of the 4 pixels are occupied then the new pixel is occupied
@@ -261,10 +269,29 @@ class Experiment:
             obstacle_locations = np.argwhere(down_sampled_map == False)
 
             # obstacle_locations = np.argwhere(ground_truth_map == False)
-            tuple_obst = tuple(map(tuple, obstacle_locations))
+            tuple_obst_rc = tuple(map(tuple, obstacle_locations))
+            
+
+            agent_locations_xy = []
+            plt.matshow(down_sampled_map)
+            for i in range(len(self.bots)):
+                if (self.bots[i].grid_position_xy[1]//2, self.bots[i].grid_position_xy[0]//2) not in tuple_obst_rc:
+                    # print("heyy")
+                    agent_locations_xy.append((self.bots[i].grid_position_xy[1]//2, self.bots[i].grid_position_xy[0]//2))
+                else:
+                    # print("**********",self.bots[i].grid_position_xy[0]//2, self.bots[i].grid_position_xy[1]//2)
+                    new_point = downsampled_empty_point((self.bots[i].grid_position_xy[1]//2, self.bots[i].grid_position_xy[0]//2), down_sampled_map, cfg)
+                    # print("*****new point", new_point)
+                    agent_locations_xy.append(new_point)
+                self.log_plot_obj.draw_bots(self.bots)
+                plt.scatter(agent_locations_xy[i][1], agent_locations_xy[i][0], c='r')
+            
+                
+
+            print("here is the finalized agent locations...", agent_locations_xy)
 
             # print("here are the obstacles...", tuple_obst)
-            darp_instance = DARP(cfg.ROWS//2, cfg.COLS//2, agent_locations_rc, tuple_obst)
+            darp_instance = DARP(cfg.ROWS//2, cfg.COLS//2, agent_locations_xy, tuple_obst_rc)
 
             darp_success , iterations = darp_instance.divideRegions()
 
@@ -282,6 +309,10 @@ class Experiment:
 
             if darp_success:
                 run_mst(iterations, self.bots, darp_instance)
+            else:
+                print("DARP failed to find a solution")
+                sys.exit()
+
                 
             
         self.frame_count = 0

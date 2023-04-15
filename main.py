@@ -109,9 +109,9 @@ def main():
         ]
     
     Robot_Loss = [
-        "Disrepair",
+        # "Disrepair",
         # "Unrecoverable",
-        # "None"
+        "None"
     ]
 
     All_scenarios = [ Start_scenario_list , Start_Goal_list]
@@ -119,7 +119,7 @@ def main():
 
 
     prosses_count = 1
-    for map_length in range(50,100,50):
+    for map_length in range(20,40,20):
         for agent_count in range(4,6,2):
             print(f"map_length: {map_length} agent_count: {agent_count}")
             for start in Start_scenario_list:
