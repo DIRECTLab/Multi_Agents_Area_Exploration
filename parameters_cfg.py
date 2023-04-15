@@ -17,6 +17,8 @@ class Parameters:
 
         self.Debug = False
         self.Use_process = False
+        self.Create_gif = False
+        assert not (self.Debug and self.Use_process), "Can't use process and debug at the same time"
 
         # The length of the map    
         self.map_length_list = list(range(20,30,10))
@@ -28,23 +30,23 @@ class Parameters:
         self.iteration_repeat_experiment = list(range(0,1))
 
         self.Method_list = [
-            # Frontier_Random,
-            # Frontier_Closest,
-            # Unknown_Random,
-            # Unknown_Closest,
+            Frontier_Random,
+            Frontier_Closest,
+            Unknown_Random,
+            Unknown_Closest,
             Voronoi_Frontier_Random,
             Voronoi_Frontier_Closest,
             Voronoi_Frontier_Help_Closest,
             Voronoi_Frontier_Help_Random,
             Decision_Frontier_Closest,
-            # # DarpVorOnly,
-            # # DarpMST,
+            DarpVorOnly,
+            DarpMST,
             Decay_Epsilon_Greedy_Unknown,
             Decay_Epsilon_Greedy_Frontier,
             Epsilon_Greedy_Unknown,
             Epsilon_Greedy_Frontier,
             GameTheory,
-            "Heterogenus",
+            # "Heterogenus",
             ]
         self.Start_scenario_list = [
             # # Manual_Start,
