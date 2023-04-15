@@ -95,5 +95,5 @@ class DarpMST(Voronoi_Frontier_Help_Closest):
         super().__init__(*args, **kwargs)
         self.random_frontier = False
 
-    def check_should_replan(self):
+    def check_should_replan(self, mutual_data):
         return False
