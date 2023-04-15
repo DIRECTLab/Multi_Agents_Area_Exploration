@@ -281,9 +281,9 @@ class Agent(Point_Finding):
         # Robot Loss 
         if self.cfg.ROBOT_LOSS_TYPE == "Disrepair":
             self.help_teammate(mutual_data)
-        if self.cfg.ROBOT_LOSS_TYPE != "None": 
-           if self.check_for_hit_mine(mutual_data):
-               return
+        if self.cfg.ROBOT_LOSS_TYPE != "Safe_Run": 
+            if self.check_for_hit_mine(mutual_data):
+                return
 
         self.total_dist_traveled += np.sqrt((next_path_point[0] - cur_x)**2 + (next_path_point[1] - cur_y)**2)
         self.grid_position_xy = next_path_point
@@ -433,7 +433,7 @@ class Agent(Point_Finding):
         if self.no_more_update:
             return
         
-        if self.cfg.ROBOT_LOSS_TYPE != "None" and self.still_disabled(mutual_data):
+        if self.cfg.ROBOT_LOSS_TYPE != "Safe_Run" and self.still_disabled(mutual_data):
             return
 
         self.scan()

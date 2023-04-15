@@ -384,7 +384,9 @@ class Experiment:
         if self.cfg.LOG_PLOTS:
             # update the ground_truth_map and plt
             self.log_plot_obj.plot_map(self.mutual_data['map'], self.bots, self.data)
-            self.log_plot_obj.map_ax.set_title(f"Max Known Area {self.ground_truth_map.size}\n {self.search_method} \n{self.experiment_name.replace('_',' ').title()}")
+
+            tittle = (self.experiment_name).replace("/", "\n").replace('_',' ').title() + f"\nMax Known Area {self.ground_truth_map.size}"
+            self.log_plot_obj.map_ax.set_title(tittle)
             if 'Voronoi' in self.search_method :
                 self.log_plot_obj.map_ax.matshow(self.minimum_comparison_table, alpha=0.3)
 
@@ -429,11 +431,10 @@ class Experiment:
                 bot.frame_count =self.frame_count
                 path_length += len(bot.plan)
                 replan_count += bot.replan_count
-                if 'Epsilon' in self.search_method:
+                if 'Epsilon' in self.Agent_Class_list[i].__name__:
                     self.data['epsilon_'+str(bot.id)].append(bot.epsilon)
 
             end_time = psutil.Process().cpu_times().user
-  
 
         # LOG ALL THE DATA
         logging_time_start = psutil.Process().cpu_times().user
