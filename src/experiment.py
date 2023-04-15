@@ -473,7 +473,7 @@ class Experiment:
                 path_length += len(bot.plan)
                 replan_count += bot.replan_count
                 if 'Epsilon' in self.search_method and dir(bot).count('epsilon'):
-                # if 'Epsilon' in self.Agent_Class_list[i].__name__: From Dev
+                
                     self.data['epsilon_'+str(bot.id)].append(bot.epsilon)
 
             end_time = psutil.Process().cpu_times().user
