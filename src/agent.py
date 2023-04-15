@@ -231,23 +231,27 @@ class Agent(Point_Finding):
                 return
 
             # Another non-disabled teammate can come help us
+            agent_locations_and_id = []
             agent_locations = []
             for agent_id in mutual_data['Agent_Data']:
                 if self.id == agent_id or mutual_data['Agent_Data'][agent_id]['disabled']:
                     continue
+                agent_locations_and_id.append((agent_id, mutual_data['Agent_Data'][agent_id]['grid_position_xy']))
                 agent_locations.append(mutual_data['Agent_Data'][agent_id]['grid_position_xy'])
 
+            if len(agent_locations) == 0:
+                warnings.warn("No viable agents available to help")
+                return
             # Find the closest teammate
             closest = self.get_closest_point_rc(agent_locations)
-            agent_locations.remove(closest)
             closest = (closest[0], closest[1])
-            for agent_id in mutual_data['Agent_Data']:
-                if mutual_data['Agent_Data'][agent_id]['grid_position_xy'] == closest:
+            for agent_info in agent_locations_and_id:
+                if agent_info[1] == closest:
                     # If a teammate is right next to us, then they can just help us
                     if abs(closest[0] - cur_x) <= 1 and abs(closest[1] - cur_y) <= 1:
                         break
                     cur_pos = (self.grid_position_xy[0], self.grid_position_xy[1])
-                    mutual_data['Agent_Data'][agent_id]['help'].append((self.id, cur_pos))
+                    mutual_data['Agent_Data'][agent_info[0]]['help'].append((self.id, cur_pos))
                     self.disabled = True
                     mutual_data['Agent_Data'][self.id]['disabled'] = True
                     self.ground_truth_map[next_path_point[0], next_path_point[1]] = self.cfg.EMPTY
