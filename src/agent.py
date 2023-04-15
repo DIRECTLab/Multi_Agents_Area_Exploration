@@ -239,6 +239,9 @@ class Agent(Point_Finding):
                 agent_locations_and_id.append((agent_id, mutual_data['Agent_Data'][agent_id]['grid_position_xy']))
                 agent_locations.append(mutual_data['Agent_Data'][agent_id]['grid_position_xy'])
 
+            if len(agent_locations) == 0:
+                warnings.warn("No viable agents available to help")
+                return
             # Find the closest teammate
             closest = self.get_closest_point_rc(agent_locations)
             closest = (closest[0], closest[1])
