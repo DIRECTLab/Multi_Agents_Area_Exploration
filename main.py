@@ -4,7 +4,7 @@ import pandas as pd
 import os
 from multiprocessing import Pool, Manager, Process, Queue
 
-from src.experiment import Experiment
+from src.experiment import *
 from src.config import Config
 
 
@@ -20,13 +20,13 @@ def run_heterogenus(start, goal, cfg, experiment_name, return_dict, Method_list,
     print("\n\n")
     # get every combo of all the methods starting from 2 to the number of methods
     
-    for combo in itertools.combinations(cur_Method_list, 2):
+    for combo in tqdm.tqdm(itertools.combinations(cur_Method_list, 2), desc="Heterogenus", colour="YELLOW"):
         print(f"combo {len(combo)} {combo}")
         method1 = type(combo[0].__name__, (combo[0], start, goal), {})
         method2 = type(combo[1].__name__, (combo[1], start, goal), {})
 
         # ratio assinment of the agents
-        for ratio in [(.50,.50), (.25,.75), (.75,.25)]:
+        for ratio in  tqdm.tqdm([(.50,.50), (.25,.75), (.75,.25)], desc="Ratio", colour="GREEN"):
             method1_couint =  int(cfg.N_BOTS * ratio[0]) # % of the agents
             method2_couint =  int(cfg.N_BOTS * ratio[1])
             cur_experiment_name = experiment_name + f"method1:{method1.__name__}_count:{method1_couint}_method2:{method2.__name__}__count:{method2_couint}/" 
@@ -39,7 +39,8 @@ def run_heterogenus(start, goal, cfg, experiment_name, return_dict, Method_list,
             for i , name in enumerate(Agent_Class_list):
                 search_method += str(i) +' '+str(name).replace("<class '__main__.","").replace("'>","").replace(" ", "") + '\n'
 
-            print("Method:", search_method)
+            print("Method:\n", )
+            prGreen(search_method)
             cur_experiment = Experiment(cfg, 
                             cur_experiment_name, 
                             Agent_Class_list, 
