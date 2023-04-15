@@ -3,6 +3,8 @@ class Config:
         self.DRAW_SIM = False
         self.LOG_PLOTS = True
         self.USE_THREADS = False
+        self.CREATE_GIF = False
+        self.USE_PROCESS = False
         
         self.SEED = None
         self.N_BOTS = 7

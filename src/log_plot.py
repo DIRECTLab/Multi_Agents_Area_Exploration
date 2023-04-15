@@ -2,14 +2,23 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 class LogPlot:
-    def __init__(self,cfg, data, split_plot=True):
+    def __init__(self,cfg, data, split_plot=True, plot_rows=None):
         self.cfg = cfg
-        map_fig = plt.figure(figsize=(10, 10))
-        map_fig.set_facecolor('gray')
-        # map_fig, (map_ax, ax2) = plt.subplots(1, 2,)
-        map_ax = plt.subplot2grid((1, 3), (0, 0), rowspan=3, colspan=1)
-        ax2 = plt.subplot2grid((3, 3), (0, 1), rowspan=3, colspan=2)
-        plot_rows = len(data.keys())
+        map_fig = plt.figure(figsize=(9, 7))
+        map_fig.set_facecolor('black')
+        plt.style.use('dark_background')
+
+        map_ax = plt.subplot2grid((1, 2), (0, 0), rowspan=1, colspan=1)
+        ax2 = plt.subplot2grid((1, 2), (0, 1), rowspan=1, colspan=1)
+
+        # map_ax = plt.subplot2grid((1, 3), (0, 0), rowspan=3, colspan=1)
+        # ax2 = plt.subplot2grid((3, 3), (0, 1), rowspan=3, colspan=2)
+        # 1/2 for the map, 1/2 for the plot
+
+        if plot_rows is None:
+            plot_rows = len(data.keys())
+        else: 
+            plot_rows = plot_rows
         self.ax_dict = {}
         self.color_dict = {}
 
@@ -18,16 +27,22 @@ class LogPlot:
         for i, data_key in enumerate(list(data.keys())[0:plot_rows]):
             self.color_dict[data_key] = f"C{i*2}"
             if self.split_plot:
-                    self.ax_dict[data_key] = plt.subplot2grid((plot_rows, 3), (i, 1), rowspan=1, colspan=2)
+                self.ax_dict[data_key] = plt.subplot2grid((plot_rows, 2), (i, 1), rowspan=1, colspan=1, )
             else:
                 # Plot all data on the same plot
-                self.ax_dict[data_key] = ax2.twinx()  # instantiate a second axes that shares the same x-axis
+                self.ax_dict[data_key] = ax2.twinx()
+                # chare the x axis
+                # self.ax_dict[data_key].get_shared_x_axes().join(ax2, self.ax_dict[data_key])
                 # offset the y axis
                 self.ax_dict[data_key].spines["right"].set_position(("axes", 1+0.1*i))
                 # set the color of the ticks
                 self.ax_dict[data_key].tick_params(axis='y', colors=self.color_dict[data_key])
 
-            self.ax_dict[data_key].set_ylabel(f"{data_key.replace('_', ' ').title()} █",color=self.color_dict[data_key])
+            self.ax_dict[data_key].set_ylabel(f"{data_key.replace('_', ' ').title()} █",
+                                            color=self.color_dict[data_key],
+                                            rotation=70,
+                                            labelpad=0)
+            
             self.ax_dict[data_key].set_xlabel("Frames")
 
         self.map_fig = map_fig
@@ -73,6 +88,7 @@ class LogPlot:
                 # print warning
                 print("\033[91m{}\033[00m" .format("WARNING: No data to plot for key: " + data_key))
                 continue
+
 
 
             self.ax_dict[data_key].plot(range(start, stop),

@@ -13,6 +13,7 @@ import itertools
 import tqdm
 
 def run_heterogenus(start, goal, cfg, experiment_name, return_dict, Method_list, prosses_count, debug=False):
+    Sub_process_list = []
     cur_Method_list = Method_list.copy()
     cur_Method_list.remove("Heterogenus")
     assert len(cur_Method_list) > 1, "Heterogenus needs more than 1 method"
@@ -20,17 +21,17 @@ def run_heterogenus(start, goal, cfg, experiment_name, return_dict, Method_list,
     print("\n\n")
     # get every combo of all the methods starting from 2 to the number of methods
     
-    for combo in tqdm.tqdm(itertools.combinations(cur_Method_list, 2), desc="Heterogenus", colour="YELLOW"):
-        print(f"combo {len(combo)} {combo}")
+    for combo in tqdm.tqdm(itertools.combinations(cur_Method_list, 2), desc=("\033[91m" + "Heterogenus"+ "\033[0m"), colour="YELLOW", total=len(list(itertools.combinations(cur_Method_list, 2)))):
+        print(f"\n\n combo {len(combo)} {combo}")
         method1 = type(combo[0].__name__, (combo[0], start, goal), {})
         method2 = type(combo[1].__name__, (combo[1], start, goal), {})
 
         # ratio assinment of the agents
-        for ratio in  tqdm.tqdm([(.50,.50), (.25,.75), (.75,.25)], desc="Ratio", colour="GREEN"):
+        for ratio in  tqdm.tqdm([(.50,.50), (.25,.75), (.75,.25)], desc="Ratio", colour="BLACK"):
             method1_couint =  int(cfg.N_BOTS * ratio[0]) # % of the agents
             method2_couint =  int(cfg.N_BOTS * ratio[1])
-            cur_experiment_name = experiment_name + f"method1:{method1.__name__}_count:{method1_couint}_method2:{method2.__name__}__count:{method2_couint}/" 
-            cur_experiment_name += f'nbots:{cfg.N_BOTS}_map_length:{cfg.ROWS}_seed:{cfg.SEED}'
+            cur_experiment_name = experiment_name + f"method1:{method1.__name__}_count:{method1_couint}\nmethod2:{method2.__name__}_count:{method2_couint}/" 
+            cur_experiment_name += f'\nnbots:{cfg.N_BOTS}_map_length:{cfg.ROWS}_seed:{cfg.SEED}'
 
             Agent_Class_list = [method1] * method1_couint
             Agent_Class_list += [method2] * method2_couint
@@ -40,7 +41,8 @@ def run_heterogenus(start, goal, cfg, experiment_name, return_dict, Method_list,
                 search_method += str(i) +' '+str(name).replace("<class '__main__.","").replace("'>","").replace(" ", "") + '\n'
 
             print("Method:\n", )
-            prGreen(search_method)
+            print("\033[92m" + search_method + "\033[0m")
+
             cur_experiment = Experiment(cfg, 
                             cur_experiment_name, 
                             Agent_Class_list, 
@@ -50,10 +52,22 @@ def run_heterogenus(start, goal, cfg, experiment_name, return_dict, Method_list,
                             debug=debug,
                             )
 
-            cur_experiment.run_experiment([None], )
-            prosses_count += 1
+            if cfg.USE_PROCESS:
+                p = Process(target=cur_experiment.run_experiment, 
+                            args=([None],))
+                p.start()
+                Sub_process_list.append(p)
+                prosses_count += 1
+            else:
+                cur_experiment.run_experiment([None], )
+                prosses_count += 1
+
+        for p in tqdm.tqdm(Sub_process_list, desc="Joining Heterogenus Process", colour="RED"):
+            p.join()
+            print("Joined Process: ", p.pid)
+        print()
             
-    return return_dict
+
 
 
 def main(parameters = None):
@@ -62,15 +76,9 @@ def main(parameters = None):
         parameters = Parameters()
 
     all_df = pd.DataFrame()
-    df_index = 0
-    
     process_manager = Manager()
     return_dict = process_manager.dict()
     Process_list = []
-    DEBUG = parameters.Debug
-    USE_PROCESS = parameters.Use_process
-
-    assert not (DEBUG and USE_PROCESS), "Can't use process and debug at the same time"
     prosses_count = 1
 
 
@@ -110,13 +118,15 @@ def main(parameters = None):
         cfg.ROWS = int(map_length)
         cfg.SCREEN_WIDTH = int(map_length*cfg.GRID_THICKNESS)
         cfg.SCREEN_HEIGHT = int(map_length*cfg.GRID_THICKNESS)
+        cfg.CREATE_GIF = parameters.Create_gif
+        cfg.USE_PROCESS = parameters.Use_process
 
         Agent_Class_list = []
 
         if Method == "Heterogenus":
             # remove the heterogenus from the list
             experiment_name = f"{Method}/"
-            run_heterogenus(start, goal, cfg, experiment_name, return_dict, parameters.Method_list, prosses_count, debug =DEBUG)
+            run_heterogenus(start, goal, cfg, experiment_name, return_dict, parameters.Method_list, prosses_count, debug = parameters.Debug)
             continue
 
         experiment_name = f"{Method.__name__}/{run_type}/{start.__name__}/{goal.__name__}/nbots-{cfg.N_BOTS}_length-{cfg.COLS}_seed-{cfg.SEED}"
@@ -133,9 +143,9 @@ def main(parameters = None):
                                     search_method,
                                     return_dict,
                                     prosses_count,
-                                    debug=DEBUG,
+                                    debug=parameters.Debug,
                                     )
-        if USE_PROCESS:
+        if cfg.USE_PROCESS:
             # run the simulation in a new process
             p = Process(target=cur_experiment.run_experiment, 
                         args=([None],))
@@ -148,8 +158,8 @@ def main(parameters = None):
 
 
 
-    if USE_PROCESS:
-        for p in Process_list:
+    if cfg.USE_PROCESS:
+        for p in tqdm.tqdm(Process_list, desc="Joining Process", colour="RED"):
             p.join()
             print("Joined Process: ", p.pid)
 
@@ -157,7 +167,7 @@ def main(parameters = None):
     import time
     t_stamp = time.time()
 
-    for i, [df, cfg, full_map] in enumerate(return_dict.values()):
+    for i, [df, cfg, full_map] in tqdm.tqdm( enumerate(return_dict.values()), colour="GREEN", desc="Saving Data", total=len(return_dict.values())):
         # all_df = all_df.append(df, ignore_index=True)
         # concat the dataframes
         df['execution_date'] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(t_stamp))
