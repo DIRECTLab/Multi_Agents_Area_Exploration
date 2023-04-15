@@ -507,6 +507,7 @@ class Experiment:
 
 
     def make_gif(self, frame_folder):
+        print("Making gif")
         frame_folder = self.folder_name + "/gif"
         import glob
         from PIL import Image
@@ -516,9 +517,8 @@ class Experiment:
         imgs = glob.glob(frame_folder + "/*.png")
         # sort the image name scring numerically
         imgs.sort(key=lambda f: int(''.join(filter(str.isdigit, f))))
-        for i in imgs:
-            print(i)
-            new_frame = Image.open(i)
+        for im in imgs:
+            new_frame = Image.open(im)
             frames.append(new_frame)
 
 
