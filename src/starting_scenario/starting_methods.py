@@ -10,7 +10,7 @@ class Center_Start_Position:
         self.grid_position_xy = center_xy
 
 class Manual_Start:
-    four_start_pos = [(14, 4), (26, 27), (43, 20), (19, 6)]
+    four_start_pos = [(2, 7), (9, 16), (2, 5), (3, 11)]
     def choose_start_position(self):
         self.grid_position_xy = self.four_start_pos[self.id]
 

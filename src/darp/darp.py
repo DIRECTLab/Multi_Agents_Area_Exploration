@@ -185,7 +185,7 @@ class DARP:
         for position_rc in initial_positions:
             for obstacle in obstacles_positions:
                 if position_rc[0] == obstacle[0] and position_rc[1] == obstacle[1]:
-                    print("Initial positions should not be on obstacles")
+                    print("Initial positions should not be on obstacles", position_rc)
                     sys.exit(5)
 
         return initial_positions, obstacles_positions, portions
@@ -280,6 +280,8 @@ class DARP:
             iteration = 0
 
             while iteration <= self.MaxIter and not cancelled:
+                if iteration % 5000 == 0:
+                    print("ITERATION COUNT FOR DARP DIVISION:", iteration)
                 self.A, self.ArrayOfElements = assign(self.robotNumber, self.rows, self.cols, self.GridEnv, self.distance_matrices, self.A)
                 ConnectedMultiplierList = np.ones((self.robotNumber, self.rows, self.cols))
                 ConnectedRobotRegions = np.zeros(self.robotNumber)
