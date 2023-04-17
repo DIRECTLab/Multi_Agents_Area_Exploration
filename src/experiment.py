@@ -397,6 +397,7 @@ class Experiment:
         df['start_scenario'] = self.search_method.split('\n')[1]
         df['goal_scenario'] = self.search_method.split('\n')[2]
         df['experiment_ID'] = self.experiment_ID
+        df['loss_type'] = self.cfg.ROBOT_LOSS_TYPE
 
         df.to_csv(f"{self.folder_name}/data.csv")
         print(f"Done {self.experiment_name}")
