@@ -21,13 +21,13 @@ class Parameters:
         assert not (self.Debug and self.Use_process), "Can't use process and debug at the same time"
 
         # The length of the map    
-        self.map_length_list = list(range(20,30,10))
+        self.map_length_list = list(range(50,100,20))
 
         # The number of agents in the experiment
-        self.agent_count_list = list(range(4,6,2))
+        self.agent_count_list = list(range(4,10,2))
 
         # iteration_repeat_experiment will be used to repeat the experiment
-        self.iteration_repeat_experiment = list(range(0,1))
+        self.iteration_repeat_experiment = list(range(0, 60))
 
         self.Method_list = [
             Frontier_Random,
@@ -52,22 +52,22 @@ class Parameters:
             # # Manual_Start,
             Rand_Start_Position,
             # Edge_Start_Position, # does not work with Voronoi methods Currently
-            Top_Left_Start_Position,
-            Center_Start_Position, 
+            # Top_Left_Start_Position,
+            # Center_Start_Position, 
             ]
         self.Start_Goal_list= [
             # # Manual_Goal,
             Rand_Start_Goal,
             # Center_Start_Goal, # does not work with Voronoi methods Currently
             # Top_Left_Start_Goal, # does not work with Voronoi methods Currently
-            Edge_Start_Goal, 
-            Distributed_Goal,
+            # Edge_Start_Goal, 
+            # Distributed_Goal,
             ]
         
         self.Robot_Loss = [
-            "Safe_Run"
-            # "Disrepair",
-            # "Unrecoverable",
+            # "Safe_Run"
+            "Disrepair",
+            "Unrecoverable",
         ]
 
 
