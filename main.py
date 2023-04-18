@@ -2,7 +2,9 @@ import random
 import numpy as np
 import pandas as pd
 import os
-from multiprocessing import Pool, Manager, Process, Queue
+# from multiprocessing import Pool, Manager, Process, Queue
+import multiprocessing as mp
+
 
 from src.experiment import *
 from src.config import Config
@@ -68,7 +70,8 @@ def run_heterogenus(start, goal, cfg, experiment_name, return_dict, Method_list,
         print()
             
 
-def run_scenario(scenario, parameters, return_dict, prosses_count, p_bar, debug=False):
+def run_scenario(args):
+    scenario, parameters, return_dict, prosses_count, debug = args
     print_string =""
     for i, [key,value, cur_list] in enumerate(zip(parameters.All_scenarios_dic.keys(), scenario, parameters.All_scenarios_dic.values())):
         cur_list = list(cur_list)
@@ -108,7 +111,7 @@ def run_scenario(scenario, parameters, return_dict, prosses_count, p_bar, debug=
         run_heterogenus(start, goal, cfg, experiment_name, return_dict, parameters.Method_list, prosses_count, debug = parameters.Debug)
         return
 
-    experiment_name = f"{Method.__name__}/{run_type}/{start.__name__}/{goal.__name__}/nbots:{cfg.N_BOTS}_map_length:{cfg.ROWS}_seed:{cfg.SEED}"
+    experiment_name = f"{Method.__name__}/{run_type}/{start.__name__}/{goal.__name__}/nbots-{cfg.N_BOTS}_map_length-{cfg.ROWS}_seed-{cfg.SEED}"
 
     if Method == "DQN":
         Agent_Class_list = [Method]
@@ -131,18 +134,8 @@ def run_scenario(scenario, parameters, return_dict, prosses_count, p_bar, debug=
                     debug=debug,
                     )
 
-    return_value = cur_experiment.run_experiment([None], )
-    p_bar.update(1)
-    # p_bar
-    return return_value
-    # if cfg.USE_PROCESS:
-    #     p = Process(target=cur_experiment.run_experiment, 
-    #                 args=([None],))
-    #     p.start()
-    #     return p
-    # else:
-    #     cur_experiment.run_experiment([None], )
-    #     return None
+    return cur_experiment.run_experiment([None], )
+
 
 
 def main(parameters = None):
@@ -151,39 +144,25 @@ def main(parameters = None):
         parameters = Parameters()
 
     all_df = pd.DataFrame()
-    process_manager = Manager()
+    process_manager = mp.Manager()
     return_dict = process_manager.dict()
-    Process_list = []
-    # prosses_count = 1
-    jobs_running = 0
 
-
-    progress_bar = tqdm.tqdm(
-            itertools.product(*parameters.All_scenarios_dic.values()),
-                total=len(list(itertools.product(*parameters.All_scenarios_dic.values()))) , 
-                colour="CYAN", desc="Experiments Progress")
-    
-
-    # for i,scenario in  enumerate(progress_bar):
-    #     p_bar_desc = ""
-
-    if parameters.Use_process:
-        pool = Pool(processes=parameters.Max_process)
 
     results = []
 
-    # setup progress bar
-    progress_bar.set_description("Experiments Progress")
-    progress_bar.set_postfix_str("")
-    progress_bar.refresh()
+    all_scenarios =  itertools.product(*parameters.All_scenarios_dic.values())
     
 
-    for prosses_count, scenario in enumerate( itertools.product(*parameters.All_scenarios_dic.values())):
-        results.append(pool.apply_async(run_scenario, (scenario, parameters, return_dict, prosses_count, progress_bar, parameters.Debug, )))
-
     if parameters.Use_process:
-        pool.close()
-        pool.join()
+        with mp.Pool(processes=int(mp.cpu_count()*0.90)) as pool:
+
+            args = list({i:[scenario, parameters, return_dict, i, parameters.Debug] for i,scenario in  enumerate(all_scenarios)}.values())
+            # Inspiration: https://stackoverflow.com/a/45276885/4856719
+            results = list(tqdm.tqdm(pool.imap(run_scenario, args), total=len(args), colour="CYAN", desc="Experiments Progress"))
+    else:
+        for i,scenario in  enumerate(tqdm.tqdm(all_scenarios, colour="CYAN", desc="Experiments Progress")):
+            results.append(run_scenario([scenario, parameters, return_dict, i, parameters.Debug]))
+
   
 
     import time
@@ -191,23 +170,8 @@ def main(parameters = None):
 
     # parce the results
     for i, return_value in tqdm.tqdm( enumerate( results), colour="GREEN", desc="Saving Data", total=len(results)):
-        [df, cfg,] = return_value.get()
+        [df, cfg,] = return_value
 
-        df['execution_date'] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(t_stamp))
-        all_df = pd.concat([all_df, df], ignore_index=True)
-
-
-    # if parameters.Use_process:
-    #     for p in tqdm.tqdm(Process_list, desc="Joining Process", colour="RED"):
-    #         p.join()
-    #         print("Joined Process: ", p.pid)
-
-    # Time stamp this data
-
-
-    for i, [df, cfg] in tqdm.tqdm( enumerate(return_dict.values()), colour="GREEN", desc="Saving Data", total=len(return_dict.values())):
-        # all_df = all_df.append(df, ignore_index=True)
-        # concat the dataframes
         df['execution_date'] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(t_stamp))
         all_df = pd.concat([all_df, df], ignore_index=True)
 
@@ -220,7 +184,4 @@ def main(parameters = None):
 
 if __name__ == "__main__":
     main()
-    # save the Conda environment yaml file so that we can recreate the environment on any machine
-    import os
-    # with out the prefix, the environment will be saved to the current directory
-    os.system("conda env export --no-builds > environment.yml")
+
