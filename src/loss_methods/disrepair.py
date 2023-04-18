@@ -1,41 +1,22 @@
 import numpy as np
 from src.agent import Agent
+from src.loss_methods.unrecoverable import Unrecoverable
 import warnings
+from src.planners.astar_new import astar
 
 
-class Disrepair(Agent):
+
+class Disrepair(Unrecoverable):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.choose_random = False
         self.last_mutual_data_copy = None
-
-    def check_should_replan(self, mutual_data):
-        if len(mutual_data['Agent_Data'][self.id]['help']) > 0 and self.plan[-1] != mutual_data['Agent_Data'][self.id]['help'][0][1]:
-                return True
-        return super().check_should_replan(mutual_data)
-    
-    def update(self, mutual_data, draw=True):
-
-        if self.still_disabled(mutual_data):
-            return
-        return super().update(mutual_data, draw)
-    
-
-    def move(self, mutual_data):
-        if self.check_for_hit_mine(mutual_data):
-                return
-        return super().move(mutual_data)
-    
 
     def check_for_hit_mine(self, mutual_data):
         cur_x = self.grid_position_xy[0]
         cur_y = self.grid_position_xy[1]
         next_path_point = self.plan[0]
         if self.ground_truth_map[next_path_point[0], next_path_point[1]] == self.cfg.MINE:
-            # If we are unrecoverable, then no one can help us
-            if self.cfg.ROBOT_LOSS_TYPE == 'Unrecoverable':
-                self.disabled = True
-                return
 
             # Another non-disabled teammate can come help us
             agent_locations_and_id = []
@@ -64,3 +45,44 @@ class Disrepair(Agent):
                     self.ground_truth_map[next_path_point[0], next_path_point[1]] = self.cfg.EMPTY
                     return True
         return False
+
+    def still_disabled(self, mutual_data):
+        if 'Agent_Data' in mutual_data and self.id in mutual_data['Agent_Data']:
+            self.disabled = mutual_data['Agent_Data'][self.id]['disabled']
+        return self.disabled
+    
+    def check_should_replan(self, mutual_data):
+        if len(mutual_data['Agent_Data'][self.id]['help']) > 0 and self.plan[-1] != mutual_data['Agent_Data'][self.id]['help'][0][1]:
+            return True
+        return super().check_should_replan(mutual_data)
+    
+    def replan_to_help(self, mutual_data):        
+        if 'Agent_Data' in mutual_data and len(mutual_data['Agent_Data'][self.id]['help']) > 0:
+            self.plan = astar( np.where(self.agent_map == self.cfg.KNOWN_WALL, self.cfg.KNOWN_WALL, self.cfg.KNOWN_EMPTY), 
+                            (int(np.round(self.grid_position_xy[0])), int(np.round(self.grid_position_xy[1]))),
+                            mutual_data['Agent_Data'][self.id]['help'][0][1])
+            if self.plan == None:
+                self.plan =[]
+                if self.replan_count > 100:
+                    warnings.warn("Replan count is too high")
+                assert self.replan_count < self.agent_map.size, "Replan count is too high 200"                
+            return True
+        return False
+
+    def replan(self, mutual_data):
+        if self.replan_to_help(mutual_data):
+            return
+        return super().replan(mutual_data)
+    
+    def help_teammate(self, mutual_data):
+        if len(mutual_data['Agent_Data'][self.id]['help']) > 0:
+            next_help = mutual_data['Agent_Data'][self.id]['help'][0][1]
+            if abs(next_help[0] - self.grid_position_xy[0]) <= 2 and abs(next_help[1] - self.grid_position_xy[1]) <= 2:
+                id = mutual_data['Agent_Data'][self.id]['help'][0][0]
+                mutual_data['Agent_Data'][id]['disabled'] = False
+                mutual_data['Agent_Data'][self.id]['help'].pop(0)
+    
+    def move(self, mutual_data):
+        self.help_teammate(mutual_data)
+
+        return super().move(mutual_data)

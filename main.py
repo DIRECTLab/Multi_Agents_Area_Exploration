@@ -91,7 +91,7 @@ def run_scenario(args):
     cfg = Config()
     cfg.SEED = int(map_length + experiment_iteration)
     cfg.N_BOTS = int(agent_count)
-    cfg.ROBOT_LOSS_TYPE = run_type
+    cfg.ROBOT_LOSS_TYPE = run_type.__name__
 
     random.seed(cfg.SEED)
     np.random.seed(cfg.SEED)
@@ -111,12 +111,10 @@ def run_scenario(args):
         run_heterogenus(start, goal, cfg, experiment_name, return_dict, parameters.Method_list, prosses_count, debug = parameters.Debug)
         return
 
-    experiment_name = f"{Method.__name__}/{run_type}/{start.__name__}/{goal.__name__}/nbots-{cfg.N_BOTS}_map_length-{cfg.ROWS}_seed-{cfg.SEED}"
+    experiment_name = f"{Method.__name__}/{run_type.__name__}/{start.__name__}/{goal.__name__}/nbots-{cfg.N_BOTS}_map_length-{cfg.ROWS}_seed-{cfg.SEED}"
 
-    if Method == "DQN":
-        Agent_Class_list = [Method]
-    else:
-        Agent_Class_list = [type(Method.__name__, (Method, start, goal), {})] * cfg.N_BOTS
+
+    Agent_Class_list = [type(Method.__name__+'_'+run_type.__name__, (Method, run_type, start, goal), {})] * cfg.N_BOTS
 
     search_method =''
     for i , name in enumerate(Agent_Class_list):
@@ -160,12 +158,10 @@ def main(parameters = None):
             # Inspiration: https://stackoverflow.com/a/45276885/4856719
             results = list(tqdm.tqdm(pool.imap_unordered(run_scenario, args,)
                                     #  time shows hours, minutes, seconds
-                                     , total=len(args), colour="CYAN", desc="Experiments Progress", ))
+                                    , total=len(args), colour="CYAN", desc="Experiments Progress", ))
     else:
         for i,scenario in  enumerate(tqdm.tqdm(itertools.product(*parameters.All_scenarios_dic.values()), colour="CYAN", desc="Experiments Progress", total=len(list(itertools.product(*parameters.All_scenarios_dic.values()))))):
             results.append(run_scenario([scenario, parameters, return_dict, i, parameters.Debug]))
-
-  
 
     import time
     t_stamp = time.time()

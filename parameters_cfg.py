@@ -1,7 +1,12 @@
 import numpy as np
 from src.config import Config
 
+# Robot Loss
 from src.agent import Agent
+from src.loss_methods.unrecoverable import Unrecoverable
+from src.loss_methods.disrepair import Disrepair
+
+# Replan methods
 from src.replan.frontier import *
 from src.replan.voronoi_basic import *
 from src.starting_scenario.starting_methods import *
@@ -11,12 +16,13 @@ from src.darp.darp import *
 from src.replan.epsilon_greedy import *
 from src.replan.game_theory import *
 
+
 class Parameters:
     def __init__(self):
         repeat_count =1
 
-        self.Debug = False
-        self.Use_process = True
+        self.Debug = True
+        self.Use_process = False
         self.Create_gif = False
         assert not (self.Debug and self.Use_process), "Can't use process and debug at the same time"
 
@@ -30,22 +36,22 @@ class Parameters:
         self.iteration_repeat_experiment = list(range(0, 60))
 
         self.Method_list = [
-            Frontier_Random,
-            Frontier_Closest,
-            Unknown_Random,
-            Unknown_Closest,
-            Voronoi_Frontier_Random,
+            # Frontier_Random,
+            # Frontier_Closest,
+            # Unknown_Random,
+            # Unknown_Closest,
+            # Voronoi_Frontier_Random,
             Voronoi_Frontier_Closest,
-            Voronoi_Frontier_Help_Closest,
-            Voronoi_Frontier_Help_Random,
-            Decision_Frontier_Closest,
+            # Voronoi_Frontier_Help_Closest,
+            # Voronoi_Frontier_Help_Random,
+            # Decision_Frontier_Closest,
             # # # DarpVorOnly,
             # # # DarpMST,
-            Decay_Epsilon_Greedy_Unknown,
-            Decay_Epsilon_Greedy_Frontier,
-            Epsilon_Greedy_Unknown,
-            Epsilon_Greedy_Frontier,
-            GameTheory,
+            # Decay_Epsilon_Greedy_Unknown,
+            # Decay_Epsilon_Greedy_Frontier,
+            # Epsilon_Greedy_Unknown,
+            # Epsilon_Greedy_Frontier,
+            # GameTheory,
             # # # "Heterogenus",
             ]
         # make sure the list is dose not contain duplicates
@@ -68,9 +74,9 @@ class Parameters:
             ]
         
         self.Robot_Loss = [
-            "Safe_Run",
-            "Disrepair",
-            "Unrecoverable",
+            # Agent,
+            # Unrecoverable,
+            Disrepair,
         ]
 
 
