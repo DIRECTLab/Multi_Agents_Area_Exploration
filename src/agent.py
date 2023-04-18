@@ -129,7 +129,7 @@ class Agent(Point_Finding):
     
     def set_new_goal(self):
         self.goal_xy = self.get_goal_method()
-        assert self.grid_position_xy is not None, "grid_position_xy is None, the Base method is not implemented"
+        assert self.goal_xy is not None, "goal_xy is None, the Base method is not implemented"
 
     def replan_to_help(self, mutual_data):        
         if 'Agent_Data' in mutual_data and len(mutual_data['Agent_Data'][self.id]['help']) > 0:
@@ -140,7 +140,7 @@ class Agent(Point_Finding):
                 self.plan =[]
                 if self.replan_count > 100:
                     warnings.warn("Replan count is too high")
-                assert self.replan_count < 200, "Replan count is too high 200"                
+                assert self.replan_count < self.agent_map.size, "Replan count is too high 200"                
             return True
         return False
 
@@ -463,11 +463,13 @@ class Agent(Point_Finding):
         
         if self.plan is None: 
             self.plan = []
-            warnings.warn(("⭕️No plan == None to follow : "+ self.__class__.__name__))
+            warnings.warn("⭕️No plan == None to follow : ") 
+            print(self.__class__.__name__)
             return 0, self.total_dist_traveled
         
         if len(self.plan) == 0:
-            warnings.warn(("❗️No plan len==0 to follow : "+ self.__class__.__name__))
+            warnings.warn("❗️No plan len==0 to follow : ")
+            print(self.__class__.__name__)
             return 0, self.total_dist_traveled
             
         self.move(mutual_data)

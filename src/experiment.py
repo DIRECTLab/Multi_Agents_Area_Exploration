@@ -534,7 +534,7 @@ class Experiment:
     def run_experiment(self, func_arr, *args , **kwargs):
         self.setup_run_now()
         done = False
-        max_iter = self.cfg.ROWS**2 //2
+        max_iter = self.cfg.ROWS**2 
         for i in range(max_iter):
             if func_arr:
                 for func, func_args in zip(func_arr, args):
