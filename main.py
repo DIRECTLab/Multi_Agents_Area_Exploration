@@ -68,6 +68,81 @@ def run_heterogenus(start, goal, cfg, experiment_name, return_dict, Method_list,
         print()
             
 
+def run_scenario(scenario, parameters, return_dict, prosses_count, p_bar, debug=False):
+    print_string =""
+    for i, [key,value, cur_list] in enumerate(zip(parameters.All_scenarios_dic.keys(), scenario, parameters.All_scenarios_dic.values())):
+        cur_list = list(cur_list)
+        if type(value ) ==type:
+            #GREEN color
+            print_string += f"| {key:<30} | \033[92m{value.__name__:<30}\033[00m | {cur_list.index(value)+1}/{len(cur_list)} \n"
+        else:
+            #YELLOW color
+            print_string += f"| {key:<30} | \033[93m{value:<30}\033[00m | {cur_list.index(value)+1}/{len(cur_list):<30} \n"
+
+
+    print('\n'+print_string + '\n')
+
+    [Method, run_type, start, goal,
+            map_length,agent_count, experiment_iteration] = scenario
+    
+    cfg = Config()
+    cfg.SEED = int(map_length + experiment_iteration)
+    cfg.N_BOTS = int(agent_count)
+    cfg.ROBOT_LOSS_TYPE = run_type
+
+    random.seed(cfg.SEED)
+    np.random.seed(cfg.SEED)
+
+    cfg.COLS = int(map_length)
+    cfg.ROWS = int(map_length)
+    cfg.SCREEN_WIDTH = int(map_length*cfg.GRID_THICKNESS)
+    cfg.SCREEN_HEIGHT = int(map_length*cfg.GRID_THICKNESS)
+    cfg.CREATE_GIF = parameters.Create_gif
+    cfg.USE_PROCESS = parameters.Use_process
+
+    Agent_Class_list = []
+
+    if Method == "Heterogenus":
+        # remove the heterogenus from the list
+        experiment_name = f"{Method}/"
+        run_heterogenus(start, goal, cfg, experiment_name, return_dict, parameters.Method_list, prosses_count, debug = parameters.Debug)
+        return
+
+    experiment_name = f"{Method.__name__}/{run_type}/{start.__name__}/{goal.__name__}/nbots:{cfg.N_BOTS}_map_length:{cfg.ROWS}_seed:{cfg.SEED}"
+
+    if Method == "DQN":
+        Agent_Class_list = [Method]
+    else:
+        Agent_Class_list = [type(Method.__name__, (Method, start, goal), {})] * cfg.N_BOTS
+
+    search_method =''
+    for i , name in enumerate(Agent_Class_list):
+        search_method += str(i) +' '+str(name).replace("<class '__main__.","").replace("'>","").replace(" ", "") + '\n'
+
+    # print("Method:\n", )
+    # print("\033[92m" + search_method + "\033[0m")
+
+    cur_experiment = Experiment(cfg, 
+                    experiment_name, 
+                    Agent_Class_list, 
+                    search_method,
+                    return_dict,
+                    prosses_count,
+                    debug=debug,
+                    )
+
+    return_value = cur_experiment.run_experiment([None], )
+    p_bar.update(1)
+    # p_bar
+    return return_value
+    # if cfg.USE_PROCESS:
+    #     p = Process(target=cur_experiment.run_experiment, 
+    #                 args=([None],))
+    #     p.start()
+    #     return p
+    # else:
+    #     cur_experiment.run_experiment([None], )
+    #     return None
 
 
 def main(parameters = None):
@@ -79,7 +154,8 @@ def main(parameters = None):
     process_manager = Manager()
     return_dict = process_manager.dict()
     Process_list = []
-    prosses_count = 1
+    # prosses_count = 1
+    jobs_running = 0
 
 
     progress_bar = tqdm.tqdm(
@@ -88,86 +164,48 @@ def main(parameters = None):
                 colour="CYAN", desc="Experiments Progress")
     
 
-    for i,scenario in  enumerate(progress_bar):
-        p_bar_desc = ""
-        print_string =""
-        for i, [key,value, cur_list] in enumerate(zip(parameters.All_scenarios_dic.keys(), scenario, parameters.All_scenarios_dic.values())):
-            cur_list = list(cur_list)
-            if type(value ) ==type:
-                #GREEN color
-                print_string += f"| {key:<30} | \033[92m{value.__name__:<30}\033[00m | {cur_list.index(value)+1}/{len(cur_list)} \n"
-            else:
-                #YELLOW color
-                print_string += f"| {key:<30} | \033[93m{value:<30}\033[00m | {cur_list.index(value)+1}/{len(cur_list):<30} \n"
+    # for i,scenario in  enumerate(progress_bar):
+    #     p_bar_desc = ""
 
+    if parameters.Use_process:
+        pool = Pool(processes=parameters.Max_process)
 
-        print('\n'+print_string + '\n')
+    results = []
 
-        [Method, run_type, start, goal,
-            map_length,agent_count, experiment_iteration] = scenario
-        
-        cfg = Config()
-        cfg.SEED = int(map_length + experiment_iteration)
-        cfg.N_BOTS = int(agent_count)
-        cfg.ROBOT_LOSS_TYPE = run_type
+    # setup progress bar
+    progress_bar.set_description("Experiments Progress")
+    progress_bar.set_postfix_str("")
+    progress_bar.refresh()
+    
 
-        random.seed(cfg.SEED)
-        np.random.seed(cfg.SEED)
+    for prosses_count, scenario in enumerate( itertools.product(*parameters.All_scenarios_dic.values())):
+        results.append(pool.apply_async(run_scenario, (scenario, parameters, return_dict, prosses_count, progress_bar, parameters.Debug, )))
 
-        cfg.COLS = int(map_length)
-        cfg.ROWS = int(map_length)
-        cfg.SCREEN_WIDTH = int(map_length*cfg.GRID_THICKNESS)
-        cfg.SCREEN_HEIGHT = int(map_length*cfg.GRID_THICKNESS)
-        cfg.CREATE_GIF = parameters.Create_gif
-        cfg.USE_PROCESS = parameters.Use_process
+    if parameters.Use_process:
+        pool.close()
+        pool.join()
+  
 
-        Agent_Class_list = []
-
-        if Method == "Heterogenus":
-            # remove the heterogenus from the list
-            experiment_name = f"{Method}/"
-            run_heterogenus(start, goal, cfg, experiment_name, return_dict, parameters.Method_list, prosses_count, debug = parameters.Debug)
-            continue
-
-        experiment_name = f"{Method.__name__}/{run_type}/{start.__name__}/{goal.__name__}/nbots-{cfg.N_BOTS}_length-{cfg.COLS}_seed-{cfg.SEED}"
-        print(f"Starting Experiment: {experiment_name}")
-        Agent_Class = type(Method.__name__, (Method, start, goal), {})
-        search_method =''.join(str(base.__name__)+'\n'  for base in Agent_Class.__bases__)
-        search_method += Agent_Class.__name__
-        print("Method:", search_method)
-        Agent_Class_list = [Agent_Class] * cfg.N_BOTS
-
-        cur_experiment = Experiment(cfg, 
-                                    experiment_name, 
-                                    Agent_Class_list, 
-                                    search_method,
-                                    return_dict,
-                                    prosses_count,
-                                    debug=parameters.Debug,
-                                    )
-        if cfg.USE_PROCESS:
-            # run the simulation in a new process
-            p = Process(target=cur_experiment.run_experiment, 
-                        args=([None],))
-            p.start()
-            Process_list.append(p)
-            prosses_count += 1
-        else:
-            cur_experiment.run_experiment([None], )
-            prosses_count += 1
-
-
-
-    if cfg.USE_PROCESS:
-        for p in tqdm.tqdm(Process_list, desc="Joining Process", colour="RED"):
-            p.join()
-            print("Joined Process: ", p.pid)
-
-    # Time stamp this data
     import time
     t_stamp = time.time()
 
-    for i, [df, cfg, full_map] in tqdm.tqdm( enumerate(return_dict.values()), colour="GREEN", desc="Saving Data", total=len(return_dict.values())):
+    # parce the results
+    for i, return_value in tqdm.tqdm( enumerate( results), colour="GREEN", desc="Saving Data", total=len(results)):
+        [df, cfg,] = return_value.get()
+
+        df['execution_date'] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(t_stamp))
+        all_df = pd.concat([all_df, df], ignore_index=True)
+
+
+    # if parameters.Use_process:
+    #     for p in tqdm.tqdm(Process_list, desc="Joining Process", colour="RED"):
+    #         p.join()
+    #         print("Joined Process: ", p.pid)
+
+    # Time stamp this data
+
+
+    for i, [df, cfg] in tqdm.tqdm( enumerate(return_dict.values()), colour="GREEN", desc="Saving Data", total=len(return_dict.values())):
         # all_df = all_df.append(df, ignore_index=True)
         # concat the dataframes
         df['execution_date'] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(t_stamp))
