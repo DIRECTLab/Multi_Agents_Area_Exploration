@@ -160,7 +160,7 @@ def main(parameters = None):
             # Inspiration: https://stackoverflow.com/a/45276885/4856719
             results = list(tqdm.tqdm(pool.imap(run_scenario, args), total=len(args), colour="CYAN", desc="Experiments Progress"))
     else:
-        for i,scenario in  enumerate(tqdm.tqdm(all_scenarios, colour="CYAN", desc="Experiments Progress")):
+        for i,scenario in  enumerate(tqdm.tqdm(itertools.product(*parameters.All_scenarios_dic.values()), colour="CYAN", desc="Experiments Progress", total=len(list(itertools.product(*parameters.All_scenarios_dic.values()))))):
             results.append(run_scenario([scenario, parameters, return_dict, i, parameters.Debug]))
 
   
@@ -184,4 +184,5 @@ def main(parameters = None):
 
 if __name__ == "__main__":
     main()
+
 
