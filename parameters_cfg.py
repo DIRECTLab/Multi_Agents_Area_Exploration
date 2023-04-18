@@ -21,7 +21,7 @@ class Parameters:
         assert not (self.Debug and self.Use_process), "Can't use process and debug at the same time"
 
         # The length of the map    
-        self.map_length_list = list(range(30,91,30))
+        self.map_length_list = [50] #list(range(30,91,30))
 
         # The number of agents in the experiment
         self.agent_count_list = list(range(4,16,4))
@@ -39,8 +39,8 @@ class Parameters:
             Voronoi_Frontier_Help_Closest,
             Voronoi_Frontier_Help_Random,
             Decision_Frontier_Closest,
-            # # DarpVorOnly,
-            # # DarpMST,
+            # # # DarpVorOnly,
+            # # # DarpMST,
             Decay_Epsilon_Greedy_Unknown,
             Decay_Epsilon_Greedy_Frontier,
             Epsilon_Greedy_Unknown,
