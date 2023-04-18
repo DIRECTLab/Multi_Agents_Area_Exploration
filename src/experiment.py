@@ -354,7 +354,6 @@ class Experiment:
 
     def clean_up_experiment(self):
             
-        print(f"Simulation Complete: {self.experiment_name} in {self.data['delta_time'][-1]} seconds")
         
         # create expeament folder
         os.makedirs(f"{self.folder_name}", exist_ok=True)
@@ -393,14 +392,13 @@ class Experiment:
         df['MAX_ROOM_SIZE'.lower()] = self.cfg.MAX_ROOM_SIZE
         # area densely
         df['wall_ratio'] = np.sum(self.ground_truth_map == 0) / self.ground_truth_map.size
-        df['method'] = self.search_method.split('\n')[0]
-        df['start_scenario'] = self.search_method.split('\n')[1]
-        df['goal_scenario'] = self.search_method.split('\n')[2]
+        df['method'] = self.experiment_name.split('/')[0]
+        df['start_scenario'] = self.experiment_name.split('/')[2]
+        df['goal_scenario'] = self.experiment_name.split('/')[3]
         df['experiment_ID'] = self.experiment_ID
         df['loss_type'] = self.cfg.ROBOT_LOSS_TYPE
 
         df.to_csv(f"{self.folder_name}/data.csv")
-        print(f"Done {self.experiment_name}")
         self.return_dict[self.experiment_ID] = [df, self.cfg, self.ground_truth_map]
 
         # close all plots
@@ -409,7 +407,11 @@ class Experiment:
         if self.cfg.CREATE_GIF:
             self.make_gif(self.folder_name)
             
-        return df, self.cfg, self.ground_truth_map
+        # in green text
+        print(f"\033[92m Simulation Complete: {self.experiment_name} in {self.data['delta_time'][-1]} seconds \033[0m")
+        
+        return df, self.cfg
+
 
     def render(self):
         if self.cfg.DRAW_SIM:
@@ -531,7 +533,8 @@ class Experiment:
     def run_experiment(self, func_arr, *args , **kwargs):
         self.setup_run_now()
         done = False
-        while not done:
+        max_iter = self.cfg.ROWS**2 //2
+        for i in range(max_iter):
             if func_arr:
                 for func, func_args in zip(func_arr, args):
                     # append self to the args
@@ -548,5 +551,16 @@ class Experiment:
                 self.log_plot_obj.map_fig.savefig(self.folder_name +f'/gif/{self.frame_count}.png', dpi=100)
 
             done = self.env_step()
+            if done:
+                self.data['success'] = True
+                break
+        else:
+            # in red
+            print("\033[91m" + "😱Max Iterations Reached:" + str(i) + "\033[0m")
+            print("Experiment Failed:", self.experiment_name)
+            self.data['success'] = False
+            # remove the last logging time 
+            self.data['logging_time'].pop()
+            
         
-        self.clean_up_experiment()
+        return self.clean_up_experiment()
