@@ -21,18 +21,25 @@ def astar(array, start, end, debug=False):
     fscore = {start:heuristic(start, end)}
     oheap = []
     heapq.heappush(oheap, (fscore[start], start))
+    max_iterations = np.sqrt((start[0] - end[0]) ** 2 + (start[1] - end[1]) ** 2) * 10000
  
+    loop_count = 0
     if debug:
-        loop_count = 0
         start_time = psutil.Process().cpu_times().user
 
     while oheap:
         current = heapq.heappop(oheap)[1]
         if current == end:
             data = []
+            sub_iter_count = 0
             while current in came_from:
                 data.append((current[1], current[0]))
                 current = came_from[current]
+                sub_iter_count += 1
+                if sub_iter_count > 1000:
+                    print("🛑 Astar sub_iter_count:", sub_iter_count)
+                    sys.exit()
+                
             return data[::-1]
         close_set.add(current)
         for i, j in neighbors:
@@ -56,8 +63,12 @@ def astar(array, start, end, debug=False):
                 fscore[neighbor] = tentative_g_score + heuristic(neighbor, end)
                 heapq.heappush(oheap, (fscore[neighbor], neighbor))
 
-        if debug:
-            loop_count += 1
+
+        loop_count += 1
+
+        if loop_count > max_iterations:
+            print("⛔️ Astar Exceeded max iterations❌")
+            break
     if debug:
         end_time = psutil.Process().cpu_times().user
         print("loop_count:",loop_count)

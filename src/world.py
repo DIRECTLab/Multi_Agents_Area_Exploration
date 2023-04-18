@@ -121,14 +121,20 @@ class World:
         # place mines randomly
         self.mines = []
         num_mines = self.cfg.MINE_DENSITY * self.cfg.SCREEN_WIDTH * self.cfg.SCREEN_HEIGHT // 1000
+        empyty_index = np.where(self.map == self.cfg.EMPTY)
+        indices = np.column_stack(empyty_index)
+        np.random.shuffle(indices)
         for i in range((int)(num_mines)):
-            while True:
-                x = np.random.randint(0, self.cfg.COLS)
-                y = np.random.randint(0, self.cfg.ROWS)
-                if self.map[x][y] == self.cfg.EMPTY:
-                    self.mines.append((x, y))
-                    self.map[x][y] = 2
-                    break
+
+            x, y = indices[i]
+            self.mines.append((x, y))
+            self.map[x][y] = 2
+            # for index in empyty_index:
+            #     x, y = index
+            #     if self.map[x][y] == self.cfg.EMPTY:
+            #         self.mines.append((x, y))
+            #         self.map[x][y] = 2
+            #         break
 
 
     def draw_grid(self, color=(150, 150, 150)):

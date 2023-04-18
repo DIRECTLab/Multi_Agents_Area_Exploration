@@ -13,13 +13,19 @@ from src.planners.astar_new import astar
 
 class Point_Finding:
     def get_random_point(self):
-        # make sure the goal is not in the obstacle
-        while True:
-            point_rc = (np.random.randint(self.ground_truth_map.shape[0]), np.random.randint(self.ground_truth_map.shape[1]))
-            if self.ground_truth_map[point_rc] == self.cfg.EMPTY:
-                point_xy = (point_rc[1], point_rc[0])
-                break
-        return point_xy
+        index_list = np.argwhere(self.ground_truth_map == self.cfg.EMPTY)
+        # shuffle the list
+        random.shuffle(index_list)
+        for index in index_list:
+            return (index[1], index[0])
+
+        # # make sure the goal is not in the obstacle
+        # while True:
+        #     point_rc = (np.random.randint(self.ground_truth_map.shape[0]), np.random.randint(self.ground_truth_map.shape[1]))
+        #     if self.ground_truth_map[point_rc] == self.cfg.EMPTY:
+        #         point_xy = (point_rc[1], point_rc[0])
+        #         break
+        # return point_xy
     
     def get_closest_point_rc(self, pointlist):
         '''
@@ -158,7 +164,7 @@ class Agent(Point_Finding):
         if self.plan == None:
             if self.replan_count > 100:
                 warnings.warn("Replan count is too high")
-            assert self.replan_count < 200, "Replan count is too high 200"
+            assert self.replan_count < self.agent_map.size, f"Replan count is too high {self.agent_map.size}"
 
             self.set_new_goal()
             self.replan(mutual_data)

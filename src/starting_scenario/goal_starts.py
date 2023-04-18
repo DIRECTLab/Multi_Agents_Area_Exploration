@@ -146,6 +146,8 @@ def calc_closest_factors(c: int):
         if c % i == 0:
             a = i
             b = c//a
+        if i > 100:
+            break
     return [b, a]
 
 def dividegrid(rows, cols, n):

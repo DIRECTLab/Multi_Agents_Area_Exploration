@@ -18,6 +18,7 @@ class Node:
         return self.f() < other.f()
 
 def astar(map, start, end):
+    assert False, "OLD Astar: implement A*"
     # print(start)
     # print(end)
     start = (start[1], start[0])
@@ -34,7 +35,7 @@ def astar(map, start, end):
     # add the start node to the open list
     heapq.heappush(open_list, start_node)
 
-    max_iterations = (len(map[0]) * len(map) // 2)
+    max_iterations = (len(map[0]) * len(map))
     loop_count = 0
     start_time = psutil.Process().cpu_times().user
     # loop until the open list is empty
@@ -104,9 +105,9 @@ def astar(map, start, end):
                 heapq.heappush(open_list, successor_node)
         
         loop_count += 1
-        # if loop_count > max_iterations:
-        #     print("Exceeded max iterations")
-        #     break
+        if loop_count > max_iterations:
+            print("⛔️ Astar Exceeded max iterations❌")
+            break
 
     end_time = psutil.Process().cpu_times().user
     print("loop_count:",loop_count)
