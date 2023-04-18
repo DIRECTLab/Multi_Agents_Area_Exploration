@@ -223,6 +223,9 @@ class Agent(Point_Finding):
     def check_for_hit_mine(self, mutual_data):
         cur_x = self.grid_position_xy[0]
         cur_y = self.grid_position_xy[1]
+        if len(self.plan) == 0:
+            warnings.warn("No plan to follow")
+            return
         next_path_point = self.plan[0]
         if self.ground_truth_map[next_path_point[0], next_path_point[1]] == self.cfg.MINE:
             # If we are unrecoverable, then no one can help us
@@ -263,6 +266,13 @@ class Agent(Point_Finding):
         cur_x = self.grid_position_xy[0]
         cur_y = self.grid_position_xy[1]
         
+        # Robot Loss 
+        if self.cfg.ROBOT_LOSS_TYPE == "Disrepair":
+            self.help_teammate(mutual_data)
+        if self.cfg.ROBOT_LOSS_TYPE != "Safe_Run": 
+            if self.check_for_hit_mine(mutual_data):
+                return
+        
         next_path_point = self.plan[0]
         if (int(np.round(cur_x)), int(np.round(cur_y))) == (next_path_point[0], next_path_point[1]):
             # get the next point
@@ -282,12 +292,7 @@ class Agent(Point_Finding):
             # self.dy = velocity * direction[1] / np.sqrt(direction[0]**2 + direction[1]**2)    self.grid_position = next_path_point
             pass
 
-        # Robot Loss 
-        if self.cfg.ROBOT_LOSS_TYPE == "Disrepair":
-            self.help_teammate(mutual_data)
-        if self.cfg.ROBOT_LOSS_TYPE != "Safe_Run": 
-            if self.check_for_hit_mine(mutual_data):
-                return
+
 
         self.total_dist_traveled += np.sqrt((next_path_point[0] - cur_x)**2 + (next_path_point[1] - cur_y)**2)
         self.grid_position_xy = next_path_point
