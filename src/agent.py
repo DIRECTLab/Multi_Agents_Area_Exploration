@@ -129,6 +129,7 @@ class Agent(Point_Finding):
     
     def set_new_goal(self):
         self.goal_xy = self.get_goal_method()
+        assert self.grid_position_xy is not None, "grid_position_xy is None, the Base method is not implemented"
 
     def replan_to_help(self, mutual_data):        
         if 'Agent_Data' in mutual_data and len(mutual_data['Agent_Data'][self.id]['help']) > 0:

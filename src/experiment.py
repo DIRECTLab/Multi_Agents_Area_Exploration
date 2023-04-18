@@ -183,6 +183,7 @@ class Experiment:
                         lock= self.lock,
                     )
                 )
+            self.ground_truth_map[self.bots[-1].goal_xy[1]][self.bots[-1].goal_xy[0]] =cfg.AGENT_OBSTACLE
         
             if cfg.DRAW_SIM:
                 bot_ax[i].set_title(f"Bot {i}")

@@ -24,6 +24,7 @@ class Config:
         self.MAX_ROOM_SIZE = 20 * self.GRID_THICKNESS
 
         # The Ground truth map is a 2D array of booleans
+        self.AGENT_OBSTACLE = 3.0
         self.MINE = 2.0
         self.EMPTY = 1.0
         self.OBSTACLE = 0.0
