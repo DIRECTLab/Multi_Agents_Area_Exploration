@@ -21,10 +21,10 @@ class Parameters:
         assert not (self.Debug and self.Use_process), "Can't use process and debug at the same time"
 
         # The length of the map    
-        self.map_length_list = list(range(30,90,30))
+        self.map_length_list = list(range(30,91,30))
 
         # The number of agents in the experiment
-        self.agent_count_list = list(range(4,12,4))
+        self.agent_count_list = list(range(4,16,4))
 
         # iteration_repeat_experiment will be used to repeat the experiment
         self.iteration_repeat_experiment = list(range(0, 60))
