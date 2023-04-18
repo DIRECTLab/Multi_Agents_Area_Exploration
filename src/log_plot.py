@@ -53,6 +53,8 @@ class LogPlot:
 
     def draw_bots(self, bots, draw_paths=False):
         for i, bot in enumerate(bots):
+            if bot.goal_xy is None:
+                bot.goal_xy = bot.grid_position_xy
             self.map_ax.scatter(bot.grid_position_xy[0], bot.grid_position_xy[1],
                         color='b', s=self.cfg.GRID_THICKNESS*2, marker='s')
             self.map_ax.scatter(bot.goal_xy[0], bot.goal_xy[1],
