@@ -135,16 +135,21 @@ class Agent(Point_Finding):
             self.plan = astar( np.where(self.agent_map == self.cfg.KNOWN_WALL, self.cfg.KNOWN_WALL, self.cfg.KNOWN_EMPTY), 
                             (int(np.round(self.grid_position_xy[0])), int(np.round(self.grid_position_xy[1]))),
                             mutual_data['Agent_Data'][self.id]['help'][0][1])
+            if self.plan == None:
+                self.plan =[]
+                if self.replan_count > 100:
+                    warnings.warn("Replan count is too high")
+                assert self.replan_count < 200, "Replan count is too high 200"                
             return True
         return False
 
     def replan(self, mutual_data):
+        self.replan_count += 1
         if self.cfg.ROBOT_LOSS_TYPE == "Disrepair" and self.replan_to_help(mutual_data):
             return
 
         if self.area_completed:
             return
-        self.replan_count += 1
         # # check id the goal_xy is known
         self.plan = astar(  np.where(self.agent_map == self.cfg.KNOWN_WALL, self.cfg.KNOWN_WALL, self.cfg.KNOWN_EMPTY), 
                             (int(np.round(self.grid_position_xy[0])), int(np.round(self.grid_position_xy[1]))),
@@ -223,9 +228,6 @@ class Agent(Point_Finding):
     def check_for_hit_mine(self, mutual_data):
         cur_x = self.grid_position_xy[0]
         cur_y = self.grid_position_xy[1]
-        if len(self.plan) == 0:
-            warnings.warn("No plan to follow")
-            return
         next_path_point = self.plan[0]
         if self.ground_truth_map[next_path_point[0], next_path_point[1]] == self.cfg.MINE:
             # If we are unrecoverable, then no one can help us
@@ -272,10 +274,6 @@ class Agent(Point_Finding):
         if self.cfg.ROBOT_LOSS_TYPE != "Safe_Run": 
             if self.check_for_hit_mine(mutual_data):
                 return
-        
-        if len(self.plan) == 0:
-            warnings.warn("No plan to follow")
-            return
         next_path_point = self.plan[0]
         if (int(np.round(cur_x)), int(np.round(cur_y))) == (next_path_point[0], next_path_point[1]):
             # get the next point
@@ -459,6 +457,17 @@ class Agent(Point_Finding):
             self.replan(mutual_data)
             if self.area_completed:
                 return 0, self.total_dist_traveled
+            
+        
+        
+        if self.plan is None: 
+            self.plan = []
+            warnings.warn(("⭕️No plan == None to follow : "+ self.__class__.__name__))
+            return 0, self.total_dist_traveled
+        
+        if len(self.plan) == 0:
+            warnings.warn(("❗️No plan len==0 to follow : "+ self.__class__.__name__))
+            return 0, self.total_dist_traveled
             
         self.move(mutual_data)
         # self.draw()

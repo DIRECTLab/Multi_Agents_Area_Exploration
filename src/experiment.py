@@ -473,7 +473,7 @@ class Experiment:
             for i, bot in enumerate(self.bots):
                 bot.update(self.mutual_data, draw=self.cfg.DRAW_SIM)
                 bot.frame_count =self.frame_count
-                path_length += len(bot.plan)
+                path_length += len(bot.plan if bot.plan is not None else [])
                 replan_count += bot.replan_count
                 if 'Epsilon' in self.search_method and dir(bot).count('epsilon'):
                 
