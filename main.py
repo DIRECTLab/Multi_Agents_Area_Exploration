@@ -120,7 +120,7 @@ def run_scenario(args):
 
     search_method =''
     for i , name in enumerate(Agent_Class_list):
-        search_method += str(i) +' '+str(name).replace("<class '__main__.","").replace("'>","").replace(" ", "") + '\n'
+        search_method += experiment_name.replace("/", "\n") + '\n'
 
     # print("Method:\n", )
     # print("\033[92m" + search_method + "\033[0m")

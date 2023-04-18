@@ -463,13 +463,13 @@ class Agent(Point_Finding):
         
         if self.plan is None: 
             self.plan = []
-            warnings.warn("⭕️No plan == None to follow : ") 
-            print(self.__class__.__name__)
+            warn_str = "❗️⭕️No plan == None to follow : " + self.__class__.__name__
+            warnings.warn(warn_str) 
             return 0, self.total_dist_traveled
         
         if len(self.plan) == 0:
-            warnings.warn("❗️No plan len==0 to follow : ")
-            print(self.__class__.__name__)
+            warn_str = "❗️❌No plan len==0 to follow : " + self.__class__.__name__
+            warnings.warn(warn_str )
             return 0, self.total_dist_traveled
             
         self.move(mutual_data)

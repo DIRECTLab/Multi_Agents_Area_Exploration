@@ -140,7 +140,7 @@ class Experiment:
             else:
                 self.log_plot_obj = log_plot.LogPlot(cfg, self.data, map_fig=figs[0], plot_fig=figs[1])
             # space out the subplots
-            self.log_plot_obj.map_fig.tight_layout()
+            # self.log_plot_obj.map_fig.tight_layout()
             # create a grid of subplots 
             self.log_plot_obj.map_ax.matshow(self.ground_truth_map)
 
@@ -331,7 +331,7 @@ class Experiment:
             # self.log_plot_obj.plot_map(mutual_data, bots, data)
             self.log_plot_obj.map_ax.set_title(f"Max Known Area {self.ground_truth_map.size} \n {search_method}")
             # ensure the Title is not cut off
-            self.log_plot_obj.map_fig.tight_layout()
+            # self.log_plot_obj.map_fig.tight_layout()
             if 'Voronoi' in search_method:
                 self.log_plot_obj.map_ax.matshow(self.minimum_comparison_table, alpha=0.3)
             self.log_plot_obj.map_fig.savefig(self.folder_name + '/starting_map.png')
