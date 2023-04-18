@@ -221,6 +221,8 @@ class Agent(Point_Finding):
     def help_teammate(self, mutual_data):
         if len(mutual_data['Agent_Data'][self.id]['help']) > 0:
             next_help = mutual_data['Agent_Data'][self.id]['help'][0][1]
+            # print("the agent", self.id, "is helping the agent", mutual_data['Agent_Data'][self.id]['help'][0][0], "at", next_help)
+            # print("length", len(mutual_data['Agent_Data'][self.id]['help']))
             if abs(next_help[0] - self.grid_position_xy[0]) <= 2 and abs(next_help[1] - self.grid_position_xy[1]) <= 2:
                 id = mutual_data['Agent_Data'][self.id]['help'][0][0]
                 mutual_data['Agent_Data'][id]['disabled'] = False
@@ -232,6 +234,10 @@ class Agent(Point_Finding):
         next_path_point = self.plan[0]
         if self.ground_truth_map[next_path_point[0], next_path_point[1]] == self.cfg.MINE:
             # If we are unrecoverable, then no one can help us
+            self.ground_truth_map[next_path_point[0], next_path_point[1]] = self.cfg.EMPTY
+            # print("agent", self.id, "hit the mine at location:", next_path_point)
+            mutual_data['map'][[next_path_point[0], next_path_point[1]]] = self.cfg.EMPTY
+
             if self.cfg.ROBOT_LOSS_TYPE == 'Unrecoverable':
                 self.disabled = True
                 return
@@ -260,7 +266,6 @@ class Agent(Point_Finding):
                     mutual_data['Agent_Data'][agent_info[0]]['help'].append((self.id, cur_pos))
                     self.disabled = True
                     mutual_data['Agent_Data'][self.id]['disabled'] = True
-                    self.ground_truth_map[next_path_point[0], next_path_point[1]] = self.cfg.EMPTY
                     return True
         return False
 
