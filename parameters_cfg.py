@@ -16,15 +16,15 @@ class Parameters:
         repeat_count =1
 
         self.Debug = False
-        self.Use_process = False
+        self.Use_process = True
         self.Create_gif = False
         assert not (self.Debug and self.Use_process), "Can't use process and debug at the same time"
 
         # The length of the map    
-        self.map_length_list = list(range(50,100,20))
+        self.map_length_list = list(range(30,90,30))
 
         # The number of agents in the experiment
-        self.agent_count_list = list(range(4,10,2))
+        self.agent_count_list = list(range(4,12,4))
 
         # iteration_repeat_experiment will be used to repeat the experiment
         self.iteration_repeat_experiment = list(range(0, 60))
@@ -39,15 +39,18 @@ class Parameters:
             Voronoi_Frontier_Help_Closest,
             Voronoi_Frontier_Help_Random,
             Decision_Frontier_Closest,
-            # DarpVorOnly,
-            # DarpMST,
+            # # DarpVorOnly,
+            # # DarpMST,
             Decay_Epsilon_Greedy_Unknown,
             Decay_Epsilon_Greedy_Frontier,
             Epsilon_Greedy_Unknown,
             Epsilon_Greedy_Frontier,
             GameTheory,
-            # "Heterogenus",
+            # # # "Heterogenus",
             ]
+        # make sure the list is dose not contain duplicates
+        self.Method_list = list(set(self.Method_list))
+
         self.Start_scenario_list = [
             # # Manual_Start,
             Rand_Start_Position,
@@ -65,7 +68,7 @@ class Parameters:
             ]
         
         self.Robot_Loss = [
-            # "Safe_Run"
+            "Safe_Run",
             "Disrepair",
             "Unrecoverable",
         ]
