@@ -310,8 +310,8 @@ class Agent(Point_Finding):
             mutual_data['Agent_Data'] = {} 
         if self.id not in mutual_data['Agent_Data']:
             mutual_data['Agent_Data'][self.id] = {}
-        if 'help' not in mutual_data['Agent_Data'][self.id]:
-            mutual_data['Agent_Data'][self.id]['help'] = []
+        if 'help_request_list' not in mutual_data['Agent_Data'][self.id]:
+            mutual_data['Agent_Data'][self.id]['help_request_list'] = []
         
         mutual_data['Agent_Data'][self.id]['plan'] = self.plan
         mutual_data['Agent_Data'][self.id]['goal_xy'] = self.goal_xy

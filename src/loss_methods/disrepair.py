@@ -39,28 +39,36 @@ class Disrepair(Unrecoverable):
                     if abs(closest[0] - cur_x) <= 1 and abs(closest[1] - cur_y) <= 1:
                         break
                     cur_pos = (self.grid_position_xy[0], self.grid_position_xy[1])
-                    mutual_data['Agent_Data'][agent_info[0]]['help'].append((self.id, cur_pos))
+                    # Inform the teammate that they need to help us
+
+                    mutual_data['Agent_Data'][agent_info[0]]['help_request_list'].append({'other_agent_ID':self.id, 'other_agent_pos':cur_pos})
                     self.disabled = True
                     mutual_data['Agent_Data'][self.id]['disabled'] = True
+                    # Remove the mine from the ground truth map
                     self.ground_truth_map[next_path_point[0], next_path_point[1]] = self.cfg.EMPTY
                     return True
         return False
 
     def still_disabled(self, mutual_data):
         if 'Agent_Data' in mutual_data and self.id in mutual_data['Agent_Data']:
+            # See if we have been helped
             self.disabled = mutual_data['Agent_Data'][self.id]['disabled']
         return self.disabled
     
     def check_should_replan(self, mutual_data):
-        if len(mutual_data['Agent_Data'][self.id]['help']) > 0 and self.plan[-1] != mutual_data['Agent_Data'][self.id]['help'][0][1]:
-            return True
+        if len(mutual_data['Agent_Data'][self.id]['help_request_list']) > 0:
+            # if len(self.plan ) == 0: # if we do this we get stuck in a loop
+            #     return True
+            if self.plan[-1] != mutual_data['Agent_Data'][self.id]['help_request_list'][0]['other_agent_pos']:
+                # We found a new help request
+                return True
         return super().check_should_replan(mutual_data)
     
     def replan_to_help(self, mutual_data):        
-        if 'Agent_Data' in mutual_data and len(mutual_data['Agent_Data'][self.id]['help']) > 0:
+        if 'Agent_Data' in mutual_data and len(mutual_data['Agent_Data'][self.id]['help_request_list']) > 0:
             self.plan = astar( np.where(self.agent_map == self.cfg.KNOWN_WALL, self.cfg.KNOWN_WALL, self.cfg.KNOWN_EMPTY), 
                             (int(np.round(self.grid_position_xy[0])), int(np.round(self.grid_position_xy[1]))),
-                            mutual_data['Agent_Data'][self.id]['help'][0][1])
+                            mutual_data['Agent_Data'][self.id]['help_request_list'][0]['other_agent_pos'])
             if self.plan == None:
                 self.plan =[]
                 if self.replan_count > 100:
@@ -75,12 +83,12 @@ class Disrepair(Unrecoverable):
         return super().replan(mutual_data)
     
     def help_teammate(self, mutual_data):
-        if len(mutual_data['Agent_Data'][self.id]['help']) > 0:
-            next_help = mutual_data['Agent_Data'][self.id]['help'][0][1]
-            if abs(next_help[0] - self.grid_position_xy[0]) <= 2 and abs(next_help[1] - self.grid_position_xy[1]) <= 2:
-                id = mutual_data['Agent_Data'][self.id]['help'][0][0]
+        if len(mutual_data['Agent_Data'][self.id]['help_request_list']) > 0:
+            next_help_pos = mutual_data['Agent_Data'][self.id]['help_request_list'][0]['other_agent_pos']
+            if abs(next_help_pos[0] - self.grid_position_xy[0]) <= 2 and abs(next_help_pos[1] - self.grid_position_xy[1]) <= 2:
+                id = mutual_data['Agent_Data'][self.id]['help_request_list'][0]['other_agent_ID']
                 mutual_data['Agent_Data'][id]['disabled'] = False
-                mutual_data['Agent_Data'][self.id]['help'].pop(0)
+                mutual_data['Agent_Data'][self.id]['help_request_list'].pop(0)
     
     def move(self, mutual_data):
         self.help_teammate(mutual_data)

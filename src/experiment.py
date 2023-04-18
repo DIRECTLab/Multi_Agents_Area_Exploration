@@ -10,6 +10,7 @@ import numpy as np
 import pandas as pd
 import os
 import time
+import tqdm
 
 import src.world as world
 import src.agent as agent
@@ -535,7 +536,7 @@ class Experiment:
         self.setup_run_now()
         done = False
         max_iter = self.cfg.ROWS**2 
-        for i in range(max_iter):
+        for i in tqdm.tqdm(range(max_iter)):
             if func_arr:
                 for func, func_args in zip(func_arr, args):
                     # append self to the args
