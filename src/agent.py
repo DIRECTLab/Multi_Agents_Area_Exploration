@@ -273,6 +273,9 @@ class Agent(Point_Finding):
             if self.check_for_hit_mine(mutual_data):
                 return
         
+        if len(self.plan) == 0:
+            warnings.warn("No plan to follow")
+            return
         next_path_point = self.plan[0]
         if (int(np.round(cur_x)), int(np.round(cur_y))) == (next_path_point[0], next_path_point[1]):
             # get the next point
