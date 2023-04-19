@@ -15,6 +15,8 @@ class Disrepair(Agent):
         cur_y = self.grid_position_xy[1]
         next_path_point = self.plan[0]
         if self.ground_truth_map[next_path_point[0], next_path_point[1]] == self.cfg.MINE:
+            self.ground_truth_map[next_path_point[0], next_path_point[1]] = self.cfg.EMPTY
+            mutual_data['map'][next_path_point[0], next_path_point[1]] = self.cfg.EMPTY
 
             # Another non-disabled teammate can come help us
             agent_locations_and_id = []
@@ -44,7 +46,6 @@ class Disrepair(Agent):
                     self.disabled = True
                     mutual_data['Agent_Data'][self.id]['disabled'] = True
                     # Remove the mine from the ground truth map
-                    self.ground_truth_map[next_path_point[0], next_path_point[1]] = self.cfg.EMPTY
                     return True
         return False
 
@@ -55,7 +56,7 @@ class Disrepair(Agent):
         return self.disabled
     
     def check_should_replan(self, mutual_data):
-        if len(mutual_data['Agent_Data'][self.id]['help_request_list']) > 0:
+        if len(mutual_data['Agent_Data'][self.id]['help_request_list']) > 0 and not self.area_completed:
             # if len(self.plan ) == 0: # if we do this we get stuck in a loop
             #     return True
             if self.plan[-1] != mutual_data['Agent_Data'][self.id]['help_request_list'][0]['other_agent_pos']:
