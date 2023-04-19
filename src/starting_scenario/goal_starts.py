@@ -1,5 +1,6 @@
 import numpy as np
 import random
+import math
 
 class Rand_Start_Goal:
     def __init__(self):
@@ -10,8 +11,35 @@ class Rand_Start_Goal:
 
 class Center_Start_Goal:
     def choose_start_goal(self):
-        center_xy = (int(self.cfg.COLS//2), int(self.cfg.ROWS//2))
-        self.goal_xy = center_xy
+        self.goal_xy = points_over_radious(self.cfg.ROWS, self.cfg.COLS, self.cfg.N_BOTS)[self.id]
+        
+        self.goal_xy = (int(np.round(self.goal_xy[0])), \
+                                int(np.round(self.goal_xy[1])))
+        
+        find_new_point = False
+        # check if the point is in the map
+        if self.goal_xy[0] < 0 or self.goal_xy[0] >= self.cfg.COLS or \
+            self.goal_xy[1] < 0 or self.goal_xy[1] >= self.cfg.ROWS:
+            find_new_point = True
+            # shift the point to be in the map
+            self.goal_xy = (max(1, min(self.goal_xy[0], self.cfg.COLS-2)), \
+                                    max(1, min(self.goal_xy[1], self.cfg.ROWS-2)))
+        # check if the point is not on an obstacle
+        elif self.ground_truth_map[self.goal_xy[1], self.goal_xy[0]] == self.cfg.OBSTACLE:
+            find_new_point = True
+
+        if find_new_point:
+            foundPoint  = check_if_valid_point(self.goal_xy, self.ground_truth_map, self.cfg)
+            if foundPoint:
+                return
+            # at this point, all the neighbors are obstacles or your off the map warning
+            print("!!WARNING!!: All the neighbors are obstacles or your off the map current point: ", self.goal_xy)
+            # get the closest point to the edge
+            empty_points_rc = np.argwhere(self.ground_truth_map == self.cfg.EMPTY)
+            self.goal_xy = self.get_closest_point_rc(empty_points_rc)
+            print("new closest point to the edge: ", self.goal_xy)
+            return
+        
 
 class Manual_Goal:
     four_goal_pos = [(10,10), (20,20), (30,30), (45,45)]
@@ -80,6 +108,43 @@ class Distributed_Goal:
             self.goal_xy = self.get_closest_point_rc(empty_points_rc)
             print("new closest point to the edge: ", self.goal_xy)
             return
+
+
+def points_over_radious(rows, cols, n):
+    radius = math.ceil(cols * 0.1)
+    center = (int(cols/2), int(rows/2))
+    
+    # Initialize an empty array to hold the coordinates of each point
+    points = np.zeros((n, 2))
+    # Calculate the angle between each point on the perimeter
+    angles = np.linspace(0, 2*np.pi, n, endpoint=False)
+    # Generate the coordinates of each point based on the angle from the center
+    for i, angle in enumerate(angles):
+        x = center[0] + radius * np.cos(angle)
+        y = center[1] + radius * np.sin(angle)
+        # Shift the point to be within the rectangle
+        shift =1
+        # Project the point onto the perimeter of the rectangle
+        if x < 0:
+            x = 0 +shift
+            y = center[1] - radius * np.sin(angle)
+        elif x > cols:
+            x = cols -shift
+            y = center[1] + radius * np.sin(angle)
+        elif y < 0:
+            y = 0+shift
+            x = center[0] - radius * np.cos(angle)
+        elif y > rows:
+            y = rows-shift
+            x = center[0] + radius * np.cos(angle)
+        points[i, 0] = x
+        points[i, 1] = y
+    return points
+    
+    # return points
+    
+
+
 
 def points_on_rectangle_edge(rows, cols, n):
     # Calculate the center of the rectangle
