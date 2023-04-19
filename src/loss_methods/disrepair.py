@@ -23,14 +23,15 @@ class Disrepair(Agent):
                 if self.id == agent_id or mutual_data['Agent_Data'][agent_id]['disabled']:
                     continue
                 agent_locations_and_id.append((agent_id, mutual_data['Agent_Data'][agent_id]['grid_position_xy']))
-                agent_locations.append(mutual_data['Agent_Data'][agent_id]['grid_position_xy'])
+                pos = mutual_data['Agent_Data'][agent_id]['grid_position_xy']
+                agent_locations.append((pos[1], pos[0]))
 
             if len(agent_locations) == 0:
                 warnings.warn("No viable agents available to help")
                 return
             # Find the closest teammate
             closest = self.get_closest_point_rc(agent_locations)
-            closest = (closest[0], closest[1])
+            closest = (closest[1], closest[0])
             for agent_info in agent_locations_and_id:
                 if agent_info[1] == closest:
                     # If a teammate is right next to us, then they can just help us

@@ -499,12 +499,16 @@ class Experiment:
             self.render()
         
         self.frame_count += 1
-        disabled_bots = 0
+        finished_bots = 0
         for bot in self.bots:
-            if bot.disabled:
-                disabled_bots += 1
-        
-        if cur_known == self.mutual_data['map'].size or disabled_bots == len(self.bots):
+            if bot.disabled or bot.area_completed:
+                finished_bots += 1
+            
+        if finished_bots == len(self.bots):
+            self.data['success'] = False
+            return True
+        if cur_known == self.mutual_data['map'].size:
+            self.data['success'] = True
             return True
 
         logging_end_time = psutil.Process().cpu_times().user
@@ -554,7 +558,6 @@ class Experiment:
 
             done = self.env_step()
             if done:
-                self.data['success'] = True
                 break
         else:
             # in red
