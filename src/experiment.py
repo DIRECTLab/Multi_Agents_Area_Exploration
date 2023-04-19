@@ -557,8 +557,10 @@ class Experiment:
                         os.makedirs(self.folder_name + '/gif')
                     self.log_plot_obj.map_fig.savefig(self.folder_name +f'/gif/{self.frame_count}.png', dpi=100)
 
+                if i%10 == 0:
+                    p_bar.update(1)
+                    
                 done = self.env_step()
-                p_bar.update(1)
                 if done:
                     # convert p_bar bar color to green
                     p_bar.set_description(f"✅ \033[92m {self.experiment_ID} {self.experiment_name} \033[0m")

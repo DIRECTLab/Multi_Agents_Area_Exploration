@@ -34,6 +34,8 @@ class Parameters:
         # iteration_repeat_experiment will be used to repeat the experiment
         self.iteration_repeat_experiment = list(range(0, 60))
 
+        self.min_rom_size = list( range(4,10,2))
+
         self.Method_list = [
             Frontier_Random,
             Frontier_Closest,
@@ -88,5 +90,6 @@ class Parameters:
             "Goal": self.Start_Goal_list,
             "Map Length": self.map_length_list,
             "Agent Count": self.agent_count_list,
-            "Experiment Iteration": self.iteration_repeat_experiment
+            "Experiment Iteration": self.iteration_repeat_experiment,
+            "Min Room Size": self.min_rom_size,
         }
