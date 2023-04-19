@@ -579,10 +579,10 @@ class Experiment:
             
             return self.clean_up_experiment()
         except Exception:
-            print(traceback.format_exc())
-            # or
-            print(sys.exc_info()[2])
-            print(f"\033[91m {self.experiment_ID} {self.experiment_name} \033[0m")
+            # Orange the error
+            print(f'\033[93m Error {traceback.format_exc()} \033[0m')
+            # print(sys.exc_info()[2])
+            print(f"\033[91m 🛑Error {self.experiment_ID} {self.experiment_name} \033[0m")
 
 
         
