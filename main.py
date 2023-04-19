@@ -158,7 +158,7 @@ def main(parameters = None):
             # Inspiration: https://stackoverflow.com/a/45276885/4856719
             results = list(tqdm.tqdm(pool.imap_unordered(run_scenario, args,)
                                     #  time shows hours, minutes, seconds
-                                    , total=len(args), colour="CYAN", desc="Experiments Progress", ))
+                                    , total=len(args), colour="MAGENTA", desc="⏰ Experiments Progress"))
     else:
         for i,scenario in  enumerate(tqdm.tqdm(itertools.product(*parameters.All_scenarios_dic.values()), colour="CYAN", desc="Experiments Progress", total=len(list(itertools.product(*parameters.All_scenarios_dic.values()))))):
             results.append(run_scenario([scenario, parameters, return_dict, i, parameters.Debug]))

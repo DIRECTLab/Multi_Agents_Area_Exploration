@@ -410,7 +410,7 @@ class Experiment:
             self.make_gif(self.folder_name)
             
         # in green text
-        print(f"\033[92m Simulation Complete: {self.experiment_name} in {self.data['delta_time'][-1]} seconds \033[0m")
+        print(f"\033[92m {self.experiment_ID} ✅ Complete: {self.experiment_name} in {self.data['delta_time'][-1]} seconds \033[0m")
         
         return df, self.cfg
 
@@ -540,7 +540,8 @@ class Experiment:
         self.setup_run_now()
         done = False
         max_iter = self.cfg.ROWS**2 
-        for i in tqdm.tqdm(range(max_iter)):
+        p_bar = tqdm.tqdm(total=max_iter, desc=f"{self.experiment_ID} {self.experiment_name}", bar_format='{l_bar}{bar:20}{r_bar}{bar:-10b}')
+        for i in range(max_iter):
             if func_arr:
                 for func, func_args in zip(func_arr, args):
                     # append self to the args
@@ -557,9 +558,16 @@ class Experiment:
                 self.log_plot_obj.map_fig.savefig(self.folder_name +f'/gif/{self.frame_count}.png', dpi=100)
 
             done = self.env_step()
+            p_bar.update(1)
             if done:
+                # convert p_bar bar color to green
+                p_bar.colour = '0000ff'
+                p_bar.close()
                 break
         else:
+            # convert p_bar to red
+            p_bar.colour = 'red'
+            p_bar.close()
             # in red
             print("\033[91m" + "😱Max Iterations Reached:" + str(i) + "\033[0m")
             print("Experiment Failed:", self.experiment_name)

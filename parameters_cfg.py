@@ -19,15 +19,14 @@ from src.replan.game_theory import *
 
 class Parameters:
     def __init__(self):
-        repeat_count =1
 
-        self.Debug = True
-        self.Use_process = False
+        self.Debug = False
+        self.Use_process = True
         self.Create_gif = False
         assert not (self.Debug and self.Use_process), "Can't use process and debug at the same time"
 
         # The length of the map    
-        self.map_length_list = [50] #list(range(30,91,30))
+        self.map_length_list = [30] #list(range(30,91,30))
 
         # The number of agents in the experiment
         self.agent_count_list = list(range(4,16,4))
@@ -36,23 +35,23 @@ class Parameters:
         self.iteration_repeat_experiment = list(range(0, 60))
 
         self.Method_list = [
-            # Frontier_Random,
-            # Frontier_Closest,
-            # Unknown_Random,
-            # Unknown_Closest,
-            # Voronoi_Frontier_Random,
+            Frontier_Random,
+            Frontier_Closest,
+            Unknown_Random,
+            Unknown_Closest,
+            Voronoi_Frontier_Random,
             Voronoi_Frontier_Closest,
-            # Voronoi_Frontier_Help_Closest,
-            # Voronoi_Frontier_Help_Random,
-            # Decision_Frontier_Closest,
-            # # # DarpVorOnly,
-            # # # DarpMST,
-            # Decay_Epsilon_Greedy_Unknown,
-            # Decay_Epsilon_Greedy_Frontier,
-            # Epsilon_Greedy_Unknown,
-            # Epsilon_Greedy_Frontier,
-            # GameTheory,
-            # # # "Heterogenus",
+            Voronoi_Frontier_Help_Closest,
+            Voronoi_Frontier_Help_Random,
+            Decision_Frontier_Closest,
+            # # DarpVorOnly,
+            # # DarpMST,
+            Decay_Epsilon_Greedy_Unknown,
+            Decay_Epsilon_Greedy_Frontier,
+            Epsilon_Greedy_Unknown,
+            Epsilon_Greedy_Frontier,
+            GameTheory,
+            # # "Heterogenus",
             ]
         # make sure the list is dose not contain duplicates
         self.Method_list = list(set(self.Method_list))
@@ -74,8 +73,8 @@ class Parameters:
             ]
         
         self.Robot_Loss = [
-            # Agent,
-            # Unrecoverable,
+            Agent,
+            Unrecoverable,
             Disrepair,
         ]
 
