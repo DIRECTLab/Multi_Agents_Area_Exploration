@@ -16,6 +16,8 @@ import src.world as world
 import src.agent as agent
 import src.log_plot as log_plot
 from src.darp.darp import *
+import traceback
+import sys
 
 def downsampled_empty_point(point, downsampled_map, cfg):
     point = point
@@ -408,9 +410,6 @@ class Experiment:
 
         if self.cfg.CREATE_GIF:
             self.make_gif(self.folder_name)
-            
-        # in green text
-        print(f"\033[92m {self.experiment_ID} ✅ Complete: {self.experiment_name} in {self.data['delta_time'][-1]} seconds \033[0m")
         
         return df, self.cfg
 
@@ -537,43 +536,53 @@ class Experiment:
                 save_all=True, duration=100, loop=0)
 
     def run_experiment(self, func_arr, *args , **kwargs):
-        self.setup_run_now()
-        done = False
-        max_iter = self.cfg.ROWS**2 
-        p_bar = tqdm.tqdm(total=max_iter, desc=f"{self.experiment_ID} {self.experiment_name}", bar_format='{l_bar}{bar:20}{r_bar}{bar:-10b}')
-        for i in range(max_iter):
-            if func_arr:
-                for func, func_args in zip(func_arr, args):
-                    # append self to the args
-                    func_args = list(func_args)
-                    func_args.append(self)
-                    func( *func_args, **kwargs) 
+        try:
+            self.setup_run_now()
+            done = False
+            max_iter = self.cfg.ROWS**2 
+            p_bar = tqdm.tqdm(total=max_iter, desc=f"{self.experiment_ID} {self.experiment_name}")
+            for i in range(max_iter):
+                if func_arr:
+                    for func, func_args in zip(func_arr, args):
+                        # append self to the args
+                        func_args = list(func_args)
+                        func_args.append(self)
+                        func( *func_args, **kwargs) 
 
-            # Save the Figure
-            if self.cfg.CREATE_GIF:
-                assert self.cfg.LOG_PLOTS, "Must log plots to create gif"
-                # check if the folder exists
-                if not os.path.exists(self.folder_name + '/gif'):
-                    os.makedirs(self.folder_name + '/gif')
-                self.log_plot_obj.map_fig.savefig(self.folder_name +f'/gif/{self.frame_count}.png', dpi=100)
+                # Save the Figure
+                if self.cfg.CREATE_GIF:
+                    assert self.cfg.LOG_PLOTS, "Must log plots to create gif"
+                    # check if the folder exists
+                    if not os.path.exists(self.folder_name + '/gif'):
+                        os.makedirs(self.folder_name + '/gif')
+                    self.log_plot_obj.map_fig.savefig(self.folder_name +f'/gif/{self.frame_count}.png', dpi=100)
 
-            done = self.env_step()
-            p_bar.update(1)
-            if done:
-                # convert p_bar bar color to green
-                p_bar.colour = '0000ff'
+                done = self.env_step()
+                p_bar.update(1)
+                if done:
+                    # convert p_bar bar color to green
+                    p_bar.set_description(f"✅ \033[92m {self.experiment_ID} {self.experiment_name} \033[0m")
+                    p_bar.colour = 'green'
+                    p_bar.close()
+                    break
+            else:
+                # convert p_bar to red
+                p_bar.colour = 'red'
                 p_bar.close()
-                break
-        else:
-            # convert p_bar to red
-            p_bar.colour = 'red'
-            p_bar.close()
-            # in red
-            print("\033[91m" + "😱Max Iterations Reached:" + str(i) + "\033[0m")
-            print("Experiment Failed:", self.experiment_name)
-            self.data['success'] = False
-            # remove the last logging time 
-            self.data['logging_time'].pop()
+                # in red
+                print("\033[91m" + "😱Max Iterations Reached:" + str(i) + "\033[0m")
+                print("Experiment Failed:", self.experiment_name)
+                self.data['success'] = False
+                # remove the last logging time 
+                self.data['logging_time'].pop()
+                
             
+            return self.clean_up_experiment()
+        except Exception:
+            print(traceback.format_exc())
+            # or
+            print(sys.exc_info()[2])
+            print(f"\033[91m {self.experiment_ID} {self.experiment_name} \033[0m")
+
+
         
-        return self.clean_up_experiment()

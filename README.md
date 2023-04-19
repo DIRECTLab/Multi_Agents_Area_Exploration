@@ -28,5 +28,5 @@ pip install \
     matplotlib==3.5.3 \
     pandas==1.4.4 \
     tqdm==4.64.1 \
-    psutil==5.9.4 \
+    psutil==5.9.4
 ```

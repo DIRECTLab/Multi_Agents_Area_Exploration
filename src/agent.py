@@ -350,6 +350,9 @@ class Agent(Point_Finding):
                 if self.agent_map[path_point[1], path_point[0]] == self.cfg.KNOWN_WALL:
                     return True
 
+        if self.goal_xy is None:
+            self.set_new_goal()
+            return True
         # check if the goal_xy is known to be empty, if so replan
         if self.agent_map[self.goal_xy[1], self.goal_xy[0]] == self.cfg.KNOWN_EMPTY or \
             self.agent_map[self.goal_xy[1], self.goal_xy[0]] == self.cfg.KNOWN_WALL:

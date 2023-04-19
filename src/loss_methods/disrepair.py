@@ -57,8 +57,10 @@ class Disrepair(Agent):
     
     def check_should_replan(self, mutual_data):
         if len(mutual_data['Agent_Data'][self.id]['help_request_list']) > 0 and not self.area_completed:
-            # if len(self.plan ) == 0: # if we do this we get stuck in a loop
-            #     return True
+            if self.plan == None:
+                return True
+            if len(self.plan) == 0: # if we do this we get stuck in a loop
+                return True
             if self.plan[-1] != mutual_data['Agent_Data'][self.id]['help_request_list'][0]['other_agent_pos']:
                 # We found a new help request
                 return True
