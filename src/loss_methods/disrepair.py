@@ -6,11 +6,9 @@ from src.planners.astar_new import astar
 
 
 
-class Disrepair(Unrecoverable):
+class Disrepair(Agent):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.choose_random = False
-        self.last_mutual_data_copy = None
 
     def check_for_hit_mine(self, mutual_data):
         cur_x = self.grid_position_xy[0]
@@ -70,7 +68,7 @@ class Disrepair(Unrecoverable):
                             (int(np.round(self.grid_position_xy[0])), int(np.round(self.grid_position_xy[1]))),
                             mutual_data['Agent_Data'][self.id]['help_request_list'][0]['other_agent_pos'])
             if self.plan == None:
-                self.plan =[]
+
                 if self.replan_count > 100:
                     warnings.warn("Replan count is too high")
                 assert self.replan_count < self.agent_map.size, "Replan count is too high 200"                
@@ -92,5 +90,15 @@ class Disrepair(Unrecoverable):
     
     def move(self, mutual_data):
         self.help_teammate(mutual_data)
+        if self.check_for_hit_mine(mutual_data):
+            return
 
         return super().move(mutual_data)
+    
+    def update(self, mutual_data, draw=True):
+        if self.plan == None:
+            print(f"{self.id} Plan is none")
+
+        if self.still_disabled(mutual_data):
+            return
+        return super().update(mutual_data, draw)
