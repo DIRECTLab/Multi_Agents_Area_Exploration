@@ -170,10 +170,21 @@ def main(parameters = None):
 
     # parce the results
     for i, return_value in tqdm.tqdm( enumerate( results), colour="GREEN", desc="Saving Data", total=len(results)):
-        [df, cfg,] = return_value
+        try:    
+            if return_value == None:
+                print(f"🛑 Experiment {i} Failed cant save to df return: None: ", return_value)
+                continue
+            if len(return_value) != 2:
+                print(f"🛑 Experiment {i} Failed cant save to df return was not len of 2", return_value)
+                continue
+            [df, cfg,] = return_value
 
-        df['execution_date'] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(t_stamp))
-        all_df = pd.concat([all_df, df], ignore_index=True)
+            df['execution_date'] = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(t_stamp))
+            all_df = pd.concat([all_df, df], ignore_index=True)
+
+        except Exception as e:
+            print(f"🛑 Experiment {i} Failed cant save to df", e)
+            continue
 
     # check if the data.csv file exists
     if os.path.isfile(f"data/all_data.csv"):
