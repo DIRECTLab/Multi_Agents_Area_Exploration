@@ -193,14 +193,19 @@ class Experiment:
                 bot_ax[i].matshow(self.bots[i].agent_map)
 
         if 'Voronoi' in search_method:
-            self.minimum_comparison_table = generate_voronoi_division_grid(grid, self.bots, matrix_list, agent_locs, self.log_plot_obj)
+            new_bot_list = []
+            for bot in self.bots:
+                if 'Voronoi' in bot.__class__.__name__:
+                    new_bot_list.append(bot)
+
+            self.minimum_comparison_table = generate_voronoi_division_grid(grid, new_bot_list, matrix_list, agent_locs, self.log_plot_obj)
             self.log_plot_obj.map_ax.matshow(self.minimum_comparison_table, alpha=0.6)
             # assign each robot one voronoi region using assigned_points
-            for bot in self.bots:
-                assigned_points = np.argwhere(self.minimum_comparison_table == bot.id)
+            for bot_id in range(len(new_bot_list)):
+                assigned_points = np.argwhere(self.minimum_comparison_table == bot_id)
                 # convert list of list into list of tuples
                 assigned_points = [tuple(point) for point in assigned_points]
-                bot.assigned_points = assigned_points
+                new_bot_list[bot_id].assigned_points = assigned_points
                 assert len(assigned_points) > 0, "No points assigned to bot"
 
         elif 'DarpVorOnly' in search_method:

@@ -24,9 +24,9 @@ class Voronoi_Frontier_Closest(Agent):
             # now the agent can help others
             return self.my_area_done(frontier_and_unknown)
         
-        assigned_assigned = []
         assert len(self.assigned_points) > 0, "assigned points is empty"
 
+        assigned_assigned = []
         for point in frontier_and_unknown:
             if tuple(point) in self.assigned_points:
                 assigned_assigned.append(point)
