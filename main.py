@@ -32,7 +32,7 @@ def run_heterogenus(start, goal, cfg, experiment_name, return_dict, Method_list,
         for ratio in  tqdm.tqdm([(.50,.50), (.25,.75), (.75,.25)], desc="Ratio", colour="BLACK"):
             method1_couint =  int(cfg.N_BOTS * ratio[0]) # % of the agents
             method2_couint =  int(cfg.N_BOTS * ratio[1])
-            cur_experiment_name = experiment_name + f"method1:{method1.__name__}_count:{method1_couint}\nmethod2:{method2.__name__}_count:{method2_couint}/" 
+            cur_experiment_name = experiment_name + f"method1:{method1.__name__}_count:{method1_couint}\nmethod2:{method2.__name__}_count:{method2_couint}/{start.__name__}/{goal.__name__}/" 
             cur_experiment_name += f'\nnbots:{cfg.N_BOTS}_map_length:{cfg.ROWS}_seed:{cfg.SEED}'
 
             Agent_Class_list = [method1] * method1_couint
