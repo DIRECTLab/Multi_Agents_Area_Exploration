@@ -29,7 +29,7 @@ class Parameters:
         self.map_length_list = [30] #list(range(30,91,30))
 
         # The number of agents in the experiment
-        self.agent_count_list = list(range(4,16,4))
+        self.agent_count_list = [2,4,6] #list(range(4,12,4))
 
         # iteration_repeat_experiment will be used to repeat the experiment
         self.iteration_repeat_experiment = list(range(0, 60))
@@ -37,23 +37,23 @@ class Parameters:
         self.min_rom_size = list( range(4,10,2))
 
         self.Method_list = [
-            Frontier_Random,
-            Frontier_Closest,
-            Unknown_Random,
-            Unknown_Closest,
-            Voronoi_Frontier_Random,
-            Voronoi_Frontier_Closest,
-            Voronoi_Frontier_Help_Closest,
-            Voronoi_Frontier_Help_Random,
-            Decision_Frontier_Closest,
-            # # DarpVorOnly,
-            # # DarpMST,
-            Decay_Epsilon_Greedy_Unknown,
-            Decay_Epsilon_Greedy_Frontier,
-            Epsilon_Greedy_Unknown,
-            Epsilon_Greedy_Frontier,
-            GameTheory,
-            # # "Heterogenus",
+            # Frontier_Random,
+            # Frontier_Closest,
+            # Unknown_Random,
+            # Unknown_Closest,
+            # Voronoi_Frontier_Random,
+            # Voronoi_Frontier_Closest,
+            # Voronoi_Frontier_Help_Closest,
+            # Voronoi_Frontier_Help_Random,
+            # Decision_Frontier_Closest,
+            DarpVorOnly,
+            # DarpMST,
+            # Decay_Epsilon_Greedy_Unknown,
+            # Decay_Epsilon_Greedy_Frontier,
+            # Epsilon_Greedy_Unknown,
+            # Epsilon_Greedy_Frontier,
+            # GameTheory,
+            # # # "Heterogenus",
             ]
         # make sure the list is dose not contain duplicates
         self.Method_list = list(set(self.Method_list))
@@ -62,8 +62,8 @@ class Parameters:
             # # Manual_Start,
             Rand_Start_Position,
             # Edge_Start_Position, # does not work with Voronoi methods Currently
-            # Top_Left_Start_Position,
-            # Center_Start_Position, 
+            Top_Left_Start_Position,
+            Center_Start_Position, 
             ]
         self.Start_Goal_list= [
             # # Manual_Goal,

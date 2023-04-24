@@ -188,6 +188,12 @@ def main(parameters = None):
 
     # check if the data.csv file exists
     if os.path.isfile(f"data/all_data.csv"):
+        # just read the file
+        other_df = pd.read_csv(f"data/all_data.csv")
+
+        # FIND THE LAST EXPERIMENT ID
+        last_experiment_id = other_df['experiment_ID'].max()
+        all_df["experiment_ID"] = all_df["experiment_ID"] + last_experiment_id + 1
         # append the new data to the end of the file
         all_df.to_csv(f"data/all_data.csv", mode='a', header=False)
     else:

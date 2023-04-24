@@ -322,7 +322,11 @@ class Experiment:
                     self.upscaling_down_sampled_map_for_vis[i*2+1, j*2+1] = point
 
             if darp_success:
-                run_mst(iterations, self.bots, darp_instance)
+                try:
+                    run_mst(iterations, self.bots, darp_instance)
+                except Exception as e:
+                    print("Exception in MST", e)
+                    return False
             else:
                 print("DARP failed to find a solution")
                 sys.exit()
