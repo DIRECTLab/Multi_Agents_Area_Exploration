@@ -2,12 +2,27 @@ import numpy as np
 import random
 import math
 
+#  will make sure we have different random points over grid for goal positions
+CHECK_RAND_LIST_GOAL = []
+
+class Manual_Goal:
+    four_goal_pos = [(10,10), (20,20), (30,30), (45,45)]
+    def choose_start_goal(self):
+        self.goal_xy = self.four_goal_pos[self.id]
+
 class Rand_Start_Goal:
     def __init__(self):
-        print("hello from random start")
+        print("hello from random goal")
         # random.seed(cfg.SEED)
     def choose_start_goal(self):
         self.goal_xy = self.get_random_point()
+        if self.goal_xy not in CHECK_RAND_LIST_GOAL:
+            CHECK_RAND_LIST_GOAL.append(self.goal_xy)
+            # print("CHECK_RAND_LIST_GOAL length:::", len(CHECK_RAND_LIST_GOAL))
+        else:
+            self.goal_xy = self.get_random_point()
+            CHECK_RAND_LIST_GOAL.append(self.goal_xy)
+            # print("CHECK_RAND_LIST_GOAL length:::", len(CHECK_RAND_LIST_GOAL))
 
 class Center_Start_Goal:
     def choose_start_goal(self):
@@ -30,7 +45,8 @@ class Center_Start_Goal:
 
         if find_new_point:
             foundPoint  = check_if_valid_point(self.goal_xy, self.ground_truth_map, self.cfg)
-            if foundPoint:
+            if foundPoint[0]:
+                self.goal_xy = foundPoint[1]
                 return
             # at this point, all the neighbors are obstacles or your off the map warning
             print("!!WARNING!!: All the neighbors are obstacles or your off the map current point: ", self.goal_xy)
@@ -40,12 +56,6 @@ class Center_Start_Goal:
             print("new closest point to the edge: ", self.goal_xy)
             return
         
-
-class Manual_Goal:
-    four_goal_pos = [(10,10), (20,20), (30,30), (45,45)]
-    def choose_start_goal(self):
-        self.goal_xy = self.four_goal_pos[self.id]
-
 class Top_Left_Start_Goal:
     def choose_start_goal(self):
         self.goal_xy = points_over_radious(self.cfg.ROWS, self.cfg.COLS, self.cfg.N_BOTS, 'topleft')[self.id]
@@ -67,7 +77,8 @@ class Top_Left_Start_Goal:
 
         if find_new_point:
             foundPoint  = check_if_valid_point(self.goal_xy, self.ground_truth_map, self.cfg)
-            if foundPoint:
+            if foundPoint[0]:
+                self.goal_xy = foundPoint[1]
                 return
             # at this point, all the neighbors are obstacles or your off the map warning
             print("!!WARNING!!: All the neighbors are obstacles or your off the map current point: ", self.goal_xy)
@@ -97,7 +108,8 @@ class Edge_Start_Goal:
 
         if find_new_point:
             foundPoint  = check_if_valid_point(self.goal_xy, self.ground_truth_map, self.cfg)
-            if foundPoint:
+            if foundPoint[0]:
+                self.goal_xy = foundPoint[1]
                 return
             # at this point, all the neighbors are obstacles or your off the map warning
             print("!!WARNING!!: All the neighbors are obstacles or your off the map current point: ", self.goal_xy)
@@ -125,7 +137,8 @@ class Distributed_Goal:
 
         if find_new_point:
             foundPoint  = check_if_valid_point(self.goal_xy, self.ground_truth_map, self.cfg)
-            if foundPoint:
+            if foundPoint[0]:
+                self.goal_xy = foundPoint[1]
                 return
             # at this point, all the neighbors are obstacles or your off the map warning
             print("!!WARNING!!: All the neighbors are obstacles or your off the map current point: ", self.goal_xy,)
@@ -155,17 +168,17 @@ def points_over_radious(rows, cols, n, location_of_radious):
         shift =1
         # Project the point onto the perimeter of the rectangle
         if x < 0:
-            x = 0 +shift
-            y = location_of_radious_point[1] - radius * np.sin(angle)
-        elif x > cols:
-            x = cols -shift
-            y = location_of_radious_point[1] + radius * np.sin(angle)
-        elif y < 0:
-            y = 0+shift
-            x = location_of_radious_point[0] - radius * np.cos(angle)
-        elif y > rows:
+            x = 0
+            # y = center[1] - radius * np.sin(angle)
+        if x >= cols:
+            x = cols-shift
+            # y = center[1] + radius * np.sin(angle)
+        if y < 0:
+            y = 0
+            # x = center[0] - radius * np.cos(angle)
+        if y >= rows:
             y = rows-shift
-            x = location_of_radious_point[0] + radius * np.cos(angle)
+            # x = center[0] + radius * np.cos(angle)
         points[i, 0] = x
         points[i, 1] = y
     return points
@@ -188,17 +201,17 @@ def points_on_rectangle_edge(rows, cols, n):
         shift =1
         # Project the point onto the perimeter of the rectangle
         if x < 0:
-            x = 0 +shift
-            y = center[1] - radius * np.sin(angle)
-        elif x > cols:
-            x = cols -shift
-            y = center[1] + radius * np.sin(angle)
-        elif y < 0:
-            y = 0+shift
-            x = center[0] - radius * np.cos(angle)
-        elif y > rows:
+            x = 0
+            # y = center[1] - radius * np.sin(angle)
+        if x >= cols:
+            x = cols-shift
+            # y = center[1] + radius * np.sin(angle)
+        if y < 0:
+            y = 0
+            # x = center[0] - radius * np.cos(angle)
+        if y >= rows:
             y = rows-shift
-            x = center[0] + radius * np.cos(angle)
+            # x = center[0] + radius * np.cos(angle)
         points[i, 0] = x
         points[i, 1] = y
     return points
@@ -224,7 +237,7 @@ def check_if_valid_point(point, ground_truth_map, cfg):
             continue
         if ground_truth_map[cur_point[1], cur_point[0]] == cfg.EMPTY:
             point = cur_point
-            return True
+            return [True, point]
     return False
 
 def calc_closest_factors(c: int):

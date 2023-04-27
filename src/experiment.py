@@ -16,6 +16,8 @@ import src.world as world
 import src.agent as agent
 import src.log_plot as log_plot
 from src.darp.darp import *
+from src.starting_scenario.goal_starts import *
+from src.starting_scenario.starting_methods import *
 import traceback
 import sys
 
@@ -186,7 +188,7 @@ class Experiment:
                         lock= self.lock,
                     )
                 )
-            self.ground_truth_map[self.bots[-1].goal_xy[1]][self.bots[-1].goal_xy[0]] =cfg.AGENT_OBSTACLE
+            self.ground_truth_map[self.bots[-1].grid_position_xy[1]][self.bots[-1].grid_position_xy[0]] = cfg.AGENT_OBSTACLE
         
             if cfg.DRAW_SIM:
                 bot_ax[i].set_title(f"Bot {i}")
@@ -573,6 +575,10 @@ class Experiment:
                 if done:
                     # convert p_bar bar color to green
                     p_bar.set_description(f"✅ \033[92m {self.experiment_ID} {self.experiment_name} \033[0m")
+                    # print("CHECK_RAND_LIST_START is getting cleared...")
+                    CHECK_RAND_LIST_START.clear()
+                    # print("CHECK_RAND_LIST_GOAL is getting cleared...")
+                    CHECK_RAND_LIST_GOAL.clear()
                     p_bar.colour = 'green'
                     p_bar.close()
                     break
