@@ -86,7 +86,7 @@ def run_scenario(args):
     print('\n'+print_string + '\n')
 
     [Method, run_type, start, goal,
-            map_length,agent_count, experiment_iteration, min_rom_size] = scenario
+            map_length,agent_count, experiment_iteration, min_rom_size, required_exploration_ratio] = scenario
     
     cfg = Config()
     cfg.SEED = int(map_length + experiment_iteration)
@@ -104,6 +104,7 @@ def run_scenario(args):
     cfg.MAX_ROOM_SIZE = 20 * cfg.GRID_THICKNESS
     cfg.CREATE_GIF = parameters.Create_gif
     cfg.USE_PROCESS = parameters.Use_process
+    cfg.MIN_EXPLORATION_RATIO = required_exploration_ratio
 
     Agent_Class_list = []
 
@@ -113,7 +114,7 @@ def run_scenario(args):
         run_heterogenus(start, goal, cfg, experiment_name, return_dict, parameters.Method_list, prosses_count, debug = parameters.Debug)
         return
 
-    experiment_name = f"{Method.__name__}/{run_type.__name__}/{start.__name__}/{goal.__name__}/nbots-{cfg.N_BOTS}_map_length-{cfg.ROWS}_min_room-{min_rom_size}_seed-{cfg.SEED}"
+    experiment_name = f"{Method.__name__}/{run_type.__name__}/{start.__name__}/{goal.__name__}/nbots-{cfg.N_BOTS}_map_length-{cfg.ROWS}_min_room-{min_rom_size}_seed-{cfg.SEED}_required-exploration-{cfg.MIN_EXPLORATION_RATIO}"
 
 
     Agent_Class_list = [type(Method.__name__+'_'+run_type.__name__, (Method, run_type, start, goal), {})] * cfg.N_BOTS

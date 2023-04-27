@@ -26,33 +26,35 @@ class Parameters:
         assert not (self.Debug and self.Use_process), "Can't use process and debug at the same time"
 
         # The length of the map    
-        self.map_length_list = [30] #list(range(30,91,30))
+        self.map_length_list = [50] #list(range(30,91,30))
 
         # The number of agents in the experiment
-        self.agent_count_list = [2,4,6] #list(range(4,12,4))
+        self.agent_count_list = list(range(2,18,2))
 
         # iteration_repeat_experiment will be used to repeat the experiment
-        self.iteration_repeat_experiment = list(range(0, 60))
+        self.iteration_repeat_experiment = list(range(0, 10))
 
-        self.min_rom_size = list( range(4,10,2))
+        self.min_rom_size = [3,6,9,12,15,18,21,24,27,30]
+
+        self.required_exploration_ratio = list(range(30,100,1))
 
         self.Method_list = [
-            Frontier_Random,
+            # Frontier_Random,
             Frontier_Closest,
-            Unknown_Random,
-            Unknown_Closest,
-            Voronoi_Frontier_Random,
-            Voronoi_Frontier_Closest,
-            Voronoi_Frontier_Help_Closest,
-            Voronoi_Frontier_Help_Random,
-            Decision_Frontier_Closest,
-            DarpVorOnly,
+            # Unknown_Random,
+            # Unknown_Closest,
+            # Voronoi_Frontier_Random,
+            # Voronoi_Frontier_Closest,
+            # Voronoi_Frontier_Help_Closest,
+            # Voronoi_Frontier_Help_Random,
+            # Decision_Frontier_Closest,
+            # DarpVorOnly,
             # DarpMST,
-            Decay_Epsilon_Greedy_Unknown,
-            Decay_Epsilon_Greedy_Frontier,
-            Epsilon_Greedy_Unknown,
-            Epsilon_Greedy_Frontier,
-            GameTheory,
+            # Decay_Epsilon_Greedy_Unknown,
+            # Decay_Epsilon_Greedy_Frontier,
+            # Epsilon_Greedy_Unknown,
+            # Epsilon_Greedy_Frontier,
+            # GameTheory,
             # # # "Heterogenus",
             ]
         # make sure the list is dose not contain duplicates
@@ -62,8 +64,8 @@ class Parameters:
             # # Manual_Start,
             Rand_Start_Position,
             # Edge_Start_Position, # does not work with Voronoi methods Currently
-            Top_Left_Start_Position,
-            Center_Start_Position, 
+            # Top_Left_Start_Position,
+            # Center_Start_Position, 
             ]
         self.Start_Goal_list= [
             # # Manual_Goal,
@@ -76,8 +78,8 @@ class Parameters:
         
         self.Robot_Loss = [
             Agent,
-            Unrecoverable,
-            Disrepair,
+            # Unrecoverable,
+            # Disrepair,
         ]
 
 
@@ -92,4 +94,5 @@ class Parameters:
             "Agent Count": self.agent_count_list,
             "Experiment Iteration": self.iteration_repeat_experiment,
             "Min Room Size": self.min_rom_size,
+            "Required Exploration Ratio": self.required_exploration_ratio
         }

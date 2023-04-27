@@ -113,8 +113,8 @@ class World:
         pygame.draw.rect(self.screen, self.cfg.WALL_COLOR, (0, 0, self.cfg.SCREEN_WIDTH, self.cfg.SCREEN_HEIGHT), self.cfg.GRID_THICKNESS)
         self.draw_grid()
         self.map = self.get_map()
-        if self.cfg.ROBOT_LOSS_TYPE != "None":
-            self.place_mines()
+        # if self.cfg.ROBOT_LOSS_TYPE != Agent:
+        #     self.place_mines()
         return self.map.copy()
 
     def place_mines(self):

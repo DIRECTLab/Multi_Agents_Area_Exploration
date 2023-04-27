@@ -39,6 +39,8 @@ class Config:
         self.ROBOT_LOSS_TYPE = None
         self.MINE_DENSITY = .1
 
+        self.MIN_EXPLORATION_RATIO = 0.5
+
         # Define the colors to be used in the drawing
         self.BACKGROUND_COLOR = (78, 157, 157)
         self.WALL_COLOR = (80, 24, 99)

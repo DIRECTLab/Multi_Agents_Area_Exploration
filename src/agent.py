@@ -83,7 +83,8 @@ class Agent(Point_Finding):
                 color=(0,255,0),
                 ax=None,
                 screen=None,
-                lock = None):
+                lock = None,
+                required_explore = 0.5):
         self.cfg = cfg
         self.id = id
         self.body_size = body_size
@@ -122,6 +123,9 @@ class Agent(Point_Finding):
         self.choose_random = None
 
         self.disabled = False
+        self.explored_sufficiently = False
+        self.required_explore = required_explore
+        self.personal_explored_area = 0
 
         self.scan()
         self.replan({})
@@ -142,7 +146,7 @@ class Agent(Point_Finding):
         if self.plan == None:
             if self.replan_count > 100:
                 warnings.warn("Replan count is too high")
-            assert self.replan_count < self.agent_map.size, f"Replan count is too high {self.agent_map.size}"
+            # assert self.replan_count < self.agent_map.size, f"Replan count is too high {self.agent_map.size}"
 
             self.set_new_goal()
             self.replan(mutual_data)
@@ -312,12 +316,22 @@ class Agent(Point_Finding):
             mutual_data['Agent_Data'][self.id] = {}
         if 'help_request_list' not in mutual_data['Agent_Data'][self.id]:
             mutual_data['Agent_Data'][self.id]['help_request_list'] = []
+        if 'personal_explored_area' not in mutual_data['Agent_Data'][self.id]:
+            mutual_data['Agent_Data'][self.id]['personal_explored_area'] = []
+        if 'total_explored_area' not in mutual_data:
+            mutual_data['total_explored_area'] = []
         
         mutual_data['Agent_Data'][self.id]['plan'] = self.plan
         mutual_data['Agent_Data'][self.id]['goal_xy'] = self.goal_xy
         mutual_data['Agent_Data'][self.id]['grid_position_xy'] = self.grid_position_xy
         mutual_data['Agent_Data'][self.id]['choose_random'] = self.choose_random
         mutual_data['Agent_Data'][self.id]['disabled'] = self.disabled
+        mutual_data['Agent_Data'][self.id]['personal_explored_area'].append(self.personal_explored_area)
+        
+        if self.id == 0:
+            total_explored_area = (np.sum(mutual_data['map'] == self.cfg.KNOWN_EMPTY) + np.sum(mutual_data['map'] == self.cfg.KNOWN_WALL)) / mutual_data['map'].size
+            mutual_data['total_explored_area'].append(total_explored_area)
+
 
         self.share_map(mutual_data['map'])
 
@@ -365,6 +379,11 @@ class Agent(Point_Finding):
 
         # NO need to replan
         return False
+    
+    def calculate_personal_searched_area(self):
+        # calculate the area the agent has searched
+        self.personal_explored_area = np.sum(self.agent_map == self.cfg.KNOWN_EMPTY) + np.sum(self.agent_map == self.cfg.KNOWN_WALL)
+        self.personal_explored_area /= self.agent_map.size
                     
     def update(self, mutual_data, draw=True):
         # Update the agent's position
@@ -374,14 +393,17 @@ class Agent(Point_Finding):
         # self.share_map(mutual_data['map'])
         self.save_to_mutual_data(mutual_data)
         # Update the agent's map
-        self.agent_map = mutual_data['map'].copy()
+        # self.agent_map = mutual_data['map'].copy()
 
         if self.check_should_replan(mutual_data):
             self.replan(mutual_data)
             if self.area_completed:
                 return 0, self.total_dist_traveled
             
-        
+        self.calculate_personal_searched_area()
+        if self.personal_explored_area >= self.required_explore / 100:
+            self.area_completed = True
+            return 0, self.total_dist_traveled
         
         if self.plan is None: 
             self.plan = []

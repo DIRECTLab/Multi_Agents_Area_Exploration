@@ -184,6 +184,7 @@ class Experiment:
                         ax = bot_ax[i] if cfg.DRAW_SIM else None,
                         screen = self.cur_world.screen if cfg.DRAW_SIM else None,
                         lock= self.lock,
+                        required_explore = cfg.MIN_EXPLORATION_RATIO
                     )
                 )
             self.ground_truth_map[self.bots[-1].goal_xy[1]][self.bots[-1].goal_xy[0]] =cfg.AGENT_OBSTACLE
@@ -411,6 +412,19 @@ class Experiment:
         df['experiment_ID'] = self.experiment_ID
         df['loss_type'] = self.cfg.ROBOT_LOSS_TYPE
 
+        search_data = {}
+        search_data['map_complexity'] = np.sum(self.ground_truth_map == 0) / self.ground_truth_map.size
+        search_data['total_searched_area'] = [self.mutual_data['total_explored_area'][-1]]
+        for bot in self.bots:
+            search_data['bot_searched_area_' + str(bot.id)] = self.mutual_data['Agent_Data'][bot.id]['personal_explored_area'][-1]
+
+        searched_df = pd.DataFrame(search_data)
+        folder = f"search_data_update/bots-{len(self.bots)}_min-room-size{self.cfg.MIN_ROOM_SIZE / self.cfg.GRID_THICKNESS}"
+        
+        os.makedirs(folder, exist_ok=True)
+
+        searched_df.to_csv(f"{folder}/seed-{self.cfg.SEED}_{self.bots[0].required_explore}explored_Exploration.csv")
+
         df.to_csv(f"{self.folder_name}/data.csv")
         self.return_dict[self.experiment_ID] = [df, self.cfg, self.ground_truth_map]
 
@@ -482,7 +496,7 @@ class Experiment:
             start_time = psutil.Process().cpu_times().user
             for i, bot in enumerate(self.bots):
                 bot.update(self.mutual_data, draw=self.cfg.DRAW_SIM)
-                bot.frame_count =self.frame_count
+                bot.frame_count = self.frame_count
                 path_length += len(bot.plan if bot.plan is not None else [])
                 replan_count += bot.replan_count
                 if 'Epsilon' in self.search_method and dir(bot).count('epsilon'):
@@ -515,9 +529,11 @@ class Experiment:
         if finished_bots == len(self.bots):
             self.data['success'] = False
             return True
-        if cur_known == self.mutual_data['map'].size:
-            self.data['success'] = True
-            return True
+        # if cur_known == self.mutual_data['map'].size:
+        #     self.data['success'] = True
+        #     return True
+
+
 
         logging_end_time = psutil.Process().cpu_times().user
         self.data['logging_time'].append(logging_end_time - logging_time_start)
@@ -548,7 +564,7 @@ class Experiment:
         try:
             self.setup_run_now()
             done = False
-            max_iter = self.cfg.ROWS**2 
+            max_iter = 1_000_000_000 
             p_bar = tqdm.tqdm(total=max_iter, desc=f"{self.experiment_ID} {self.experiment_name}")
             for i in range(max_iter):
                 if func_arr:
