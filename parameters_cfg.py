@@ -31,7 +31,7 @@ class Parameters:
 
         # The number of agents in the experiment
         self.agent_count_list = [4,6,8]
-        # self.agent_count_list = [8]
+        # self.agent_count_list = [6]
 
         # iteration_repeat_experiment will be used to repeat the experiment
         self.iteration_repeat_experiment = list(range(0, 1))
@@ -45,17 +45,17 @@ class Parameters:
             Unknown_Random,
             Unknown_Closest,
 
-            Voronoi_Frontier_Random,
-            Voronoi_Frontier_Closest,
-            Voronoi_Frontier_Help_Closest,
-            Voronoi_Frontier_Help_Random,
+            # Voronoi_Frontier_Random,
+            # Voronoi_Frontier_Closest,
+            # Voronoi_Frontier_Help_Closest,
+            # Voronoi_Frontier_Help_Random,
             
-            Decision_Frontier_Closest,
-            Decay_Epsilon_Greedy_Unknown,
-            Decay_Epsilon_Greedy_Frontier,
-            Epsilon_Greedy_Unknown,
-            Epsilon_Greedy_Frontier,
-            GameTheory,
+            # Decision_Frontier_Closest,
+            # Decay_Epsilon_Greedy_Unknown,
+            # Decay_Epsilon_Greedy_Frontier,
+            # Epsilon_Greedy_Unknown,
+            # Epsilon_Greedy_Frontier,
+            # GameTheory,
 
             # DarpVorOnly,
             # DarpMST,
@@ -68,24 +68,24 @@ class Parameters:
         self.Start_scenario_list = [
             # # Manual_Start,
             Rand_Start_Position,
-            # Edge_Start_Position,
-            # Top_Left_Start_Position,
-            # Center_Start_Position,
-            # Distributed_Start,
+            Edge_Start_Position,
+            Top_Left_Start_Position,
+            Center_Start_Position,
+            Distributed_Start,
             ]
         self.Start_Goal_list= [
             # # Manual_Goal,
             Rand_Start_Goal,
-            # Center_Start_Goal,
-            # Top_Left_Start_Goal,
-            # Edge_Start_Goal,
-            # Distributed_Goal,
+            Center_Start_Goal,
+            Top_Left_Start_Goal,
+            Edge_Start_Goal,
+            Distributed_Goal,
             ]
         
         self.Robot_Loss = [
             Agent,
-            # Unrecoverable,
-            # Disrepair,
+            Unrecoverable,
+            Disrepair,
         ]
 
 
