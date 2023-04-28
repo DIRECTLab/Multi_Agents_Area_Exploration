@@ -1,6 +1,7 @@
 import numpy as np
 import random
 import math
+from itertools import product, starmap, islice
 
 #  will make sure we have different random points over grid for goal positions
 CHECK_RAND_LIST_GOAL = []
@@ -217,30 +218,22 @@ def points_on_rectangle_edge(rows, cols, n):
     return points
 
 def check_if_valid_point(point, ground_truth_map, cfg):
-    point = point
-    # choose a fandome point from the 8 neighbors
-    neighbors = [(point[0]+1, point[1]), \
-                (point[0]-1, point[1]), \
-                (point[0], point[1]+1), \
-                (point[0], point[1]-1), \
-                (point[0]+1, point[1]+1), \
-                (point[0]-1, point[1]+1), \
-                (point[0]+1, point[1]-1), \
-                (point[0]-1, point[1]-1)]
     
-    # shuffle the neighbors
-    np.random.shuffle(neighbors)
+    # checking level 1 neighbors
+    neighbors = list(findNeighbors(ground_truth_map, point[0], point[1], 1))
     for cur_point in neighbors:
-        # check if the point is in the map
-        if cur_point[0] < 0 or cur_point[0] >= cfg.COLS or \
-            cur_point[1] < 0 or cur_point[1] >= cfg.ROWS:
-            continue
         if ground_truth_map[cur_point[1], cur_point[0]] == cfg.EMPTY:
             point = cur_point
             return [True, point]
-    print("Warn!!! No neighbor found that is either empty and in the grid")
-    print("checking level 2 neighbors")
-    level_two_neighbors = []
+    
+    # checking level 2 neighbors
+    neighbors = list(findNeighbors(ground_truth_map, point[0], point[1], 2))
+    for cur_point in neighbors:
+        if ground_truth_map[cur_point[1], cur_point[0]] == cfg.EMPTY:
+            point = cur_point
+            return [True, point]
+    
+    print("WARNING: All the neighbors are obstacles or off the map!! Here are the neighbors: ", neighbors)
     return False
 
 def calc_closest_factors(c: int):
@@ -278,3 +271,30 @@ def dividegrid(rows, cols, n):
     for i in range(len(x_var)):
         points.append((x_var[i], y_var[i]))
     return points
+
+# https://stackoverflow.com/questions/16245407/python-finding-neighbors-in-a-2-d-list
+def findNeighbors(grid, x, y, level):
+    if level == 1:
+        xi = (0, -level, level) if 0 < x < len(grid) - 1 else ((0, -level) if x > 0 else (0, level))
+        yi = (0, -level, level) if 0 < y < len(grid[0]) - 1 else ((0, -level) if y > 0 else (0, level))
+        return islice(starmap((lambda a, b: (x + a, y + b)), product(xi, yi)), 1, None)
+    elif level == 2:
+        xi = (0, -level, -(level-1), (level-1), level) if 0 < x < len(grid) - 1 else ((0, -(level-1), -level) if x > 0 else (0, (level-1), level))
+        yi = (0, -level, -(level-1), (level-1), level) if 0 < y < len(grid[0]) - 1 else ((0, -(level-1), -level) if y > 0 else (0, (level-1), level))
+        return islice(starmap((lambda a, b: (x + a, y + b)), product(xi, yi)), 1, None)
+
+# extended version of findNeighbors without itertools magic
+# def findNeighbors_detailed_version(grid, x, y):
+#     if 0 < x < len(grid) - 1:
+#         xi = (0, -1, 1, -2, 2)   # this isn't first or last row, so we can look above and below
+#     elif x > 0:
+#         xi = (0, -1, -2)      # this is the last row, so we can only look above
+#     else:
+#         xi = (0, 1, 2)       # this is the first row, so we can only look below
+#     # the following line accomplishes the same thing as the above code but for columns
+#     yi = (0, -1, 1, -2, 2) if 0 < y < len(grid[0]) - 1 else ((0, -1, -2) if y > 0 else (0, 1, 2))
+#     for a in xi:
+#         for b in yi:
+#             if a == b == 0:  # this value is skipped using islice in the original code
+#                 continue
+#             yield (x + a, y + b)

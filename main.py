@@ -89,7 +89,7 @@ def run_scenario(args):
             map_length,agent_count, experiment_iteration, min_rom_size] = scenario
     
     cfg = Config()
-    cfg.SEED = 31#int(map_length + experiment_iteration)
+    cfg.SEED = int(map_length + experiment_iteration)
     cfg.N_BOTS = int(agent_count)
     cfg.ROBOT_LOSS_TYPE = run_type.__name__
 
