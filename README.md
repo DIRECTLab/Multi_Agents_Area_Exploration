@@ -33,7 +33,7 @@ pip install \
     psutil==5.9.4
 ```
 
-## RUN:
+## Running the Program:
 
 to run  the simulation, run the following command:
 ```
@@ -59,7 +59,7 @@ if you would like to change the simulation parameters, you can do so by changing
 | `Start_Goal_list`| Starting Goal Locations | `Manual_Goal`, `Rand_Start_Goal`, `Center_Start_Goal`, `Top_Left_Start_Goal`, `Edge_Start_Goal`,  `Distributed_Goal`, |
 | `Robot_Loss`| Holds A list of Classes that change the scenario, where `Agent`is a normal run, `Unrecoverable` the robots will hit random mines and become disabled, and last the `Disrepair` robots can help and fix other robots   | `[Agent, Unrecoverable, Disrepair]` |
 
-| Method | Description | Gifdddddddddddddd |
+| Method | Description | GIFs |
 | --- | --- | --- |
 | `Frontier_Random` | Each agent randomly selects a frontier section of the map to explore. ||
 | `Frontier_Closest` | Each agent selects the closest frontier section of the map to explore. ||
@@ -69,7 +69,7 @@ if you would like to change the simulation parameters, you can do so by changing
 | `Voronoi_Frontier_Closest` | The map is split up into various sections and then the frontier closest method is used within each section. ||
 | `Voronoi_Frontier_Help_Closest` | The map is split up into various sections and then the frontier closest method is used in tandem with the paired searching strategy. ||
 | `Voronoi_Frontier_Help_Random` | The map is split up into various sections and then the frontier random method is used in tandem with the paired searching strategy.||
-| `Decision_Frontier_Closest` | Each agent shares it's goal position in the mutual data set. As each agent sets a new goal position it checks to see if any other agent is already visiting that location. If not, it keeps that location. If it is already taken \|then the agent with the shortest path keeps that location and the other is assigned a new goal. ||
+| `Decision_Frontier_Closest` | Each agent shares it's goal position in the mutual data set. As each agent sets a new goal position it checks to see if any other agent is already visiting that location. If not, it keeps that location. If it is already taken \|then the agent with the shortest path keeps that location and the other is assigned a new goal. |![Optimal_Stopping_complexity image](assets/DFC.gif)|
 | `DarpVorOnly` | Separates the map into areas that are roughly the same and assigns an area to each agent. ||
 | `DarpMST` | Creates a hamiltonian loop that helps each agent avoid covering the same location twice. This optimizes the number of spaces visited by each agent resulting in nearly the same amount of visited locations per agent. ||
 | `Decay_Epsilon_Greedy_Unknown` | Each agent is assigned to either random or closest exploration of a frontier based on an epsilon value. As the simulation progresses the epsilon value decays resulting in less exploration as the map is explored more. ||
@@ -107,10 +107,3 @@ The graphs for all this data can be found on the branch under the folder optimal
 
 <!-- import a image form assets -->
 ![Optimal_Stopping_complexity image](assets/Optimal_Stopping_complexity.png)
-
-## What is this project about?
-In each agent's horizon, following labels will be created that will affect bidding for the neighbors:
-- Empty     -> Positively affect
-- Visited   -> Negatively affect
-- Wall      -> Negatively affect
-- Agent     -> Negatively affect
