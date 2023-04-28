@@ -68,10 +68,10 @@ class Parameters:
         self.Start_scenario_list = [
             # # Manual_Start,
             Rand_Start_Position,
-            # Edge_Start_Position,
-            # Top_Left_Start_Position,
-            # Center_Start_Position,
-            # Distributed_Start,
+            Edge_Start_Position,
+            Top_Left_Start_Position,
+            Center_Start_Position,
+            Distributed_Start,
             ]
         self.Start_Goal_list= [
             # # Manual_Goal,
@@ -84,8 +84,8 @@ class Parameters:
         
         self.Robot_Loss = [
             Agent,
-            # Unrecoverable,
-            # Disrepair,
+            Unrecoverable,
+            Disrepair,
         ]
 
 
