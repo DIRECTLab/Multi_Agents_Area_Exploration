@@ -2,7 +2,7 @@
 
 ## Quick Summary
 
-![No desc](https://im2.ezgif.com/tmp/ezgif-2-6ea1f96aa0.gif)
+![No desc](assets/ezgif-2-6ea1f96aa0.gif)
 
 This project is investigating how to explore a building map that is not known prior except its boundary. To analyze the efficiencies between different approaches for exploration time, we compare various methods as well as different starting and goal conditions. We assume perfect communication among agents is possible as well as each agent localize itself over the map.
 
