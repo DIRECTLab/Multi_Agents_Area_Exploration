@@ -1,8 +1,10 @@
-# Multi_Agents_Area_Exploration
+# Multi Agents Area Exploration
 
 ## Quick Summary
 
-This project is investigating how to explore a building map that is not known prior except its boundaries. To analyze the efficiencies between different approaches for exploration time, we compare various methods as well as different starting and goal conditions. We assume perfect communication among agents is possible as well as each agent localize itself over the map.
+![No desc](https://im2.ezgif.com/tmp/ezgif-2-6ea1f96aa0.gif)
+
+This project is investigating how to explore a building map that is not known prior except its boundary. To analyze the efficiencies between different approaches for exploration time, we compare various methods as well as different starting and goal conditions. We assume perfect communication among agents is possible as well as each agent localize itself over the map.
 
 Furthermore, we also examined how agent loss would affect the overall performance by placing mines over the ground.
 
@@ -35,12 +37,12 @@ pip install \
 
 ## Running the Program:
 
-to run  the simulation, run the following command:
+To run  the simulation, run the following command:
 ```
 python main.py
 ```
 
-if you would like to change the simulation parameters, you can do so by changing the values in the `parameters_cfg.py` file.
+If you would like to change the simulation parameters, you can do so by changing the values in the `parameters_cfg.py` file.
 
 
 ### Simulation Parameters:
@@ -57,10 +59,15 @@ if you would like to change the simulation parameters, you can do so by changing
 | `Method_list` | A list of all the Methods that the simulation will run, these all inherit from the base `Agent` class | - |
 | `Start_scenario_list`| starting locations for all the agents | `Manual_Start`, `Rand_Start_Position`, `Edge_Start_Position`, `Top_Left_Start_Position`, `Center_Start_Position`,  |
 | `Start_Goal_list`| Starting Goal Locations | `Manual_Goal`, `Rand_Start_Goal`, `Center_Start_Goal`, `Top_Left_Start_Goal`, `Edge_Start_Goal`,  `Distributed_Goal`, |
-| `Robot_Loss`| Holds A list of Classes that change the scenario, where `Agent`is a normal run, `Unrecoverable` the robots will hit random mines and become disabled, and last the `Disrepair` robots can help and fix other robots   | `[Agent, Unrecoverable, Disrepair]` |
+| `Robot_Loss`| Holds A list of Classes that change the scenario, where `Agent`is a normal run, `Unrecoverable` the robots will hit random mines and become disabled, and last the `Disrepair` robots can help and fix other robots ![No desc](assets/VFHR_Unrecoverable.gif)  | `[Agent, Unrecoverable, Disrepair]` |
 
-| Method | Description | GIFs |
-| --- | --- | --- |
+
+
+
+
+
+| Method | Description |
+| --- | --- |
 | `Frontier_Random` | Each agent randomly selects a frontier section of the map to explore. ||
 | `Frontier_Closest` | Each agent selects the closest frontier section of the map to explore. ||
 | `Unknown_Random` | Each agent randomly selects an unknown section of the map to explore. ||
@@ -68,15 +75,15 @@ if you would like to change the simulation parameters, you can do so by changing
 | `Voronoi_Frontier_Random` | The map is split up into various sections and then the frontier random method is used within each section. ||
 | `Voronoi_Frontier_Closest` | The map is split up into various sections and then the frontier closest method is used within each section. ||
 | `Voronoi_Frontier_Help_Closest` | The map is split up into various sections and then the frontier closest method is used in tandem with the paired searching strategy. ||
-| `Voronoi_Frontier_Help_Random` | The map is split up into various sections and then the frontier random method is used in tandem with the paired searching strategy.||
-| `Decision_Frontier_Closest` | Each agent shares it's goal position in the mutual data set. As each agent sets a new goal position it checks to see if any other agent is already visiting that location. If not, it keeps that location. If it is already taken \|then the agent with the shortest path keeps that location and the other is assigned a new goal. |![Optimal_Stopping_complexity image](assets/DFC.gif)|
+| `Voronoi_Frontier_Help_Random` | The map is split up into various sections and then the frontier random method is used in tandem with the paired searching strategy. ![No desc](assets/VFHR_agent.gif)||
+| `Decision_Frontier_Closest` | Each agent shares it's goal position in the mutual data set. As each agent sets a new goal position it checks to see if any other agent is already visiting that location. If not, it keeps that location. If it is already taken \|then the agent with the shortest path keeps that location and the other is assigned a new goal. ![image](assets/Decision_Frontier_Closest.gif)|
 | `DarpVorOnly` | Separates the map into areas that are roughly the same and assigns an area to each agent. ||
 | `DarpMST` | Creates a hamiltonian loop that helps each agent avoid covering the same location twice. This optimizes the number of spaces visited by each agent resulting in nearly the same amount of visited locations per agent. ||
 | `Decay_Epsilon_Greedy_Unknown` | Each agent is assigned to either random or closest exploration of a frontier based on an epsilon value. As the simulation progresses the epsilon value decays resulting in less exploration as the map is explored more. ||
-| `Decay_Epsilon_Greedy_Frontier` | Each agent is assigned to either random or closest exploration of an unknown area based on an epsilon value. As the simulation progresses the epsilon value decays resulting in less exploration as the map is explored more.||
-| `Epsilon_Greedy_Unknown` | Each agent is assigned to either random or closest exploration of an unknown area based on a constant epsilon value. ||
+| `Decay_Epsilon_Greedy_Frontier` | Each agent is assigned to either random or closest exploration of an unknown area based on an epsilon value. As the simulation progresses the epsilon value decays resulting in less exploration as the map is explored more.![assets/Decay_Epsilon_Greedy_Frontier.gif](assets/Decay_Epsilon_Greedy_Frontier.gif)||
+| `Epsilon_Greedy_Unknown` | Each agent is assigned to either random or closest exploration of an unknown area based on a constant epsilon value. ![assets/Epsilon_Greedy_Unknown.gif](assets/Epsilon_Greedy_Unknown.gif)||
 | `Epsilon_Greedy_Frontier` | Each agent is assigned to either random or closest exploration of a frontier based on a constant epsilon value. ||
-| `GameTheory` | This builds upon the heterogeneous method by allowing each agent to choose the anti-majority of search methods chosen by the other agents. The two options are random or closest. ||
+| `GameTheory` | This builds upon the heterogeneous method by allowing each agent to choose the anti-majority of search methods chosen by the other agents. The two options are random or closest. ![assets/GameTheory.gif](assets/GameTheory.gif)||
 | `Heterogeneous` | Each agent is able to view information about the other agents to choose a search method that is best for itself. ||
 
 
