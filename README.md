@@ -103,12 +103,11 @@ The algorithm is as follows:
 
 This allows us to see at what point the agents can stop exploring because they have collectively explored the entire region. This delves into an area of unexplored robotics where we can optimize exploration tasks where there is no or minimal communication. 
 
-Future implementations will include larger map sizes, more agents, different exploration algorithms, and partial communication. We hope to see the impact of these various parameters on the agents ability to explore.
+Future implementations will include larger map sizes, more agents, different exploration algorithms, and partial communication. We hope to see the impact of these various parameters on the agents' ability to explore.
 
-With the vanilla results that we have already compiled we have seen that the total explored area is invariant of the complexity. The primary factor in determining the convergence ability of the exploration is the number of agents. With 14 agents and a square map of 50 units, each bot only needed to explore around 40% of the total area to achieve full area coverage. 
+With the vanilla results that we have already compiled we have seen that the total explored area is invariant of the complexity. The primary factor in determining the convergence ability of the exploration is the number of agents. With 6 agents and a square map of 50 units, each bot needed to explore around 60% of the total area to achieve full area coverage. 
 
-We also saw that the maps with a medium complexity tend to converge faster than maps with high or low complexity. For example, with 14 bots and a complexity rating of 
-.12628 the bots converged on 100% after only individually exploring approximately 38%.
+We also saw that the maps with a medium complexity tend to converge faster than maps with high or low complexity. For example, with 6 bots and a complexity rating of .12628 the bots converged on 100% after only individually exploring approximately 45%.
 
 The graphs for all this data can be found on the branch under the folder optimal_stopping_graphs/
 
