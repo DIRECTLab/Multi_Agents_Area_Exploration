@@ -238,6 +238,9 @@ def check_if_valid_point(point, ground_truth_map, cfg):
         if ground_truth_map[cur_point[1], cur_point[0]] == cfg.EMPTY:
             point = cur_point
             return [True, point]
+    print("Warn!!! No neighbor found that is either empty and in the grid")
+    print("checking level 2 neighbors")
+    level_two_neighbors = []
     return False
 
 def calc_closest_factors(c: int):

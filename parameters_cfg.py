@@ -20,8 +20,8 @@ from src.replan.game_theory import *
 class Parameters:
     def __init__(self):
 
-        self.Debug = False
-        self.Use_process = True
+        self.Debug = True
+        self.Use_process = False
 
         self.Create_gif = False
         assert not (self.Debug and self.Use_process), "Can't use process and debug at the same time"
@@ -30,32 +30,32 @@ class Parameters:
         self.map_length_list = [30] #list(range(30,91,30))
 
         # The number of agents in the experiment
-        self.agent_count_list = [4,6,8]
-        # self.agent_count_list = [8]
+        # self.agent_count_list = [4,6,8]
+        self.agent_count_list = [8]
 
         # iteration_repeat_experiment will be used to repeat the experiment
         self.iteration_repeat_experiment = list(range(0, 1))
 
-        self.min_rom_size = list(range(4,10,2))
-        # self.min_rom_size = list(range(6,8,2))
+        # self.min_rom_size = list(range(4,10,2))
+        self.min_rom_size = list(range(8,10,2))
 
         self.Method_list = [
-            Frontier_Random,
-            Frontier_Closest,
+            # Frontier_Random,
+            # Frontier_Closest,
             Unknown_Random,
-            Unknown_Closest,
+            # Unknown_Closest,
 
-            Voronoi_Frontier_Random,
-            Voronoi_Frontier_Closest,
-            Voronoi_Frontier_Help_Closest,
-            Voronoi_Frontier_Help_Random,
+            # Voronoi_Frontier_Random,
+            # Voronoi_Frontier_Closest,
+            # Voronoi_Frontier_Help_Closest,
+            # Voronoi_Frontier_Help_Random,
             
-            Decision_Frontier_Closest,
-            Decay_Epsilon_Greedy_Unknown,
-            Decay_Epsilon_Greedy_Frontier,
-            Epsilon_Greedy_Unknown,
-            Epsilon_Greedy_Frontier,
-            GameTheory,
+            # Decision_Frontier_Closest,
+            # Decay_Epsilon_Greedy_Unknown,
+            # Decay_Epsilon_Greedy_Frontier,
+            # Epsilon_Greedy_Unknown,
+            # Epsilon_Greedy_Frontier,
+            # GameTheory,
 
             # DarpVorOnly,
             # DarpMST,
@@ -75,10 +75,10 @@ class Parameters:
             ]
         self.Start_Goal_list= [
             # # Manual_Goal,
-            Rand_Start_Goal,
+            # Rand_Start_Goal,
             # Center_Start_Goal,
             # Top_Left_Start_Goal,
-            # Edge_Start_Goal,
+            Edge_Start_Goal,
             # Distributed_Goal,
             ]
         
