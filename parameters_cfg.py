@@ -20,8 +20,8 @@ from src.replan.game_theory import *
 class Parameters:
     def __init__(self):
 
-        self.Debug = False
-        self.Use_process = True
+        self.Debug = True
+        self.Use_process = False
         self.Create_gif = False
         assert not (self.Debug and self.Use_process), "Can't use process and debug at the same time"
 
