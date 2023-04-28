@@ -88,7 +88,9 @@ The algorithm is as follows:
     - Once all agents are done, the total area coverage between all bots is computed
 
 
-This allows us to see at what point the agents can stop exploring because they have collectively explored the entire region. This delves into an area of unexplored robotics where we can optimize exploration tasks where there is no or minimal communication. The future 
+This allows us to see at what point the agents can stop exploring because they have collectively explored the entire region. This delves into an area of unexplored robotics where we can optimize exploration tasks where there is no or minimal communication. 
+
+Future implementations will include 
         
 
 
