@@ -257,16 +257,24 @@ def dividegrid(rows, cols, n):
     
     x = np.arange(0, cols, cols/agentcolumncount)
     y = np.arange(0, rows, rows/agentrowcount)
-    if y[0] == 0:
+    if len(y)<2 and y[0] == 0:
         y[0] = rows/2
+
     x_var = []
     y_var = []
+
     for i in x:
         for j in y:
             x_var.append(i)
             y_var.append(j)
-    x_offset = (x_var[1] - x_var[0])/2
-    y_offset = (y_var[1] - y_var[0])/2
+    
+    # x_offset and y_offset are used to shift the points to the center of the grid
+    for i in x_var:
+        if i != 0:
+            x_offset = i/2
+            break
+    y_offset = (y_var[1] - y_var[0]) / 2
+
     x_var = [int(x + x_offset) for x in x_var]
     y_var = [int(y + y_offset) for y in y_var]
     points = []

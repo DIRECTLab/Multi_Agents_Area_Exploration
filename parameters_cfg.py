@@ -20,8 +20,8 @@ from src.replan.game_theory import *
 class Parameters:
     def __init__(self):
 
-        self.Debug = True
-        self.Use_process = False
+        self.Debug = False
+        self.Use_process = True
         self.Create_gif = False
         assert not (self.Debug and self.Use_process), "Can't use process and debug at the same time"
 
@@ -37,17 +37,16 @@ class Parameters:
 
         # self.min_rom_size = list(range(3,33,3))
         self.min_rom_size = [3,6,9,12,15,18,21,24,27,30]
-        # self.min_rom_size = [4, 8]
 
         self.Method_list = [
             # Frontier_Random,
-            # Frontier_Closest,
+            Frontier_Closest,
             # Unknown_Random,
             # Unknown_Closest,
 
             # Voronoi_Frontier_Random,
             # Voronoi_Frontier_Closest,
-            Voronoi_Frontier_Help_Closest,
+            # Voronoi_Frontier_Help_Closest,
             # Voronoi_Frontier_Help_Random,
             
             # Decision_Frontier_Closest,
@@ -77,9 +76,9 @@ class Parameters:
             # # Manual_Goal,
             # Rand_Start_Goal,
             # Center_Start_Goal,
-            # Top_Left_Start_Goal,
+            Top_Left_Start_Goal,
             # Edge_Start_Goal,
-            Distributed_Goal,
+            # Distributed_Goal,
             ]
         
         self.Robot_Loss = [
