@@ -269,6 +269,7 @@ class Agent(Point_Finding):
         self.grid_position_xy = new_position
 
     def scan(self):
+        prev_explored_area = self.calculate_personal_searched_area()
         # send out scan to update local built_map
         for i, angle in enumerate(np.arange(0, 2*np.pi, self.lidar_sweep_res)):
 
@@ -308,6 +309,8 @@ class Agent(Point_Finding):
             #                     color=RED,
             #                     center=(self.grid_position[0]*self.grid_size, self.grid_position[1]*self.grid_size),
             #                     radius=self.grid_size//2)
+
+        self.personal_explored_area += self.calculate_personal_searched_area() - prev_explored_area
     
     def save_to_mutual_data(self, mutual_data):
         if 'Agent_Data' not in mutual_data:
@@ -327,6 +330,15 @@ class Agent(Point_Finding):
         mutual_data['Agent_Data'][self.id]['choose_random'] = self.choose_random
         mutual_data['Agent_Data'][self.id]['disabled'] = self.disabled
         mutual_data['Agent_Data'][self.id]['personal_explored_area'].append(self.personal_explored_area)
+        mutual_data['Agent_Data'][self.id]['personal_map'] = self.agent_map.copy()
+
+        num_bots = self.cfg.N_BOTS
+        for i in range(num_bots):
+            if i == self.id or i not in mutual_data['Agent_Data']:
+                continue
+            dist = np.sqrt((mutual_data['Agent_Data'][i]['grid_position_xy'][0] - self.grid_position_xy[0])**2 + (mutual_data['Agent_Data'][i]['grid_position_xy'][1] - self.grid_position_xy[1])**2)
+            if dist < 5:
+                self.share_map(mutual_data['Agent_Data'][i]['personal_map'])
         
         if self.id == 0:
             total_explored_area = (np.sum(mutual_data['map'] == self.cfg.KNOWN_EMPTY) + np.sum(mutual_data['map'] == self.cfg.KNOWN_WALL)) / mutual_data['map'].size
@@ -382,10 +394,13 @@ class Agent(Point_Finding):
     
     def calculate_personal_searched_area(self):
         # calculate the area the agent has searched
-        self.personal_explored_area = np.sum(self.agent_map == self.cfg.KNOWN_EMPTY) + np.sum(self.agent_map == self.cfg.KNOWN_WALL)
-        self.personal_explored_area /= self.agent_map.size
+        explored_area = np.sum(self.agent_map == self.cfg.KNOWN_EMPTY) + np.sum(self.agent_map == self.cfg.KNOWN_WALL)
+        explored_area /= self.agent_map.size
+        return explored_area
                     
     def update(self, mutual_data, draw=True):
+        if 'Agent_Data' in mutual_data and self.id in mutual_data['Agent_Data'] and 'personal_map' in mutual_data['Agent_Data'][self.id]:
+            self.agent_map = mutual_data['Agent_Data'][self.id]['personal_map']
         # Update the agent's position
         # Scan the environment
         self.scan()
@@ -400,7 +415,6 @@ class Agent(Point_Finding):
             if self.area_completed:
                 return 0, self.total_dist_traveled
             
-        self.calculate_personal_searched_area()
         if self.personal_explored_area >= self.required_explore / 100:
             self.area_completed = True
             return 0, self.total_dist_traveled
