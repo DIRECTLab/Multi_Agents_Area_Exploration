@@ -36,7 +36,7 @@ class Parameters:
 
         self.min_rom_size = [3,6,9,12,15,18,21,24,27,30]
 
-        self.required_exploration_ratio = list(range(30,100,1))
+        self.required_exploration_ratio = list(range(30,60,1))
 
         self.Method_list = [
             # Frontier_Random,
