@@ -419,7 +419,7 @@ class Experiment:
             search_data['bot_searched_area_' + str(bot.id)] = self.mutual_data['Agent_Data'][bot.id]['personal_explored_area'][-1]
 
         searched_df = pd.DataFrame(search_data)
-        folder = f"search_data_update/bots-{len(self.bots)}_min-room-size{self.cfg.MIN_ROOM_SIZE / self.cfg.GRID_THICKNESS}"
+        folder = f"multiple_method_search_data/goal_scenario_{self.experiment_name.split('/')[3]}/bots-{len(self.bots)}_min-room-size{self.cfg.MIN_ROOM_SIZE / self.cfg.GRID_THICKNESS}"
         
         os.makedirs(folder, exist_ok=True)
 

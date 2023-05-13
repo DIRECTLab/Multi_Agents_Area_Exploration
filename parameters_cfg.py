@@ -29,7 +29,7 @@ class Parameters:
         self.map_length_list = [50] #list(range(30,91,30))
 
         # The number of agents in the experiment
-        self.agent_count_list = list(range(2,18,2))
+        self.agent_count_list = list(range(4,18,2))
 
         # iteration_repeat_experiment will be used to repeat the experiment
         self.iteration_repeat_experiment = list(range(0, 10))
@@ -62,17 +62,17 @@ class Parameters:
 
         self.Start_scenario_list = [
             # # Manual_Start,
-            Rand_Start_Position,
-            # Edge_Start_Position, # does not work with Voronoi methods Currently
+            # Rand_Start_Position,
+            Edge_Start_Position, # does not work with Voronoi methods Currently
             # Top_Left_Start_Position,
             # Center_Start_Position, 
             ]
         self.Start_Goal_list= [
-            # # Manual_Goal,
-            Rand_Start_Goal,
+            # Manual_Goal,
+            # Rand_Start_Goal,
             # Center_Start_Goal, # does not work with Voronoi methods Currently
             # Top_Left_Start_Goal, # does not work with Voronoi methods Currently
-            # Edge_Start_Goal, 
+            Edge_Start_Goal, 
             # Distributed_Goal,
             ]
         
