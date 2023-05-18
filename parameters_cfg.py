@@ -29,34 +29,34 @@ class Parameters:
         self.map_length_list = [50] #list(range(30,91,30))
 
         # The number of agents in the experiment
-        self.agent_count_list = list(range(2,18,2))
+        self.agent_count_list = list(range(4,14,2))
         
         # iteration_repeat_experiment will be used to repeat the experiment
         # self.iteration_repeat_experiment = list(range(0, 10))
-        self.iteration_repeat_experiment = list(range(0, 10))
+        self.iteration_repeat_experiment = list(range(0, 60))
 
-        # self.min_rom_size = list(range(3,33,3))
-        self.min_rom_size = [3,6,9,12,15,18,21,24,27,30]
+        self.min_rom_size = list(range(4,24,4))
+        # self.min_rom_size = [3,6,9,12,30]
 
         self.Method_list = [
-            # Frontier_Random,
+            Frontier_Random,
             Frontier_Closest,
-            # Unknown_Random,
-            # Unknown_Closest,
+            Unknown_Random,
+            Unknown_Closest,
 
-            # Voronoi_Frontier_Random,
-            # Voronoi_Frontier_Closest,
-            # Voronoi_Frontier_Help_Closest,
-            # Voronoi_Frontier_Help_Random,
+            Voronoi_Frontier_Random,
+            Voronoi_Frontier_Closest,
+            Voronoi_Frontier_Help_Closest,
+            Voronoi_Frontier_Help_Random,
             
-            # Decision_Frontier_Closest,
-            # Decay_Epsilon_Greedy_Unknown,
-            # Decay_Epsilon_Greedy_Frontier,
+            Decision_Frontier_Closest,
+            Decay_Epsilon_Greedy_Unknown,
+            Decay_Epsilon_Greedy_Frontier,
             # Epsilon_Greedy_Unknown,
             # Epsilon_Greedy_Frontier,
-            # GameTheory,
+            GameTheory,
 
-            # DarpVorOnly,
+            DarpVorOnly,
             # DarpMST,
 
             # # # "Heterogenus",
@@ -66,19 +66,19 @@ class Parameters:
 
         self.Start_scenario_list = [
             # # Manual_Start,
-            # Rand_Start_Position,
-            # Edge_Start_Position,
+            Rand_Start_Position,
+            Edge_Start_Position,
             Top_Left_Start_Position,
-            # Center_Start_Position,
-            # Distributed_Start,
+            Center_Start_Position,
+            Distributed_Start,
             ]
         self.Start_Goal_list= [
             # # Manual_Goal,
-            # Rand_Start_Goal,
-            # Center_Start_Goal,
+            Rand_Start_Goal,
+            Center_Start_Goal,
             Top_Left_Start_Goal,
-            # Edge_Start_Goal,
-            # Distributed_Goal,
+            Edge_Start_Goal,
+            Distributed_Goal,
             ]
         
         self.Robot_Loss = [
