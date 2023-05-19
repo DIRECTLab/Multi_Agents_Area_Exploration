@@ -4,7 +4,7 @@ import math
 from itertools import product, starmap, islice
 
 #  will make sure we have different random points over grid for goal positions
-CHECK_RAND_LIST_GOAL = []
+OTHER_AGENT_LOCATIONS_GOAL = []
 
 class Manual_Goal:
     four_goal_pos = [(10,10), (20,20), (30,30), (45,45)]
@@ -17,37 +17,43 @@ class Rand_Start_Goal:
         # random.seed(cfg.SEED)
     def choose_start_goal(self):
         self.goal_xy = self.get_random_point()
-        if self.goal_xy not in CHECK_RAND_LIST_GOAL:
-            CHECK_RAND_LIST_GOAL.append(self.goal_xy)
+        if self.goal_xy not in OTHER_AGENT_LOCATIONS_GOAL:
+            OTHER_AGENT_LOCATIONS_GOAL.append(self.goal_xy)
             # print("CHECK_RAND_LIST_GOAL length:::", len(CHECK_RAND_LIST_GOAL))
         else:
             self.goal_xy = self.get_random_point()
-            CHECK_RAND_LIST_GOAL.append(self.goal_xy)
+            OTHER_AGENT_LOCATIONS_GOAL.append(self.goal_xy)
             # print("CHECK_RAND_LIST_GOAL length:::", len(CHECK_RAND_LIST_GOAL))
 
 class Center_Start_Goal:
     def choose_start_goal(self):
-        self.goal_xy = points_over_radious(self.cfg.ROWS, self.cfg.COLS, self.cfg.N_BOTS, 'center')[self.id]
-        
-        self.goal_xy = (int(np.round(self.goal_xy[0])), \
-                                int(np.round(self.goal_xy[1])))
-        
         find_new_point = False
+        
+        self.goal_xy = points_over_radious(self.cfg.ROWS, self.cfg.COLS, self.cfg.N_BOTS, 'center')[self.id]
+        self.goal_xy = (int(np.round(self.goal_xy[0])), int(np.round(self.goal_xy[1])))
+        
+        # check if the point is in the list that keeps other agents locations
+        # if it is not in the list, add it to the list
+        if self.goal_xy not in OTHER_AGENT_LOCATIONS_GOAL:
+            OTHER_AGENT_LOCATIONS_GOAL.append(self.goal_xy)
+        
         # check if the point is in the map
-        if self.goal_xy[0] < 0 or self.goal_xy[0] >= self.cfg.COLS or \
-            self.goal_xy[1] < 0 or self.goal_xy[1] >= self.cfg.ROWS:
+        if self.goal_xy[0] < 0 or self.goal_xy[0] >= self.cfg.COLS or self.goal_xy[1] < 0 or self.goal_xy[1] >= self.cfg.ROWS:
             find_new_point = True
             # shift the point to be in the map
-            self.goal_xy = (max(1, min(self.goal_xy[0], self.cfg.COLS-2)), \
-                                    max(1, min(self.goal_xy[1], self.cfg.ROWS-2)))
+            self.goal_xy = (max(1, min(self.goal_xy[0], self.cfg.COLS-2)), max(1, min(self.goal_xy[1], self.cfg.ROWS-2)))
+
+
         # check if the point is not on an obstacle
-        elif self.ground_truth_map[self.goal_xy[1], self.goal_xy[0]] == self.cfg.OBSTACLE:
+        if (self.ground_truth_map[self.goal_xy[1], self.goal_xy[0]] == self.cfg.OBSTACLE) or (self.goal_xy in OTHER_AGENT_LOCATIONS_GOAL):
             find_new_point = True
 
+        
         if find_new_point:
             foundPoint  = check_if_valid_point(self.goal_xy, self.ground_truth_map, self.cfg)
             if foundPoint[0]:
                 self.goal_xy = foundPoint[1]
+                OTHER_AGENT_LOCATIONS_GOAL[-1] = self.goal_xy
                 return
             # at this point, all the neighbors are obstacles or your off the map warning
             print("!!WARNING!!: All the neighbors are obstacles or your off the map current point: ", self.goal_xy)
@@ -59,27 +65,31 @@ class Center_Start_Goal:
         
 class Top_Left_Start_Goal:
     def choose_start_goal(self):
-        self.goal_xy = points_over_radious(self.cfg.ROWS, self.cfg.COLS, self.cfg.N_BOTS, 'topleft')[self.id]
-        
-        self.goal_xy = (int(np.round(self.goal_xy[0])), \
-                                int(np.round(self.goal_xy[1])))
-        
         find_new_point = False
+
+        self.goal_xy = points_over_radious(self.cfg.ROWS, self.cfg.COLS, self.cfg.N_BOTS, 'topleft')[self.id]
+        self.goal_xy = (int(np.round(self.goal_xy[0])), int(np.round(self.goal_xy[1])))
+
+        # check if the point is in the list that keeps other agents locations
+        # if it is not in the list, add it to the list
+        if self.goal_xy not in OTHER_AGENT_LOCATIONS_GOAL:
+            OTHER_AGENT_LOCATIONS_GOAL.append(self.goal_xy)
+        
         # check if the point is in the map
-        if self.goal_xy[0] < 0 or self.goal_xy[0] >= self.cfg.COLS or \
-            self.goal_xy[1] < 0 or self.goal_xy[1] >= self.cfg.ROWS:
+        if self.goal_xy[0] < 0 or self.goal_xy[0] >= self.cfg.COLS or self.goal_xy[1] < 0 or self.goal_xy[1] >= self.cfg.ROWS:
             find_new_point = True
             # shift the point to be in the map
-            self.goal_xy = (max(1, min(self.goal_xy[0], self.cfg.COLS-2)), \
-                                    max(1, min(self.goal_xy[1], self.cfg.ROWS-2)))
+            self.goal_xy = (max(1, min(self.goal_xy[0], self.cfg.COLS-2)), max(1, min(self.goal_xy[1], self.cfg.ROWS-2)))
+
         # check if the point is not on an obstacle
-        elif self.ground_truth_map[self.goal_xy[1], self.goal_xy[0]] == self.cfg.OBSTACLE:
+        if (self.ground_truth_map[self.goal_xy[1], self.goal_xy[0]] == self.cfg.OBSTACLE) or (self.goal_xy in OTHER_AGENT_LOCATIONS_GOAL):
             find_new_point = True
 
         if find_new_point:
             foundPoint  = check_if_valid_point(self.goal_xy, self.ground_truth_map, self.cfg)
             if foundPoint[0]:
                 self.goal_xy = foundPoint[1]
+                OTHER_AGENT_LOCATIONS_GOAL[-1] = self.goal_xy
                 return
             # at this point, all the neighbors are obstacles or your off the map warning
             print("!!WARNING!!: All the neighbors are obstacles or your off the map current point: ", self.goal_xy)

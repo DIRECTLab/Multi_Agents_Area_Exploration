@@ -576,9 +576,9 @@ class Experiment:
                     # convert p_bar bar color to green
                     p_bar.set_description(f"✅ \033[92m {self.experiment_ID} {self.experiment_name} \033[0m")
                     # print("CHECK_RAND_LIST_START is getting cleared...")
-                    CHECK_RAND_LIST_START.clear()
+                    OTHER_AGENT_LOCATIONS_START.clear()
                     # print("CHECK_RAND_LIST_GOAL is getting cleared...")
-                    CHECK_RAND_LIST_GOAL.clear()
+                    OTHER_AGENT_LOCATIONS_GOAL.clear()
                     p_bar.colour = 'green'
                     p_bar.close()
                     break

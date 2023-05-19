@@ -4,7 +4,7 @@ import math
 from itertools import product, starmap, islice
 
 #  will make sure we have different random points over grid for agent positions
-CHECK_RAND_LIST_START = []
+OTHER_AGENT_LOCATIONS_START = []
 
 class Manual_Start:
     four_start_pos = [(2, 7), (9, 16), (2, 5), (3, 11)]
@@ -17,37 +17,45 @@ class Rand_Start_Position:
         # random.seed(cfg.SEED)
     def choose_start_position(self):
         self.grid_position_xy = self.get_random_point()
-        if self.grid_position_xy not in CHECK_RAND_LIST_START:
-            CHECK_RAND_LIST_START.append(self.grid_position_xy)
+        if self.grid_position_xy not in OTHER_AGENT_LOCATIONS_START:
+            OTHER_AGENT_LOCATIONS_START.append(self.grid_position_xy)
             # print("CHECK_RAND_LIST_START length:::", len(CHECK_RAND_LIST_START))
         else:
             self.grid_position_xy = self.get_random_point()
-            CHECK_RAND_LIST_START.append(self.grid_position_xy)
+            OTHER_AGENT_LOCATIONS_START.append(self.grid_position_xy)
             # print("CHECK_RAND_LIST_START length:::", len(CHECK_RAND_LIST_START))
 
 class Center_Start_Position:
     def choose_start_position(self):
-        self.grid_position_xy = points_over_radious(self.cfg.ROWS, self.cfg.COLS, self.cfg.N_BOTS, 'center')[self.id]
-        
-        self.grid_position_xy = (int(np.round(self.grid_position_xy[0])), \
-                                int(np.round(self.grid_position_xy[1])))
-        
         find_new_point = False
+
+        self.grid_position_xy = points_over_radious(self.cfg.ROWS, self.cfg.COLS, self.cfg.N_BOTS, 'center')[self.id]
+        self.grid_position_xy = (int(np.round(self.grid_position_xy[0])), int(np.round(self.grid_position_xy[1])))
+
+
+        # check if the point is in the list that keeps other agents locations
+        # if it is not in the list, add it to the list
+        if self.grid_position_xy not in OTHER_AGENT_LOCATIONS_START:
+            OTHER_AGENT_LOCATIONS_START.append(self.grid_position_xy)
+        
+        
         # check if the point is in the map
-        if self.grid_position_xy[0] < 0 or self.grid_position_xy[0] >= self.cfg.COLS or \
-            self.grid_position_xy[1] < 0 or self.grid_position_xy[1] >= self.cfg.ROWS:
+        if self.grid_position_xy[0] < 0 or self.grid_position_xy[0] >= self.cfg.COLS or self.grid_position_xy[1] < 0 or self.grid_position_xy[1] >= self.cfg.ROWS:
             find_new_point = True
             # shift the point to be in the map
-            self.grid_position_xy = (max(1, min(self.grid_position_xy[0], self.cfg.COLS-2)), \
-                                    max(1, min(self.grid_position_xy[1], self.cfg.ROWS-2)))
+            self.grid_position_xy = (max(1, min(self.grid_position_xy[0], self.cfg.COLS-2)), max(1, min(self.grid_position_xy[1], self.cfg.ROWS-2)))
+
+
         # check if the point is not on an obstacle
-        elif self.ground_truth_map[self.grid_position_xy[1], self.grid_position_xy[0]] == self.cfg.OBSTACLE:
+        if (self.ground_truth_map[self.grid_position_xy[1], self.grid_position_xy[0]] == self.cfg.OBSTACLE) or (self.grid_position_xy in OTHER_AGENT_LOCATIONS_START):
             find_new_point = True
+
 
         if find_new_point:
             foundPoint  = check_if_valid_point(self.grid_position_xy, self.ground_truth_map, self.cfg)
             if foundPoint[0]:
-                self.goal_xy = foundPoint[1]
+                self.grid_position_xy = foundPoint[1]
+                OTHER_AGENT_LOCATIONS_START[-1] = self.grid_position_xy
                 return
             # at this point, all the neighbors are obstacles or your off the map warning
             print("!!WARNING!!: All the neighbors are obstacles or your off the map current point: ", self.grid_position_xy)
@@ -59,27 +67,33 @@ class Center_Start_Position:
 
 class Top_Left_Start_Position:
     def choose_start_position(self):
-        self.grid_position_xy = points_over_radious(self.cfg.ROWS, self.cfg.COLS, self.cfg.N_BOTS, 'topleft')[self.id]
-        
-        self.grid_position_xy = (int(np.round(self.grid_position_xy[0])), \
-                                int(np.round(self.grid_position_xy[1])))
-        
         find_new_point = False
+        
+        self.grid_position_xy = points_over_radious(self.cfg.ROWS, self.cfg.COLS, self.cfg.N_BOTS, 'topleft')[self.id]
+        self.grid_position_xy = (int(np.round(self.grid_position_xy[0])), int(np.round(self.grid_position_xy[1])))
+        
+        # check if the point is in the list that keeps other agents locations
+        # if it is not in the list, add it to the list
+        if self.grid_position_xy not in OTHER_AGENT_LOCATIONS_START:
+            OTHER_AGENT_LOCATIONS_START.append(self.grid_position_xy)
+        
+
+
         # check if the point is in the map
-        if self.grid_position_xy[0] < 0 or self.grid_position_xy[0] >= self.cfg.COLS or \
-            self.grid_position_xy[1] < 0 or self.grid_position_xy[1] >= self.cfg.ROWS:
+        if self.grid_position_xy[0] < 0 or self.grid_position_xy[0] >= self.cfg.COLS or self.grid_position_xy[1] < 0 or self.grid_position_xy[1] >= self.cfg.ROWS:
             find_new_point = True
             # shift the point to be in the map
-            self.grid_position_xy = (max(1, min(self.grid_position_xy[0], self.cfg.COLS-2)), \
-                                    max(1, min(self.grid_position_xy[1], self.cfg.ROWS-2)))
+            self.grid_position_xy = (max(1, min(self.grid_position_xy[0], self.cfg.COLS-2)), max(1, min(self.grid_position_xy[1], self.cfg.ROWS-2)))
+
         # check if the point is not on an obstacle
-        elif self.ground_truth_map[self.grid_position_xy[1], self.grid_position_xy[0]] == self.cfg.OBSTACLE:
+        elif (self.ground_truth_map[self.grid_position_xy[1], self.grid_position_xy[0]] == self.cfg.OBSTACLE) or (self.grid_position_xy in OTHER_AGENT_LOCATIONS_START):
             find_new_point = True
 
         if find_new_point:
             foundPoint  = check_if_valid_point(self.grid_position_xy, self.ground_truth_map, self.cfg)
             if foundPoint[0]:
-                self.goal_xy = foundPoint[1]
+                self.grid_position_xy = foundPoint[1]
+                OTHER_AGENT_LOCATIONS_START[-1] = self.grid_position_xy
                 return
             # at this point, all the neighbors are obstacles or your off the map warning
             print("!!WARNING!!: All the neighbors are obstacles or your off the map current point: ", self.grid_position_xy)
@@ -110,7 +124,7 @@ class Edge_Start_Position:
         if find_new_point:
             foundPoint  = check_if_valid_point(self.grid_position_xy, self.ground_truth_map, self.cfg)
             if foundPoint[0]:
-                self.goal_xy = foundPoint[1]
+                self.grid_position_xy = foundPoint[1]
                 return
             # at this point, all the neighbors are obstacles or your off the map warning
             print("!!WARNING!!: All the neighbors are obstacles or your off the map current point: ", self.grid_position_xy)
@@ -139,7 +153,7 @@ class Distributed_Start:
         if find_new_point:
             foundPoint  = check_if_valid_point(self.grid_position_xy, self.ground_truth_map, self.cfg)
             if foundPoint[0]:
-                self.goal_xy = foundPoint[1]
+                self.grid_position_xy = foundPoint[1]
                 return
             # at this point, all the neighbors are obstacles or your off the map warning
             print("!!WARNING!!: All the neighbors are obstacles or your off the map current point: ", self.grid_position_xy,)
