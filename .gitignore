@@ -164,3 +164,4 @@ cython_debug/
 /data_save
 /data_analysis/unsaved_plots
 /search_data_update
+/data_big
