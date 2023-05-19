@@ -70,7 +70,7 @@ class Point_Finding:
     
     
 class Agent(Point_Finding):
-    def __init__(self, 
+    def __init__(self,
                 cfg,
                 id, 
                 body_size,
@@ -83,7 +83,10 @@ class Agent(Point_Finding):
                 color=(0,255,0),
                 ax=None,
                 screen=None,
-                lock = None):
+                lock = None,
+                *args,
+                **kwargs):
+        super().__init__(*args, **kwargs)
         self.cfg = cfg
         self.id = id
         self.body_size = body_size

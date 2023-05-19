@@ -173,7 +173,8 @@ class Experiment:
         self.lock = threading.Lock()
 
         assert cfg.USE_THREADS != True, "The use of the threads is not enabled"
-        
+        OTHER_AGENT_LOCATIONS_GOAL.clear()
+        OTHER_AGENT_LOCATIONS_POSITION.clear()
         # Agent_Class_list
         for i, agent_class in enumerate(Agent_Class_list):
             self.bots.append(agent_class(
@@ -188,6 +189,7 @@ class Experiment:
                         lock= self.lock,
                     )
                 )
+            # print("!!!!!@@@@@@@@@@@ <<<<< INITIAL ",i," BOT POS ",self.bots[-1].grid_position_xy )
             self.ground_truth_map[self.bots[-1].grid_position_xy[1]][self.bots[-1].grid_position_xy[0]] = cfg.AGENT_OBSTACLE
         
             if cfg.DRAW_SIM:
@@ -575,10 +577,6 @@ class Experiment:
                 if done:
                     # convert p_bar bar color to green
                     p_bar.set_description(f"✅ \033[92m {self.experiment_ID} {self.experiment_name} \033[0m")
-                    # print("CHECK_RAND_LIST_START is getting cleared...")
-                    OTHER_AGENT_LOCATIONS_START.clear()
-                    # print("CHECK_RAND_LIST_GOAL is getting cleared...")
-                    OTHER_AGENT_LOCATIONS_GOAL.clear()
                     p_bar.colour = 'green'
                     p_bar.close()
                     break

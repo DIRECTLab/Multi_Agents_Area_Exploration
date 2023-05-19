@@ -21,22 +21,24 @@ class Parameters:
     def __init__(self):
 
         self.Debug = False
-        self.Use_process = True
+        self.Use_process = False
         self.Create_gif = False
         assert not (self.Debug and self.Use_process), "Can't use process and debug at the same time"
         # The length of the map
         self.map_length_list = [50] #list(range(30,91,30))
 
         # The number of agents in the experiment
-        self.agent_count_list = list(range(2,10,2))
-        assert np.array(self.agent_count_list).max() <11, "The number of agents should be less than 13"
+        # self.agent_count_list = list(range(4,13,4))
+        self.agent_count_list = [4,8,12]
+
+        assert np.array(self.agent_count_list).max() <13, "The number of agents should be less than 13"
         
         # iteration_repeat_experiment will be used to repeat the experiment
         self.iteration_repeat_experiment = list(range(0, 30))
         # self.iteration_repeat_experiment = [0,10]
 
-        self.min_rom_size = list(range(4,21,8))
-        # self.min_rom_size = [3,6,9,12,30]
+        # self.min_rom_size = list(range(4,21,8))
+        self.min_rom_size = [4,12,20]
 
         self.Method_list = [
             # Frontier_Random,
@@ -44,10 +46,10 @@ class Parameters:
             # Unknown_Random,
             # Unknown_Closest,
 
-            Voronoi_Frontier_Random,
-            # Voronoi_Frontier_Closest,
-            # Voronoi_Frontier_Help_Closest,
-            # Voronoi_Frontier_Help_Random,
+            # @@@@@@@ Voronoi_Frontier_Random,
+            # @@@@@@@ Voronoi_Frontier_Closest,
+            Voronoi_Frontier_Help_Closest,
+            Voronoi_Frontier_Help_Random,
             
             # Decision_Frontier_Closest,
             # Decay_Epsilon_Greedy_Unknown,
