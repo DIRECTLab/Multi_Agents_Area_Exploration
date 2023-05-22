@@ -21,7 +21,7 @@ class Parameters:
     def __init__(self):
 
         self.Debug = False
-        self.Use_process = False
+        self.Use_process = True
         self.Create_gif = False
         assert not (self.Debug and self.Use_process), "Can't use process and debug at the same time"
         # The length of the map
@@ -41,22 +41,22 @@ class Parameters:
         self.min_rom_size = [4,12,20]
 
         self.Method_list = [
-            # Frontier_Random,
-            # Frontier_Closest,
-            # Unknown_Random,
-            # Unknown_Closest,
+            Frontier_Random,
+            Frontier_Closest,
+            Unknown_Random,
+            Unknown_Closest,
 
             # @@@@@@@ Voronoi_Frontier_Random,
             # @@@@@@@ Voronoi_Frontier_Closest,
             Voronoi_Frontier_Help_Closest,
             Voronoi_Frontier_Help_Random,
             
-            # Decision_Frontier_Closest,
-            # Decay_Epsilon_Greedy_Unknown,
-            # Decay_Epsilon_Greedy_Frontier,
+            Decision_Frontier_Closest,
+            Decay_Epsilon_Greedy_Unknown,
+            Decay_Epsilon_Greedy_Frontier,
             # Epsilon_Greedy_Unknown,
             # Epsilon_Greedy_Frontier,
-            # GameTheory,
+            GameTheory,
 
             # DarpVorOnly,
             # DarpMST,

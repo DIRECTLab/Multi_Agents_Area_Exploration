@@ -21,7 +21,7 @@ class Base_Start:
                 continue
             if ground_truth_map[cur_point[1], cur_point[0]] == cfg.EMPTY:
                 other_agent_locations.append(cur_point)
-                print(other_agent_locations)
+                # print(other_agent_locations)
                 return (True,cur_point)
         
         # checking level 2 neighbors
