@@ -29,34 +29,34 @@ class Parameters:
         self.map_length_list = [50] #list(range(30,91,30))
 
         # The number of agents in the experiment
-        self.agent_count_list = list(range(4,14,2))
+        self.agent_count_list = list(range(2,10,2))
+        assert np.array(self.agent_count_list).max() <11, "The number of agents should be less than 13"
         
         # iteration_repeat_experiment will be used to repeat the experiment
-        # self.iteration_repeat_experiment = list(range(0, 10))
-        self.iteration_repeat_experiment = list(range(0, 60))
+        self.iteration_repeat_experiment = list(range(0, 30))
 
-        self.min_rom_size = list(range(4,24,4))
+        self.min_rom_size = list(range(4,21,8))
         # self.min_rom_size = [3,6,9,12,30]
 
         self.Method_list = [
-            Frontier_Random,
-            Frontier_Closest,
-            Unknown_Random,
-            Unknown_Closest,
+            # Frontier_Random,
+            # Frontier_Closest,
+            # Unknown_Random,
+            # Unknown_Closest,
 
             Voronoi_Frontier_Random,
-            Voronoi_Frontier_Closest,
-            Voronoi_Frontier_Help_Closest,
-            Voronoi_Frontier_Help_Random,
+            # Voronoi_Frontier_Closest,
+            # Voronoi_Frontier_Help_Closest,
+            # Voronoi_Frontier_Help_Random,
             
-            Decision_Frontier_Closest,
-            Decay_Epsilon_Greedy_Unknown,
-            Decay_Epsilon_Greedy_Frontier,
+            # Decision_Frontier_Closest,
+            # Decay_Epsilon_Greedy_Unknown,
+            # Decay_Epsilon_Greedy_Frontier,
             # Epsilon_Greedy_Unknown,
             # Epsilon_Greedy_Frontier,
-            GameTheory,
+            # GameTheory,
 
-            DarpVorOnly,
+            # DarpVorOnly,
             # DarpMST,
 
             # # # "Heterogenus",
