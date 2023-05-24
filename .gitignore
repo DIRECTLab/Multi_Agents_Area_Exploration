@@ -161,4 +161,5 @@ cython_debug/
 
 /data
 /data_save
+/data_copy
 /data_analysis/unsaved_plots
