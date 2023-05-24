@@ -91,6 +91,8 @@ class Experiment:
                 search_method, 
                 return_dict,
                 process_ID,
+                start_method,
+                goal_method,
                 debug=False,
                 figs=[]):
         self.cfg = cfg
@@ -175,8 +177,26 @@ class Experiment:
 
         assert cfg.USE_THREADS != True, "The use of the threads is not enabled"
         
-        OTHER_AGENT_LOCATIONS_GOAL.clear()
-        OTHER_AGENT_LOCATIONS_START.clear()
+        # OTHER_AGENT_LOCATIONS_GOAL.clear()
+        # OTHER_AGENT_LOCATIONS_START.clear()
+        start_locations = []
+        goal_locations = []
+        # place the goal locations
+        if start_method == None:
+            # throw an error if the start method is not defined
+            assert False, "The start method is not defined"
+        else:
+            random.seed(cfg.SEED)
+            np.random.seed(cfg.SEED)
+            start_locations = start_method(cfg, self.ground_truth_map)
+
+        if goal_method == None:
+            # throw an error if the goal method is not defined
+            assert False, "The goal method is not defined"
+        else:
+            random.seed(cfg.SEED)
+            np.random.seed(cfg.SEED)
+            goal_locations = goal_method(cfg, self.ground_truth_map)
         
         # Agent_Class_list
         for i, agent_class in enumerate(Agent_Class_list):
@@ -187,6 +207,8 @@ class Experiment:
                         grid_size = cfg.GRID_THICKNESS,
                         lidar_range = self.ground_truth_map.shape[0]//6,
                         full_map = self.ground_truth_map,
+                        position = start_locations[i],
+                        goal_xy = goal_locations[i],
                         ax = bot_ax[i] if cfg.DRAW_SIM else None,
                         screen = self.cur_world.screen if cfg.DRAW_SIM else None,
                         lock= self.lock,
@@ -577,7 +599,7 @@ class Experiment:
                     self.log_plot_obj.map_fig.savefig(self.folder_name +f'/gif/{self.frame_count}.png', dpi=100)
 
                 if i%10 == 0:
-                    p_bar.update(1)
+                    p_bar.update(10)
                     
                 done = self.env_step()
                 if done:

@@ -3,7 +3,7 @@ from src.agent import Agent
 from src.loss_methods.unrecoverable import Unrecoverable
 import warnings
 from src.planners.astar_new import astar
-
+from src.point_utils.point_find import *
 
 
 class Disrepair(Agent):
@@ -32,7 +32,7 @@ class Disrepair(Agent):
                 warnings.warn("No viable agents available to help")
                 return
             # Find the closest teammate
-            closest = self.get_closest_point_rc(agent_locations)
+            closest = get_closest_point_rc(agent_locations, self.grid_position_xy)
             closest = (closest[1], closest[0])
             for agent_info in agent_locations_and_id:
                 if agent_info[1] == closest:
