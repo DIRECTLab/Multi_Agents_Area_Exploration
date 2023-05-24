@@ -84,9 +84,9 @@ class Parameters:
             ]
         
         self.Robot_Loss = [
-            Agent,
-            # Unrecoverable,
-            # Disrepair,
+            # Agent,
+            Unrecoverable,
+            Disrepair,
         ]
 
 
