@@ -25,7 +25,6 @@ share/python-wheels/
 *.egg
 MANIFEST
 
-
 # PyInstaller
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
@@ -162,6 +161,7 @@ cython_debug/
 
 /data
 /data_save
-analysing_data/data_analysis/unsaved_plots
+/data_analysis/unsaved_plots
 /search_data_update
 /data_big
+/data_copy
