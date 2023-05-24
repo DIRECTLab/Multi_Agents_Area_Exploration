@@ -10,7 +10,6 @@ from src.loss_methods.disrepair import Disrepair
 from src.replan.frontier import *
 from src.replan.voronoi_basic import *
 from src.starting_scenario.starting_methods import *
-from src.starting_scenario.goal_starts import *
 from src.replan.decision import *
 from src.darp.darp import *
 from src.replan.epsilon_greedy import *
@@ -21,7 +20,7 @@ class Parameters:
     def __init__(self):
 
         self.Debug = False
-        self.Use_process = False
+        self.Use_process = True
         self.Create_gif = False
         assert not (self.Debug and self.Use_process), "Can't use process and debug at the same time"
 
@@ -43,22 +42,22 @@ class Parameters:
         # self.min_rom_size = [3,6,9,12,30]
 
         self.Method_list = [
-            # Frontier_Random,
-            # Frontier_Closest,
-            # Unknown_Random,
-            # Unknown_Closest,
+            Frontier_Random,
+            Frontier_Closest,
+            Unknown_Random,
+            Unknown_Closest,
 
             # @@@@@@@@ Voronoi_Frontier_Random,
             # @@@@@@@@ Voronoi_Frontier_Closest,
             Voronoi_Frontier_Help_Closest,
             # Voronoi_Frontier_Help_Random,
             
-            # Decision_Frontier_Closest,
-            # Decay_Epsilon_Greedy_Unknown,
-            # Decay_Epsilon_Greedy_Frontier,
-            # Epsilon_Greedy_Unknown,
-            # Epsilon_Greedy_Frontier,
-            # GameTheory,
+            Decision_Frontier_Closest,
+            Decay_Epsilon_Greedy_Unknown,
+            Decay_Epsilon_Greedy_Frontier,
+            Epsilon_Greedy_Unknown,
+            Epsilon_Greedy_Frontier,
+            GameTheory,
 
             # DarpVorOnly,
             # DarpMST,

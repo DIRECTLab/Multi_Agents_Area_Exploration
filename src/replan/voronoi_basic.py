@@ -33,13 +33,13 @@ class Voronoi_Frontier_Closest(Agent):
                 assigned_assigned.append(point)
 
         # Get a random frontier point
-        frontier_point = get_new_location_xy(assigned_assigned, self.cfg.FRONTIER, useRandom=self.choose_random, closest_point_to_xy= self.grid_position_xy)
+        frontier_point = get_new_location_xy(assigned_assigned, self.cfg.FRONTIER, useRandom=self.choose_random, closest_point_to_xy=self.grid_position_xy if not self.choose_random else None)
         if frontier_point:
             # Found a frontier point
             return frontier_point
         
         # Get a random unknown point
-        unknown_point = get_new_location_xy(np.array(assigned_assigned), self.cfg.UNKNOWN, useRandom=self.choose_random, closest_point_to_xy= self.grid_position_xy)
+        unknown_point = get_new_location_xy(np.array(assigned_assigned), self.cfg.UNKNOWN, useRandom=self.choose_random, closest_point_to_xy=self.grid_position_xy if not self.choose_random else None)
         if unknown_point is None:
             self.plan = []
             self.area_completed = True

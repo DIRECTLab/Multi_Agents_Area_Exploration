@@ -16,7 +16,6 @@ import src.world as world
 import src.agent as agent
 import src.log_plot as log_plot
 from src.darp.darp import *
-from src.starting_scenario.goal_starts import *
 from src.starting_scenario.starting_methods import *
 import traceback
 import sys
