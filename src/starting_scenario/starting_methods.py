@@ -5,38 +5,42 @@ from itertools import product, starmap, islice
 #  will make sure we have different random points over grid for agent positions
 OTHER_AGENT_LOCATIONS_START = []
 
-class Base_Start:
-    def check_if_valid_point(self, ground_truth_map, cfg):
 
-        # checking level 1 neighbors
-        neighbors = list(findNeighbors(ground_truth_map, self.grid_position_xy[0], self.grid_position_xy[1], 1))
+def check_if_valid_point(point, ground_truth_map, cfg):
 
-        for cur_point in neighbors:
-            if cur_point[0] < 0 or cur_point[0] >= self.cfg.COLS or cur_point[1] < 0 or cur_point[1] >= self.cfg.ROWS:
-                # shift the point to be in the map
-                self.grid_position_xy = (max(1, min(cur_point, self.cfg.COLS-2)), max(1, min(cur_point[1], self.cfg.ROWS-2)))
-                return True
-            # check if the point is not on an obstacle
-            if (self.ground_truth_map[cur_point[1], cur_point[0]] == self.cfg.OBSTACLE):
-                continue
-            if cur_point in OTHER_AGENT_LOCATIONS_START:
-                continue
-            if ground_truth_map[cur_point[1], cur_point[0]] == cfg.EMPTY:
-                # point = cur_point
-                self.grid_position_xy =cur_point
-                return True
+    # checking level 1 neighbors
+    neighbors = list(findNeighbors(ground_truth_map, point[0], point[1], 1))
 
-        # checking level 2 neighbors
-        neighbors = list(findNeighbors(ground_truth_map, self.grid_position_xy[0], self.grid_position_xy[1], 2))
-        for cur_point in neighbors:
-            if cur_point in OTHER_AGENT_LOCATIONS_START:
-                continue
-            if ground_truth_map[cur_point[1], cur_point[0]] == cfg.EMPTY:
-                self.grid_position_xy  = cur_point
-                return True
+    for cur_point in neighbors:
+        if cur_point[0] < 0 or cur_point[0] >= cfg.COLS or cur_point[1] < 0 or cur_point[1] >= cfg.ROWS:
+            # shift the point to be in the map
+            point = (max(1, min(cur_point, cfg.COLS-2)), max(1, min(cur_point[1], cfg.ROWS-2)))
+            OTHER_AGENT_LOCATIONS_START.append(cur_point)
+            return (True, cur_point)
+        # check if the point is not on an obstacle
+        if (ground_truth_map[cur_point[1], cur_point[0]] == cfg.OBSTACLE):
+            continue
+        if cur_point in OTHER_AGENT_LOCATIONS_START:
+            continue
+        if ground_truth_map[cur_point[1], cur_point[0]] == cfg.EMPTY:
+            # point = cur_point
+            OTHER_AGENT_LOCATIONS_START.append(cur_point)
+            # print("OTHER_AGENT_LOCATIONS_START",OTHER_AGENT_LOCATIONS_START)
+            # point =cur_point
+            return (True, cur_point)
 
-        print("WARNING: All the neighbors are obstacles or off the map!! Here are the neighbors: ", neighbors)
-        return False
+    # checking level 2 neighbors
+    print("WARNING: checking level 2 neighbors")
+    neighbors = list(findNeighbors(ground_truth_map, point[0], point[1], 2))
+    for cur_point in neighbors:
+        if cur_point in OTHER_AGENT_LOCATIONS_START:
+            continue
+        if ground_truth_map[cur_point[1], cur_point[0]] == cfg.EMPTY:
+            OTHER_AGENT_LOCATIONS_START.append(cur_point)
+            return True
+
+    print("WARNING: All the neighbors are obstacles or off the map!! Here are the neighbors: ", neighbors)
+    return False
 
 class Manual_Start:
     four_start_pos = [(2, 7), (9, 16), (2, 5), (3, 11)]
@@ -52,15 +56,15 @@ class Rand_Start_Position:
             self.grid_position_xy = self.get_random_point()
             OTHER_AGENT_LOCATIONS_START.append(self.grid_position_xy)
 
-class Center_Start_Position(Base_Start):
+class Center_Start_Position():
     def choose_start_position(self):
         self.grid_position_xy = points_over_radious(self.cfg.ROWS, self.cfg.COLS, self.cfg.N_BOTS, 'center')[self.id]
         self.grid_position_xy = (int(np.round(self.grid_position_xy[0])), int(np.round(self.grid_position_xy[1])))
-        OTHER_AGENT_LOCATIONS_START.append(self.grid_position_xy)
 
 
-        found_goal = self.check_if_valid_point(self.ground_truth_map, self.cfg)
-        if not found_goal:
+        (found_point, new_p) = check_if_valid_point(self.grid_position_xy, self.ground_truth_map, self.cfg)
+        self.grid_position_xy = new_p
+        if not found_point:
             # at this point, all the neighbors are obstacles or your off the map warning
             print("!!WARNING!!: All the neighbors are obstacles or your off the map current point: ", self.grid_position_xy)
             # get the closest point to the edge
@@ -69,14 +73,16 @@ class Center_Start_Position(Base_Start):
             print("new closest point to the edge: ", self.grid_position_xy)
             return
 
-class Top_Left_Start_Position(Base_Start):
+class Top_Left_Start_Position():
     def choose_start_position(self):
         self.grid_position_xy = points_over_radious(self.cfg.ROWS, self.cfg.COLS, self.cfg.N_BOTS, 'topleft')[self.id]
         self.grid_position_xy = (int(np.round(self.grid_position_xy[0])), int(np.round(self.grid_position_xy[1])))
-        OTHER_AGENT_LOCATIONS_START.append(self.grid_position_xy)
+        # print("self.grid_position_xy", self.grid_position_xy)
         
-        found_goal = self.check_if_valid_point(self.ground_truth_map, self.cfg)
-        if not found_goal:
+        (found_point, new_p) = check_if_valid_point(self.grid_position_xy, self.ground_truth_map, self.cfg)
+        self.grid_position_xy = new_p
+        # print("new self.grid_position_xy", self.grid_position_xy)
+        if not found_point:
             # at this point, all the neighbors are obstacles or your off the map warning
             print("!!WARNING!!: All the neighbors are obstacles or your off the map current point: ", self.grid_position_xy)
             # get the closest point to the edge
@@ -84,15 +90,17 @@ class Top_Left_Start_Position(Base_Start):
             self.grid_position_xy = self.get_closest_point_rc(empty_points_rc)
             print("new closest point to the edge: ", self.grid_position_xy)
             return
+        else:
+            return 
 
-class Edge_Start_Position(Base_Start):
+class Edge_Start_Position():
     def choose_start_position(self):
         self.grid_position_xy = points_on_rectangle_edge(self.cfg.ROWS, self.cfg.COLS, self.cfg.N_BOTS)[self.id]
         self.grid_position_xy = (int(np.round(self.grid_position_xy[0])), int(np.round(self.grid_position_xy[1])))
-        OTHER_AGENT_LOCATIONS_START.append(self.grid_position_xy)
         
-        found_goal = self.check_if_valid_point(self.ground_truth_map, self.cfg)
-        if not found_goal:
+        (found_point, new_p) = check_if_valid_point(self.grid_position_xy, self.ground_truth_map, self.cfg)
+        self.grid_position_xy = new_p
+        if not found_point:
             # at this point, all the neighbors are obstacles or your off the map warning
             print("!!WARNING!!: All the neighbors are obstacles or your off the map current point: ", self.grid_position_xy)
             # get the closest point to the edge
@@ -101,14 +109,14 @@ class Edge_Start_Position(Base_Start):
             print("new closest point to the edge: ", self.grid_position_xy)
             return
 
-class Distributed_Start(Base_Start):
+class Distributed_Start():
     def choose_start_position(self):
         self.grid_position_xy = dividegrid(self.cfg.ROWS, self.cfg.COLS, self.cfg.N_BOTS)[self.id]
         self.grid_position_xy = (int(np.round(self.grid_position_xy[0])), int(np.round(self.grid_position_xy[1])))
-        OTHER_AGENT_LOCATIONS_START.append(self.grid_position_xy)
 
-        found_goal = self.check_if_valid_point(self.ground_truth_map, self.cfg)
-        if not found_goal:
+        (found_point, new_p) = check_if_valid_point(self.grid_position_xy, self.ground_truth_map, self.cfg)
+        self.grid_position_xy = new_p
+        if not found_point:
             # at this point, all the neighbors are obstacles or your off the map warning
             print("!!WARNING!!: All the neighbors are obstacles or your off the map current point: ", self.grid_position_xy,)
             # get the closest point to the edge
@@ -117,17 +125,19 @@ class Distributed_Start(Base_Start):
             print("new closest point to the edge: ", self.grid_position_xy)
             return
             
-def points_over_radious(rows, cols, n, location_of_radious):
+def points_over_radious(rows, cols, n, location_of_radious, start_angle=0, end_angle=2*np.pi):
     radius = math.ceil(cols * 0.1)
     if location_of_radious == 'center':
         location_of_radious_point = (int(cols/2), int(rows/2))
     elif location_of_radious == 'topleft':
-        location_of_radious_point = (5, 5)
+        location_of_radious_point = (1, 1)
+        radius +=6
+        end_angle = np.pi/2
     
     # Initialize an empty array to hold the coordinates of each point
     points = np.zeros((n, 2))
     # Calculate the angle between each point on the perimeter
-    angles = np.linspace(0, 2*np.pi, n, endpoint=False)
+    angles = np.linspace(start_angle, end_angle, n, endpoint=False) #0, 2*np.pi, n, endpoint=False)
     # Generate the coordinates of each point based on the angle from the center
     for i, angle in enumerate(angles):
         x = location_of_radious_point[0] + radius * np.cos(angle)
@@ -182,24 +192,6 @@ def points_on_rectangle_edge(rows, cols, n):
         points[i, 0] = x
         points[i, 1] = y
     return points
-
-def check_if_valid_point(point, ground_truth_map, cfg):
-    # checking level 1 neighbors
-    neighbors = list(findNeighbors(ground_truth_map, point[0], point[1], 1))
-    for cur_point in neighbors:
-        if ground_truth_map[cur_point[1], cur_point[0]] == cfg.EMPTY:
-            point = cur_point
-            return [True, point]
-    
-    # checking level 2 neighbors
-    neighbors = list(findNeighbors(ground_truth_map, point[0], point[1], 2))
-    for cur_point in neighbors:
-        if ground_truth_map[cur_point[1], cur_point[0]] == cfg.EMPTY:
-            point = cur_point
-            return [True, point]
-    
-    print("WARNING: All the neighbors are obstacles or off the map!! Here are the neighbors: ", neighbors)
-    return False
 
 def calc_closest_factors(c: int):
     if c//1 != c:

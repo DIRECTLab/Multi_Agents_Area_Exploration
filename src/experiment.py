@@ -130,6 +130,7 @@ class Experiment:
         non_plot_data ={
             'frame_count': [],
             'known_area' : [],
+            'total_distance_travelled' : [],
             }
         
         if 'Epsilon' in search_method:
@@ -173,6 +174,9 @@ class Experiment:
         self.lock = threading.Lock()
 
         assert cfg.USE_THREADS != True, "The use of the threads is not enabled"
+        
+        OTHER_AGENT_LOCATIONS_GOAL.clear()
+        OTHER_AGENT_LOCATIONS_START.clear()
         
         # Agent_Class_list
         for i, agent_class in enumerate(Agent_Class_list):
@@ -401,10 +405,11 @@ class Experiment:
         df['USE_THREADS'.lower()] = self.cfg.USE_THREADS
         df['N_BOTS'.lower()] = self.cfg.N_BOTS
         df['GRID_THICKNESS'.lower()] = self.cfg.GRID_THICKNESS
-        df['SCREEN_WIDTH'.lower()] = self.cfg.SCREEN_WIDTH
-        df['SCREEN_HEIGHT'.lower()] = self.cfg.SCREEN_HEIGHT
-        df['MIN_ROOM_SIZE'.lower()] = self.cfg.MIN_ROOM_SIZE 
-        df['MAX_ROOM_SIZE'.lower()] = self.cfg.MAX_ROOM_SIZE
+        df['COLS'.lower()] = self.cfg.COLS
+        df['ROWS'.lower()] = self.cfg.ROWS
+        df['ROOM_AREA'.lower()] = self.cfg.COLS * self.cfg.ROWS
+        df['MIN_ROOM_SIZE'.lower()] = self.cfg.MIN_ROOM_SIZE / self.cfg.GRID_THICKNESS
+        df['MAX_ROOM_SIZE'.lower()] = self.cfg.MAX_ROOM_SIZE / self.cfg.GRID_THICKNESS
         # area densely
         df['wall_ratio'] = np.sum(self.ground_truth_map == 0) / self.ground_truth_map.size
         df['method'] = self.experiment_name.split('/')[0]
@@ -476,6 +481,7 @@ class Experiment:
         # This is the main loop of the simulation
         path_length = 0
         replan_count = 0
+        total_distance = 0
         if self.cfg.USE_THREADS:
             self.spawn_update_thread()
             end_time = psutil.Process().cpu_times().user
@@ -487,6 +493,7 @@ class Experiment:
                 bot.frame_count =self.frame_count
                 path_length += len(bot.plan if bot.plan is not None else [])
                 replan_count += bot.replan_count
+                total_distance += bot.total_dist_traveled
                 if 'Epsilon' in self.search_method and dir(bot).count('epsilon'):
                 
                     self.data['epsilon_'+str(bot.id)].append(bot.epsilon)
@@ -503,6 +510,7 @@ class Experiment:
         self.data['replan_count'].append(replan_count)
         self.data['frame_count'].append(self.frame_count)
         self.data['known_area'].append(cur_known)
+        self.data['total_distance_travelled'].append(total_distance)
 
 
         if self.debug:
@@ -575,10 +583,6 @@ class Experiment:
                 if done:
                     # convert p_bar bar color to green
                     p_bar.set_description(f"✅ \033[92m {self.experiment_ID} {self.experiment_name} \033[0m")
-                    # print("CHECK_RAND_LIST_START is getting cleared...")
-                    OTHER_AGENT_LOCATIONS_START.clear()
-                    # print("CHECK_RAND_LIST_GOAL is getting cleared...")
-                    OTHER_AGENT_LOCATIONS_GOAL.clear()
                     p_bar.colour = 'green'
                     p_bar.close()
                     break
