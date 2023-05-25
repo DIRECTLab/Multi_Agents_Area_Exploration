@@ -1,75 +1,15 @@
 # this hold the agent class
 
-import random
 import math
 import pygame
 import numpy as np
 import matplotlib.pyplot as plt
 import warnings
 from src.planners.astar_new import astar
-# from src.replan.choose_random import *
-# from src.replan.voronoi_choose_random import *
-
-
-class Point_Finding:
-    def get_random_point(self):
-        index_list = list(np.argwhere(self.ground_truth_map == self.cfg.EMPTY))
-        # shuffle the list
-        random.shuffle(index_list,)
-        # get the first point
-        point_xy = (index_list[0][1], index_list[0][0])
-        return point_xy
+from src.point_utils.point_find import *
 
     
-    def get_closest_point_rc(self, pointlist):
-        '''
-        This function returns the closest point from the pointlist to the agent
-        :param pointlist: a list of points (r,c)
-        :return: the closest point from the pointlist to the agent
-        '''
-        min_dist = np.inf
-        min_point = None
-        for point_rc in pointlist:
-            dist = np.sqrt((point_rc[1] - self.grid_position_xy[0])**2 + (point_rc[0] - self.grid_position_xy[1])**2)
-            if dist < min_dist:
-                min_dist = dist
-                min_point = point_rc
-        if min_point is None:
-            raise Exception("min_point is None")
-        return min_point
-    
-    def get_new_location_xy(self,map_area,  MapLocationType = None, useRandom = False):
-        '''
-        This function returns a random location from the map_area
-        :param map_area: the map area to choose from typically self.agent_map
-        :param MapLocationType: the type of location to choose from: self.cfg.FRONTIER or self.cfg.UNKNOWN
-        :return: a random location from the map_area (x,y) or None if no location is found
-        '''
-        if MapLocationType ==None:
-            raise Exception("MapLocationType is None set it to self.cfg.FRONTIER or self.cfg.UNKNOWN")
-        if len(map_area) == 0:
-            return None
-        
-        if map_area[0].shape == (2,):
-            points_array = map_area 
-        else:
-            points_array = np.argwhere(map_area == MapLocationType)
-        
-        if len(points_array) == 0:
-            return None
-        elif len(points_array) == 1:
-            return (points_array[0][1], points_array[0][0])
-        
-        if useRandom:
-            # choose a random point
-            idx = np.random.randint(len(points_array))
-            return (points_array[idx][1], points_array[idx][0])
-
-        point = self.get_closest_point_rc(list(points_array))
-        return (point[1], point[0])
-    
-    
-class Agent(Point_Finding):
+class Agent():
     def __init__(self, 
                 cfg,
                 id, 
@@ -78,8 +18,8 @@ class Agent(Point_Finding):
                 lidar_range, 
                 full_map,
                 assigned_points =None,
-                # position=None,
-                # goal_xy=None,
+                position=None,
+                goal_xy=None,
                 color=(0,255,0),
                 ax=None,
                 screen=None,
@@ -102,10 +42,9 @@ class Agent(Point_Finding):
 
         self.goal_xy = None
         self.grid_position_xy = None
-        # Base Class will set the goal
-        self.choose_start_position()
+        self.grid_position_xy = position
+        self.goal_xy = goal_xy
         assert self.grid_position_xy is not None, "grid_position_xy is None, the Base method is not implemented"
-        self.choose_start_goal()
         assert self.goal_xy is not None, "goal_xy is None, the Base method is not implemented"
         self.plan = None
 

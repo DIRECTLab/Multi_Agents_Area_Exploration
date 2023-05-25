@@ -1,5 +1,6 @@
 import numpy as np
 from src.agent import Agent
+from src.point_utils.point_find import *
 
 class Voronoi_Frontier_Closest(Agent):
     def __init__(self, *args, **kwargs):
@@ -32,13 +33,13 @@ class Voronoi_Frontier_Closest(Agent):
                 assigned_assigned.append(point)
 
         # Get a random frontier point
-        frontier_point = self.get_new_location_xy(assigned_assigned, self.cfg.FRONTIER, useRandom=self.choose_random)
+        frontier_point = get_new_location_xy(assigned_assigned, self.cfg.FRONTIER, useRandom=self.choose_random, closest_point_to_xy=self.grid_position_xy if not self.choose_random else None)
         if frontier_point:
             # Found a frontier point
             return frontier_point
         
         # Get a random unknown point
-        unknown_point = self.get_new_location_xy(np.array(assigned_assigned), self.cfg.UNKNOWN, useRandom=self.choose_random)
+        unknown_point = get_new_location_xy(np.array(assigned_assigned), self.cfg.UNKNOWN, useRandom=self.choose_random, closest_point_to_xy=self.grid_position_xy if not self.choose_random else None)
         if unknown_point is None:
             self.plan = []
             self.area_completed = True
@@ -63,7 +64,7 @@ class Voronoi_Frontier_Help_Closest(Voronoi_Frontier_Closest):
             return self.grid_position_xy
         
         # find the closest point
-        min_point= self.get_closest_point_rc(done_search_points)
+        min_point= get_closest_point_rc(done_search_points, self.grid_position_xy)
 
         # return in X, Y format
         return (min_point[1], min_point[0])
