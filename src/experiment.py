@@ -204,7 +204,7 @@ class Experiment:
                         id = i,
                         body_size = 3,
                         grid_size = cfg.GRID_THICKNESS,
-                        lidar_range = self.ground_truth_map.shape[0]//6,
+                        lidar_range = self.ground_truth_map.shape[0]//4,
                         full_map = self.ground_truth_map,
                         position = start_locations[i],
                         goal_xy = goal_locations[i],

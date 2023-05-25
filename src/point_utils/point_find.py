@@ -169,28 +169,53 @@ def dividegrid(rows, cols, n):
         points.append((x_var[i], y_var[i]))
     return points
 
-# https://stackoverflow.com/questions/16245407/python-finding-neighbors-in-a-2-d-list
+def findNeighbors(grid, position, level):
+    """
+    Finds the neighbors of a cell at a given position in different levels.
+    
+    Args:
+        grid (list): The grid containing cells.
+        position (tuple): The position of the cell (row, column).
+        level (int): The desired level of neighbors.
+        
+    Returns:
+        list: The neighbors of the cell at the given position in the specified level.
+    """
+    row, col = position
+    rows = len(grid)
+    cols = len(grid[0])
+    
+    # neighbors = []
+    coordinates = []
+    # Check the cell's neighbors in the specified level
+    for r in range(row - level, row + level + 1):
+        for c in range(col - level, col + level + 1):
+            if (r != row or c != col) and 0 <= r < rows and 0 <= c < cols:
+                # neighbors.append(grid[r][c])
+                coordinates.append((r, c))
+    return coordinates
+    # return neighbors
+
 # def findNeighbors(grid, x, y, level):
 #     if level == 1:
-#         xi = (0, -level, level) if 0 < x < len(grid) - 1 else ((0, -level) if x > 0 else (0, level))
-#         yi = (0, -level, level) if 0 < y < len(grid[0]) - 1 else ((0, -level) if y > 0 else (0, level))
+#         xi = (0, -1, 1) if 0 < x < len(grid) - 1 else ((0, -1) if x > 0 else (0, 1))
+#         yi = (0, -1, 1) if 0 < y < len(grid[0]) - 1 else ((0, -1) if y > 0 else (0, 1))
 #         return islice(starmap((lambda a, b: (x + a, y + b)), product(xi, yi)), 1, None)
 #     elif level == 2:
-#         xi = (0, -level, -(level-1), (level-1), level) if 0 < x < len(grid) - 1 else ((0, -(level-1), -level) if x > 0 else (0, (level-1), level))
-#         yi = (0, -level, -(level-1), (level-1), level) if 0 < y < len(grid[0]) - 1 else ((0, -(level-1), -level) if y > 0 else (0, (level-1), level))
+#         xi = (0, -2, -1, 1, 2) if 0 < x < len(grid) - 1 else ((0, -1, -2) if x > 0 else (0, 1, 2))
+#         yi = (0, -2, -1, 1, 2) if 0 < y < len(grid[0]) - 1 else ((0, -1, -2) if y > 0 else (0, 1, 2))
 #         return islice(starmap((lambda a, b: (x + a, y + b)), product(xi, yi)), 1, None)
-from itertools import product, islice, starmap
 
-def findNeighbors(grid, x, y, level):
-    xi_range = range(-level, level+1)
-    yi_range = range(-level, level+1)
+# def findNeighbors(grid, x, y, level):
+#     xi_range = range(-level, level+1)
+#     yi_range = range(-level, level+1)
     
-    if 0 <= x < len(grid) and 0 <= y < len(grid[0]):
-        xi = xi_range if 0 < x < len(grid) - 1 else (xi_range[:-1] if x > 0 else xi_range[1:])
-        yi = yi_range if 0 < y < len(grid[0]) - 1 else (yi_range[:-1] if y > 0 else yi_range[1:])
-        return islice(starmap((lambda a, b: (x + a, y + b)), product(xi, yi)), 1, None)
-    else:
-        return []
+#     if 0 <= x < len(grid) and 0 <= y < len(grid[0]):
+#         xi = xi_range if 0 < x < len(grid) - 1 else (xi_range[:-1] if x > 0 else xi_range[1:])
+#         yi = yi_range if 0 < y < len(grid[0]) - 1 else (yi_range[:-1] if y > 0 else yi_range[1:])
+#         return islice(starmap((lambda a, b: (x + a, y + b)), product(xi, yi)), 1, None)
+#     else:
+#         return []
 
 
 # class Point_Finding:

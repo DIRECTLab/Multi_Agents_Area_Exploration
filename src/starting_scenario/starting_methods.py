@@ -3,11 +3,17 @@ import numpy as np
 from src.point_utils.point_find import *
 
 def recursive_look_for_neighbors(point, ground_truth_map, cfg, other_agents_locations, level):
+    main_point_for_checking = point
+    other_agents_locations.remove(main_point_for_checking)
+    # check also even if the spot might be empty, there might be another agent already previously placed there
+    if (ground_truth_map[main_point_for_checking[1], main_point_for_checking[0]] == cfg.EMPTY) and (main_point_for_checking not in other_agents_locations):
+        return (True, main_point_for_checking)
+    
     if level > 5:
         raise Exception("🛑🔎 recursive look_for_Neighbors level is too high")
     
-    # checking level 1 neighbors
-    neighbors = list(findNeighbors(ground_truth_map, point[0], point[1], level))
+    # checking neighbors with different levels starting from 1
+    neighbors = findNeighbors(ground_truth_map, main_point_for_checking, level)
 
     for cur_point in neighbors:
         if cur_point[0] < 0 or cur_point[0] >= cfg.COLS or cur_point[1] < 0 or cur_point[1] >= cfg.ROWS:
@@ -35,6 +41,7 @@ def check_all_points(locations, ground_truth_map, cfg):
     new_locations = []
     for i, point in enumerate(locations):
         (found_point, new_p) = check_if_valid_point(point, ground_truth_map, cfg, locations)
+        locations.insert(i, new_p)
         new_locations.append(new_p)
         if not found_point:
             # at this point, all the neighbors are obstacles or your off the map warning
