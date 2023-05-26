@@ -75,12 +75,20 @@ def run_scenario(args):
     print_string =""
     for i, [key,value, cur_list] in enumerate(zip(parameters.All_scenarios_dic.keys(), scenario, parameters.All_scenarios_dic.values())):
         cur_list = list(cur_list)
-        if type(value ) ==type:
-            #GREEN color
+
+        if type(value) == type:
+            # GREEN color for classes
             print_string += f"| {key:<30} | \033[92m{value.__name__:<30}\033[00m | {cur_list.index(value)+1}/{len(cur_list)} \n"
+        elif callable(value):
+            # BLUE color for functions
+            print_string += f"| {key:<30} | \033[94m{value.__name__:<30}\033[00m | {cur_list.index(value)+1}/{len(cur_list)} \n"
+        elif isinstance(value, str):
+            # RED color for strings
+            print_string += f"| {key:<30} | \033[91m{value:<30}\033[00m | {cur_list.index(value)+1}/{len(cur_list)} \n"
         else:
-            #YELLOW color
+            # YELLOW color for other types
             print_string += f"| {key:<30} | \033[93m{value:<30}\033[00m | {cur_list.index(value)+1}/{len(cur_list):<30} \n"
+
 
 
     print('\n'+print_string + '\n')
@@ -113,10 +121,10 @@ def run_scenario(args):
         run_heterogenus(start, goal, cfg, experiment_name, return_dict, parameters.Method_list, prosses_count, debug = parameters.Debug)
         return
 
-    experiment_name = f"{Method.__name__}/{run_type.__name__}/{start.__name__}/{goal.__name__}/nbots-{cfg.N_BOTS}_map_length-{cfg.ROWS}_min_room-{min_rom_size}_seed-{cfg.SEED}"
+    experiment_name = f"{Method.__name__}/{run_type.__name__}/start-{start.__name__}/goal-{goal.__name__}/nbots-{cfg.N_BOTS}_map_length-{cfg.ROWS}_min_room-{min_rom_size}_seed-{cfg.SEED}"
 
 
-    Agent_Class_list = [type(Method.__name__+'_'+run_type.__name__, (Method, run_type, start, goal), {})] * cfg.N_BOTS
+    Agent_Class_list = [type(Method.__name__+'_'+run_type.__name__, (Method, run_type,), {})] * cfg.N_BOTS
 
     search_method =''
     for i , name in enumerate(Agent_Class_list):
@@ -131,6 +139,8 @@ def run_scenario(args):
                     search_method,
                     return_dict,
                     prosses_count,
+                    start_method=start,
+                    goal_method=goal,
                     debug=debug,
                     )
 
@@ -160,9 +170,9 @@ def main(parameters = None):
             # Inspiration: https://stackoverflow.com/a/45276885/4856719
             results = list(tqdm.tqdm(pool.imap_unordered(run_scenario, args,)
                                     #  time shows hours, minutes, seconds
-                                    , total=len(args), colour="MAGENTA", desc=">>⏰ Experiments Progress"))
+                                    , total=len(args), colour="MAGENTA", desc="⏰ Experiments Progress"))
     else:
-        for i,scenario in  enumerate(tqdm.tqdm(itertools.product(*parameters.All_scenarios_dic.values()), colour="MAGENTA", desc=">>⏰ Experiments Progress", total=len(list(itertools.product(*parameters.All_scenarios_dic.values()))))):
+        for i,scenario in  enumerate(tqdm.tqdm(itertools.product(*parameters.All_scenarios_dic.values()), colour="MAGENTA", desc="⏰ \033[95m Experiments Progress \033[95m", total=len(list(itertools.product(*parameters.All_scenarios_dic.values()))))):
             results.append(run_scenario([scenario, parameters, return_dict, i, parameters.Debug]))
 
     import time

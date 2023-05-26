@@ -10,7 +10,6 @@ from src.loss_methods.disrepair import Disrepair
 from src.replan.frontier import *
 from src.replan.voronoi_basic import *
 from src.starting_scenario.starting_methods import *
-from src.starting_scenario.goal_starts import *
 from src.replan.decision import *
 from src.darp.darp import *
 from src.replan.epsilon_greedy import *
@@ -31,6 +30,7 @@ class Parameters:
         # The number of agents in the experiment
         # self.agent_count_list = list(range(2,10,2))
         self.agent_count_list = [4,8,12]
+        # self.agent_count_list = [12]
         assert np.array(self.agent_count_list).max() <13, "The number of agents should be less than 13"
         
         # iteration_repeat_experiment will be used to repeat the experiment
@@ -39,6 +39,7 @@ class Parameters:
 
         self.min_rom_size = [4,12,20]
         # self.min_rom_size = [4]
+        # self.min_rom_size = [3,6,9,12,30]
 
         self.Method_list = [
             Frontier_Random,
@@ -68,19 +69,19 @@ class Parameters:
 
         self.Start_scenario_list = [
             # # Manual_Start,
-            Rand_Start_Position,
-            Edge_Start_Position,
-            Top_Left_Start_Position,
-            Center_Start_Position,
+            Rand_Start,
+            Edge_Start,
+            Top_Left_Start,
+            Center_Start,
             Distributed_Start,
             ]
         self.Start_Goal_list= [
-            # # Manual_Goal,
-            Rand_Start_Goal,
-            Center_Start_Goal,
-            Top_Left_Start_Goal,
-            Edge_Start_Goal,
-            Distributed_Goal,
+            # # Manual_Start,
+            Rand_Start,
+            Edge_Start,
+            Top_Left_Start,
+            Center_Start,
+            Distributed_Start,
             ]
         
         self.Robot_Loss = [
