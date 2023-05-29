@@ -539,15 +539,23 @@ class Experiment:
         
         self.frame_count += 1
         finished_bots = 0
+        disabled_bots = 0
         for bot in self.bots:
-            if bot.disabled or bot.area_completed:
+            if bot.area_completed:
                 finished_bots += 1
-            
+            elif bot.disabled:
+                disabled_bots += 1
+        # print('finished_bots', finished_bots)
+        # print('disabled_bots', disabled_bots)
+        
         if finished_bots == len(self.bots):
-            self.data['success'] = False
+            self.data['success'] = True
             return True
         if cur_known == self.mutual_data['map'].size:
             self.data['success'] = True
+            return True
+        if finished_bots + disabled_bots == len(self.bots):
+            self.data['success'] = False
             return True
 
         logging_end_time = psutil.Process().cpu_times().user
