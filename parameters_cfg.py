@@ -36,7 +36,7 @@ class Parameters:
 
         self.min_rom_size = [3,6,9,12,15,18,21,24,27,30]
 
-        self.required_exploration_ratio = list(range(30,60,1))
+        self.required_exploration_ratio = list(range(0,35,1))
 
         self.Method_list = [
             # Frontier_Random,
@@ -56,7 +56,7 @@ class Parameters:
             # Epsilon_Greedy_Frontier,
             # GameTheory,
             # # # "Heterogenus",
-            ]
+        ]
         # make sure the list is dose not contain duplicates
         self.Method_list = list(set(self.Method_list))
 

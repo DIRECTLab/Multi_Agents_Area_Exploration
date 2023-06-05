@@ -24,7 +24,7 @@ class Frontier_Closest(Agent):
         if unknown_point[0] == len(self.agent_map) - 1:
             unknown_point = (unknown_point[0] - 1, unknown_point[1])
         if unknown_point[1] == 0:
-            unknown_point = (unknown_point[0], 1)
+            unknown_point = (unknown_point[0], 2)
         if unknown_point[1] == len(self.agent_map[0]) - 1:
             unknown_point = (unknown_point[0], unknown_point[1] - 1)
         
