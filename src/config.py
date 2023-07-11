@@ -12,16 +12,19 @@ class Config:
         self.START_CENTROID_LIST_XY = None 
         
         # Define the size of the walls
-        self.GRID_THICKNESS = 10
         # Define the size of the screen
-        self.COLS = 50
-        self.ROWS = 50
+        # self.COLS = 50
+        # self.ROWS = 50
+        self.GRID_SIZE = 50
+        self.CELL_SIZE = 10
+        self.GRID_THICKNESS = 1
+        self.WINDOW_SIZE = self.GRID_SIZE * self.CELL_SIZE
 
-        self.SCREEN_WIDTH = self.COLS * self.GRID_THICKNESS
-        self.SCREEN_HEIGHT = self.ROWS * self.GRID_THICKNESS
+        # self.SCREEN_WIDTH = self.COLS * self.GRID_THICKNESS
+        # self.SCREEN_HEIGHT = self.ROWS * self.GRID_THICKNESS
         # Define the minimum and maximum sizes for the rooms
-        self.MIN_ROOM_SIZE = 10 * self.GRID_THICKNESS
-        self.MAX_ROOM_SIZE = 20 * self.GRID_THICKNESS
+        self.MIN_ROOM_SIZE = self.CELL_SIZE
+        # self.MAX_ROOM_SIZE = 20 * self.CELL_SIZE
 
         # The Ground truth map is a 2D array of booleans
         self.AGENT_OBSTACLE = 3.0

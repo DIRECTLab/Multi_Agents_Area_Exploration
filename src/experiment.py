@@ -37,8 +37,8 @@ def downsampled_empty_point(point, downsampled_map, cfg):
     np.random.shuffle(neighbors)
     for cur_point in neighbors:
         # check if the point is in the map
-        if cur_point[0] < 0 or cur_point[0] >= cfg.COLS//2 or \
-            cur_point[1] < 0 or cur_point[1] >= cfg.ROWS//2:
+        if cur_point[0] < 0 or cur_point[0] >= cfg.GRID_SIZE//2 or \
+            cur_point[1] < 0 or cur_point[1] >= cfg.GRID_SIZE//2:
             continue
         if downsampled_map[cur_point[1], cur_point[0]] == cfg.EMPTY:
             point = cur_point
@@ -57,13 +57,13 @@ def generate_vor_cells_over_world(cfg):
             self.agent_id = None        # which agent is placed on a box
             self.distance_matrix = None
         def calc_distance_matrices(self):
-            x_arr, y_arr = np.mgrid[0:cfg.ROWS, 0:cfg.COLS]
+            x_arr, y_arr = np.mgrid[0:cfg.GRID_SIZE, 0:cfg.GRID_SIZE]
             cell = (self.pos_row, self.pos_column)
             dists = np.sqrt((x_arr - cell[0])**2 + (y_arr - cell[1])**2)
             return dists
-    for row in range(cfg.ROWS):
+    for row in range(cfg.GRID_SIZE):
         grid.append([])
-        for column in range(cfg.COLS):
+        for column in range(cfg.GRID_SIZE):
             grid[row].append(Cell(row, column))
     return grid, matrix_list, agent_locs
 
@@ -203,7 +203,8 @@ class Experiment:
                         cfg = cfg,
                         id = i,
                         body_size = 3,
-                        grid_size = cfg.GRID_THICKNESS,
+                        grid_size = cfg.GRID_SIZE,
+                        window_size = cfg.WINDOW_SIZE,
                         lidar_range = self.ground_truth_map.shape[0]//4,
                         full_map = self.ground_truth_map,
                         position = start_locations[i],
@@ -254,7 +255,7 @@ class Experiment:
             tuple_obst_rc = tuple(map(tuple, obstacle_locations))
 
             # print("here are the obstacles...", tuple_obst)
-            darp_instance = DARP(cfg.ROWS, cfg.COLS, goal_locations_rc, tuple_obst_rc)
+            darp_instance = DARP(cfg.GRID_SIZE, cfg.GRID_SIZE, goal_locations_rc, tuple_obst_rc)
 
             darp_success , iterations = darp_instance.divideRegions()
 
@@ -332,14 +333,14 @@ class Experiment:
             print("here is the finalized agent locations...", agent_locations_xy)
 
             # print("here are the obstacles...", tuple_obst)
-            darp_instance = DARP(cfg.ROWS//2, cfg.COLS//2, agent_locations_xy, tuple_obst_rc)
+            darp_instance = DARP(cfg.GRID_SIZE//2, cfg.GRID_SIZE//2, agent_locations_xy, tuple_obst_rc)
 
             darp_success , iterations = darp_instance.divideRegions()
 
             end_time = time.time()
             it_took = end_time - start_time
 
-            self.upscaling_down_sampled_map_for_vis = np.zeros((cfg.ROWS, cfg.COLS))
+            self.upscaling_down_sampled_map_for_vis = np.zeros((cfg.GRID_SIZE, cfg.GRID_SIZE))
             for i in range(len(darp_instance.A)):
                 for j in range(len(darp_instance.A[0])):
                     point = darp_instance.A[i][j]
@@ -375,8 +376,8 @@ class Experiment:
                 self.log_plot_obj.map_ax.matshow(self.minimum_comparison_table, alpha=0.3)
             self.log_plot_obj.map_fig.savefig(self.folder_name + '/starting_map.png')
 
-        if cfg.DRAW_SIM:
-            bot_fig.savefig(self.folder_name + '/starting_bot.png')
+        # if cfg.DRAW_SIM:
+        #     bot_fig.savefig(self.folder_name + '/starting_bot.png')
     
     # return [data, bots, ground_truth_map, mutual_data, self.log_plot_obj, self.minimum_comparison_table, cur_world, map_screen, self.folder_name, upscaling_down_sampled_map_for_vis]
     
@@ -384,7 +385,7 @@ class Experiment:
         if self.cfg.DRAW_SIM:
             # Display the floor plan on the screen
             pygame.display.update()
-            FPS = 10
+            FPS = 60
             clock = pygame.time.Clock()
 
         # Wait for the user to close the window
@@ -426,11 +427,11 @@ class Experiment:
         df['USE_THREADS'.lower()] = self.cfg.USE_THREADS
         df['N_BOTS'.lower()] = self.cfg.N_BOTS
         df['GRID_THICKNESS'.lower()] = self.cfg.GRID_THICKNESS
-        df['COLS'.lower()] = self.cfg.COLS
-        df['ROWS'.lower()] = self.cfg.ROWS
-        df['ROOM_AREA'.lower()] = self.cfg.COLS * self.cfg.ROWS
+        # df['COLS'.lower()] = self.cfg.COLS
+        df['GRID_SIZE'.lower()] = self.cfg.GRID_SIZE
+        df['ROOM_AREA'.lower()] = self.cfg.GRID_SIZE * self.cfg.GRID_SIZE
         df['MIN_ROOM_SIZE'.lower()] = self.cfg.MIN_ROOM_SIZE / self.cfg.GRID_THICKNESS
-        df['MAX_ROOM_SIZE'.lower()] = self.cfg.MAX_ROOM_SIZE / self.cfg.GRID_THICKNESS
+        # df['MAX_ROOM_SIZE'.lower()] = self.cfg.MAX_ROOM_SIZE / self.cfg.GRID_THICKNESS
         # area densely
         df['wall_ratio'] = np.sum(self.ground_truth_map == 0) / self.ground_truth_map.size
         df['method'] = self.experiment_name.split('/')[0]
@@ -457,11 +458,11 @@ class Experiment:
                 if event.type == pygame.QUIT:
                     pygame.quit()
                     quit()
-            self.clock.tick(self.FPS)
+            # self.clock.tick(self.FPS)
             # update the scrren
             pygame.display.update()
             self.cur_world.screen.blit(self.map_screen, (0, 0))
-            print("clock.get_fps()",self.clock.get_fps(), end='\r')
+            # print("clock.get_fps()",self.clock.get_fps(), end='\r')
 
         if self.cfg.LOG_PLOTS:
             # update the ground_truth_map and plt
@@ -587,7 +588,7 @@ class Experiment:
         try:
             self.setup_run_now()
             done = False
-            max_iter = self.cfg.ROWS**2 
+            max_iter = self.cfg.GRID_SIZE**2 
             p_bar = tqdm.tqdm(total=max_iter, desc=f"{self.experiment_ID} {self.experiment_name}")
             for i in range(max_iter):
                 if func_arr:

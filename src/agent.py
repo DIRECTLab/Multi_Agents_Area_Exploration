@@ -8,13 +8,58 @@ import warnings
 from src.planners.astar_new import astar
 from src.point_utils.point_find import *
 
-    
+def bresenham(start, end):
+    """
+    Implementation of Bresenham's line drawing algorithm
+    See en.wikipedia.org/wiki/Bresenham's_line_algorithm
+    Bresenham's Line Algorithm
+    Produces a np.array from start and end (original from roguebasin.com)
+    >>> points1 = bresenham((4, 4), (6, 10))
+    >>> print(points1)
+    np.array([[4,4], [4,5], [5,6], [5,7], [5,8], [6,9], [6,10]])
+    """
+    # setup initial conditions
+    x1, y1 = start
+    x2, y2 = end
+    dx = x2 - x1
+    dy = y2 - y1
+    is_steep = abs(dy) > abs(dx)  # determine how steep the line is
+    if is_steep:  # rotate line
+        x1, y1 = y1, x1
+        x2, y2 = y2, x2
+    # swap start and end points if necessary and store swap state
+    swapped = False
+    if x1 > x2:
+        x1, x2 = x2, x1
+        y1, y2 = y2, y1
+        swapped = True
+    dx = x2 - x1  # recalculate differentials
+    dy = y2 - y1  # recalculate differentials
+    error = int(dx / 2.0)  # calculate error
+    y_step = 1 if y1 < y2 else -1
+    # iterate over bounding box generating points between start and end
+    y = y1
+    points = []
+    for x in range(x1, x2 + 1):
+        coord = [y, x] if is_steep else (x, y)
+        points.append(coord)
+        # print(points)
+        error -= abs(dy)
+        if error < 0:
+            y += y_step
+            error += dx
+    if swapped:  # reverse the list if the coordinates were swapped
+        points.reverse()
+    points = np.array(points)
+    return points
+
 class Agent():
     def __init__(self, 
                 cfg,
                 id, 
                 body_size,
                 grid_size,
+                window_size,
                 lidar_range, 
                 full_map,
                 assigned_points =None,
@@ -28,6 +73,7 @@ class Agent():
         self.id = id
         self.body_size = body_size
         self.grid_size = grid_size
+        self.window_size = window_size
         self.ground_truth_map = full_map.copy()
         self.agent_map = np.zeros((full_map.shape[0], full_map.shape[1])).astype(int)
         self.agent_map.fill(self.cfg.UNKNOWN)
@@ -140,9 +186,46 @@ class Agent():
         if not somthing_drawn:
             warnings.warn("No drawing method is set, please set ax or screen")
 
+    
+    
+    # Function to detect obstacles using Bresenham's line algorithm
+    def detect_obstacles(self, start_x, start_y, end_x, end_y):
+        dx = abs(end_x - start_x)
+        dy = abs(end_y - start_y)
+        sx = 1 if start_x < end_x else -1
+        sy = 1 if start_y < end_y else -1
 
+        x = start_x
+        y = start_y
 
+        obstacles = []
 
+        if dx > dy:
+            err = dx / 2.0
+            while x != end_x:
+                if x >= 0 and x < self.grid_size and y >= 0 and y < self.grid_size:  # Check valid range
+                    if self.ground_truth_map[y][x] == self.cfg.OBSTACLE:
+                        obstacles.append((x, y))
+
+                err -= dy
+                if err < 0:
+                    y += sy
+                    err += dx
+                x += sx
+        else:
+            err = dy / 2.0
+            while y != end_y:
+                if x >= 0 and x < self.grid_size and y >= 0 and y < self.grid_size:  # Check valid range
+                    if self.ground_truth_map[y][x] == self.cfg.OBSTACLE:
+                        obstacles.append((x, y))
+
+                err -= dx
+                if err < 0:
+                    x += sx
+                    err += dy
+                y += sy
+        # print(obstacles)
+        return obstacles
     
 
     def move(self, mutual_data):
@@ -205,44 +288,118 @@ class Agent():
 
     def scan(self):
         # send out scan to update local built_map
-        for i, angle in enumerate(np.arange(0, 2*np.pi, self.lidar_sweep_res)):
+        for angle in range(0, 360, 5):
+            x, y = self.grid_position_xy[0] * 10 + 10 // 2, self.grid_position_xy[1] * 10 + 10 // 2
+            end_x = int(x + self.lidarRange * 10 * math.cos(math.radians(angle)))
+            end_y = int(y + self.lidarRange * 10 * math.sin(math.radians(angle)))
 
-            x, y = self.grid_position_xy
+            obstacles = self.detect_obstacles(x//10, y//10, end_x//10, end_y//10)
+            
+            if obstacles:
+                obstacle_x = obstacles[0][0]
+                obstacle_y = obstacles[0][1]
+                free_area = bresenham((x//10, y//10), (obstacle_x, obstacle_y))
 
-            ray_cast_samples = np.arange(0,self.lidarRange, self.lidar_step_res)
-            for j, r in enumerate(ray_cast_samples):
-                # self.world_ax.add_patch(plt.Circle((self.pose_rc[1], self.pose_rc[0]), r, color='pink', fill=False))
+                for fa in free_area:
+                    # if OBSTACLE
+                    if self.ground_truth_map[fa[1]][fa[0]] == self.cfg.OBSTACLE:
+                        self.agent_map[fa[1]][fa[0]] = self.cfg.KNOWN_WALL
+                        if self.screen is not None:
+                            pygame.draw.line(self.screen, (255, 0, 0), (x, y), (obstacle_x * 10 + 10 // 2, obstacle_y * 10 + 10 // 2))
+                        continue
+                    # if EMPTY
+                    if self.ground_truth_map[fa[1]][fa[0]] == self.cfg.EMPTY or self.ground_truth_map[fa[1]][fa[0]] == self.cfg.MINE:
+                        self.agent_map[fa[1]][fa[0]] = self.cfg.KNOWN_EMPTY
+                        if self.screen is not None:
+                            pygame.draw.line(self.screen, (0, 255, 0), (x, y), (obstacle_x * 10 + 10 // 2, obstacle_y * 10 + 10 // 2))
+                        continue
 
-                # get the point rounded to the nearest grid
-                x = int(np.round(self.grid_position_xy[0] + r*np.sin(angle)))
-                y = int(np.round(self.grid_position_xy[1] + r*np.cos(angle)))
+                    # # if Mine
+                    # if self.ground_truth_map[fa[1]][fa[0]] == self.cfg.MINE:
+                    #     self.agent_map[fa[1]][fa[0]] = self.cfg.MINE
+                    #     if self.screen is not None:
+                    #         pygame.draw.line(self.screen, (0, 0, 255), (x, y), (obstacle_x * 10 + 10 // 2, obstacle_y * 10 + 10 // 2))
+                    #     continue
+                continue
+        
+            if len(obstacles) == 0:
+                free_area = bresenham((x//10, y//10), (end_x//10, end_y//10))
 
-                if x < 0 or x >= self.agent_map.shape[1] or y < 0 or y >= self.agent_map.shape[0]:
-                    break
-                sampled_point= self.ground_truth_map[y, x]
-                if sampled_point == False:# obstacle
-                    self.agent_map[y, x] = self.cfg.KNOWN_WALL
-                    # ddraw the obstacle
-                    if self.screen is not None:
-                        pygame.draw.circle(self.screen, color= self.cfg.RED, center=(x*self.grid_size, y*self.grid_size), radius=self.grid_size//2)
+                for fa in free_area:
+                    # if OBSTACLE
+                    if self.ground_truth_map[fa[1]][fa[0]] == self.cfg.OBSTACLE:
+                        self.agent_map[fa[1]][fa[0]] = self.cfg.KNOWN_WALL
+                        if self.screen is not None:
+                            pygame.draw.line(self.screen, (255, 0, 0), (x, y), (end_x, end_y))
+                        continue
 
-                    break
-                if r == max(ray_cast_samples):# frontier
-                    if self.agent_map[y, x] == self.cfg.KNOWN_EMPTY:
-                        break
-                    self.agent_map[y, x] = self.cfg.FRONTIER
-                    if self.screen is not None:
-                        pygame.draw.circle(self.screen, color=self.cfg.YELLOW, center=(x*self.grid_size, y*self.grid_size), radius=self.grid_size//2)
-                    break
-                # free space
-                self.agent_map[y, x] = self.cfg.KNOWN_EMPTY
-                # pygame.draw.circle(self.screen, color= (0, 255, 0), center=(x, y), radius=self.grid_size//5)
+                    # if EMPTY
+                    if self.ground_truth_map[fa[1]][fa[0]] == self.cfg.EMPTY or self.ground_truth_map[fa[1]][fa[0]] == self.cfg.MINE:
+                        self.agent_map[fa[1]][fa[0]] = self.cfg.KNOWN_EMPTY
+                        if self.screen is not None:
+                            pygame.draw.line(self.screen, (0, 255, 0), (x, y), (end_x, end_y))
+                        continue
 
-            # draw lidar lines
-            # pygame.draw.circle( self.screen, 
-            #                     color=RED,
-            #                     center=(self.grid_position[0]*self.grid_size, self.grid_position[1]*self.grid_size),
-            #                     radius=self.grid_size//2)
+                    # # if Mine
+                    # if self.ground_truth_map[fa[1]][fa[0]] == self.cfg.MINE:
+                    #     self.agent_map[fa[1]][fa[0]] = self.cfg.MINE
+                    #     if self.screen is not None:
+                    #         pygame.draw.line(self.screen, (0, 0, 255), (x, y), (end_x, end_y))
+                    #     continue
+
+                # if self.ground_truth_map[end_y//10, end_x//10] == self.cfg.MINE:
+                #     self.agent_map[end_y//10, end_x//10] = self.cfg.MINE
+                #     continue
+
+
+                if self.ground_truth_map[end_y//10, end_x//10] != self.cfg.OBSTACLE:
+                    self.agent_map[end_y//10, end_x//10] = self.cfg.FRONTIER
+                    continue
+
+
+
+
+    # def scan(self):
+    #     # send out scan to update local built_map
+    #     for i, angle in enumerate(np.arange(0, 2*np.pi, self.lidar_sweep_res)):
+
+    #         x, y = self.grid_position_xy
+
+    #         ray_cast_samples = np.arange(0,self.lidarRange, self.lidar_step_res)
+    #         for j, r in enumerate(ray_cast_samples):
+    #             # self.world_ax.add_patch(plt.Circle((self.pose_rc[1], self.pose_rc[0]), r, color='pink', fill=False))
+
+    #             # get the point rounded to the nearest grid
+    #             x = int(np.round(self.grid_position_xy[0] + r*np.sin(angle)))
+    #             y = int(np.round(self.grid_position_xy[1] + r*np.cos(angle)))
+
+    #             if x < 0 or x >= self.agent_map.shape[1] or y < 0 or y >= self.agent_map.shape[0]:
+    #                 break
+    #             sampled_point= self.ground_truth_map[y, x]
+    #             if sampled_point == False:# obstacle
+    #                 self.agent_map[y, x] = self.cfg.KNOWN_WALL
+    #                 # ddraw the obstacle
+    #                 if self.screen is not None:
+    #                     pygame.draw.circle(self.screen, color= self.cfg.RED, center=(x*self.grid_size, y*self.grid_size), radius=5)
+
+    #                 break
+    #             if r == max(ray_cast_samples):# frontier
+    #                 if self.agent_map[y, x] == self.cfg.KNOWN_EMPTY:
+    #                     break
+    #                 self.agent_map[y, x] = self.cfg.FRONTIER
+    #                 if self.screen is not None:
+    #                     pygame.draw.circle(self.screen, color=self.cfg.YELLOW, center=(x*self.grid_size, y*self.grid_size), radius=5)
+    #                 break
+    #             # free space
+    #             self.agent_map[y, x] = self.cfg.KNOWN_EMPTY
+    #             # pygame.draw.circle(self.screen, color= (0, 255, 0), center=(x, y), radius=self.grid_size//5)
+
+    #         # draw lidar lines
+    #         # pygame.draw.circle( self.screen, 
+    #         #                     color=RED,
+    #         #                     center=(self.grid_position[0]*self.grid_size, self.grid_position[1]*self.grid_size),
+    #         #                     radius=self.grid_size//2)
+    
     
     def save_to_mutual_data(self, mutual_data):
         if 'Agent_Data' not in mutual_data:

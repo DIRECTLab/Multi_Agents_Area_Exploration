@@ -19,7 +19,7 @@ class Room:
 class World:
     def __init__(self, cfg) -> None:
         self.cfg = cfg
-        self.screen = pygame.display.set_mode((self.cfg.SCREEN_WIDTH+self.cfg.GRID_THICKNESS, self.cfg.SCREEN_HEIGHT+self.cfg.GRID_THICKNESS))
+        self.screen = pygame.display.set_mode((self.cfg.WINDOW_SIZE+self.cfg.GRID_THICKNESS, self.cfg.WINDOW_SIZE+self.cfg.GRID_THICKNESS))
         self.screen.fill(self.cfg.BACKGROUND_COLOR)
         self.walls = []
         self.doors = []
@@ -28,8 +28,8 @@ class World:
         self.room_count = 0
 
         # create col list
-        self.col_list = np.linspace(0, self.cfg.SCREEN_WIDTH, self.cfg.SCREEN_WIDTH // self.cfg.GRID_THICKNESS + 1)
-        self.row_list = np.linspace(0, self.cfg.SCREEN_HEIGHT, self.cfg.SCREEN_HEIGHT // self.cfg.GRID_THICKNESS + 1)
+        self.col_list = np.linspace(0, self.cfg.WINDOW_SIZE, self.cfg.WINDOW_SIZE // self.cfg.GRID_THICKNESS + 1)
+        self.row_list = np.linspace(0, self.cfg.WINDOW_SIZE, self.cfg.WINDOW_SIZE // self.cfg.GRID_THICKNESS + 1)
         self.map = None
 
 
@@ -92,7 +92,7 @@ class World:
     # Define a function to generate a random floor plan
     def generate_floor_plan(self):
         # Generate the rooms
-        rooms = self.split_rect(pygame.Rect(0, 0, self.cfg.SCREEN_WIDTH, self.cfg.SCREEN_HEIGHT), self.cfg.MIN_ROOM_SIZE)
+        rooms = self.split_rect(pygame.Rect(0, 0, self.cfg.GRID_SIZE, self.cfg.GRID_SIZE), self.cfg.MIN_ROOM_SIZE)
 
         # Draw the walls of the rooms
         for room in rooms:
@@ -110,9 +110,16 @@ class World:
 
 
         # Generate the walls of the outer boundary of the floor plan
-        pygame.draw.rect(self.screen, self.cfg.WALL_COLOR, (0, 0, self.cfg.SCREEN_WIDTH, self.cfg.SCREEN_HEIGHT), self.cfg.GRID_THICKNESS)
+        # pygame.draw.rect(self.screen, self.cfg.WALL_COLOR, (0, 0, self.cfg.GRID_SIZE, self.cfg.GRID_SIZE), self.cfg.GRID_THICKNESS)
         self.draw_grid()
         self.map = self.get_map()
+        for y in range(self.cfg.GRID_SIZE):
+            for x in range(self.cfg.GRID_SIZE):
+                if self.map[y][x] == 0:
+                    obstacle_x = x * self.cfg.CELL_SIZE + self.cfg.CELL_SIZE // 2
+                    obstacle_y = y * self.cfg.CELL_SIZE + self.cfg.CELL_SIZE // 2
+                    pygame.draw.rect(self.screen, (150,150,150), (obstacle_x - self.cfg.CELL_SIZE // 2, obstacle_y - self.cfg.CELL_SIZE // 2, self.cfg.CELL_SIZE, self.cfg.CELL_SIZE))
+
         if self.cfg.ROBOT_LOSS_TYPE != "None":
             self.place_mines()
         return self.map.copy()
@@ -120,7 +127,7 @@ class World:
     def place_mines(self):
         # place mines randomly
         self.mines = []
-        num_mines = self.cfg.MINE_DENSITY * self.cfg.SCREEN_WIDTH * self.cfg.SCREEN_HEIGHT // 1000
+        num_mines = self.cfg.MINE_DENSITY * self.cfg.WINDOW_SIZE * self.cfg.WINDOW_SIZE // 1000
         empyty_index = np.where(self.map == self.cfg.EMPTY)
         indices = np.column_stack(empyty_index)
         np.random.shuffle(indices)
@@ -139,15 +146,15 @@ class World:
 
     def draw_grid(self, color=(150, 150, 150)):
         # draw a thin grid 
-        for x in range(0, self.cfg.SCREEN_WIDTH, 20):
-            pygame.draw.line(self.screen, color, (x, 0), (x, self.cfg.SCREEN_HEIGHT))
+        for x in range(0, self.cfg.WINDOW_SIZE, self.cfg.CELL_SIZE):
+            pygame.draw.line(self.screen, color, (x, 0), (x, self.cfg.WINDOW_SIZE))
 
-        for y in range(0, self.cfg.SCREEN_HEIGHT, 20):
-            pygame.draw.line(self.screen, color, (0, y), (self.cfg.SCREEN_WIDTH, y))
+        for y in range(0, self.cfg.WINDOW_SIZE, self.cfg.CELL_SIZE):
+            pygame.draw.line(self.screen, color, (0, y), (self.cfg.WINDOW_SIZE, y))
 
     def get_map(self, show_grid=False):
         # show the floor plan in matplotlib
-        world_grid = np.zeros((self.cfg.SCREEN_HEIGHT//self.cfg.GRID_THICKNESS, self.cfg.SCREEN_WIDTH//self.cfg.GRID_THICKNESS))
+        world_grid = np.zeros((self.cfg.GRID_SIZE, self.cfg.GRID_SIZE))
         world_grid.fill(self.cfg.EMPTY)
         
         for wall in self.walls:
