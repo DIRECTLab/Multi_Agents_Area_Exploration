@@ -288,6 +288,8 @@ class Agent():
 
     def scan(self):
         # send out scan to update local built_map
+        # either: (obstacle_x, obstacle_y) or (end_x, end_y)
+        check_length_list = []
         for angle in range(0, 360, 5):
             x, y = self.grid_position_xy[0] * 10 + 10 // 2, self.grid_position_xy[1] * 10 + 10 // 2
             end_x = int(x + self.lidarRange * 10 * math.cos(math.radians(angle)))
@@ -298,6 +300,18 @@ class Agent():
             if obstacles:
                 obstacle_x = obstacles[0][0]
                 obstacle_y = obstacles[0][1]
+                check_length_list.append((obstacle_x, obstacle_y))
+                if(len(check_length_list) == 2):
+                    # calculate the distance between the two points
+                    dist = np.sqrt((check_length_list[0][0] - check_length_list[1][0])**2 + (check_length_list[0][1] - check_length_list[1][1])**2)
+                    if dist > self.lidarRange/4:
+                        # print("YIHUUU")
+                        frontier_area = bresenham((check_length_list[0][0], check_length_list[0][1]), (check_length_list[1][0], check_length_list[1][1]))
+                        for fron in frontier_area:
+                            if self.ground_truth_map[fron[1]][fron[0]] != self.cfg.OBSTACLE:
+                                self.agent_map[fron[1]][fron[0]] = self.cfg.FRONTIER
+
+                    check_length_list.pop(0)
                 free_area = bresenham((x//10, y//10), (obstacle_x, obstacle_y))
 
                 for fa in free_area:
@@ -324,6 +338,20 @@ class Agent():
         
             if len(obstacles) == 0:
                 free_area = bresenham((x//10, y//10), (end_x//10, end_y//10))
+                check_length_list.append((end_x//10, end_y//10))
+                if(len(check_length_list) == 2):
+                    # calculate the distance between the two points
+                    dist = np.sqrt((check_length_list[0][0] - check_length_list[1][0])**2 + (check_length_list[0][1] - check_length_list[1][1])**2)
+                    if dist > self.lidarRange/4:
+                        # print("YIHUUU")
+                        frontier_area = bresenham((check_length_list[0][0], check_length_list[0][1]), (check_length_list[1][0], check_length_list[1][1]))
+                        for fron in frontier_area:
+                            if self.ground_truth_map[fron[1]][fron[0]] != self.cfg.OBSTACLE:
+                                self.agent_map[fron[1]][fron[0]] = self.cfg.FRONTIER
+                            # if self.screen is not None:
+                            #     pygame.draw.line(self.screen, (0, 255, 255), (x, y), (end_x, end_y))
+                    check_length_list.pop(0)
+
 
                 for fa in free_area:
                     # if OBSTACLE
@@ -356,6 +384,7 @@ class Agent():
                     self.agent_map[end_y//10, end_x//10] = self.cfg.FRONTIER
                     continue
 
+                continue
 
 
 

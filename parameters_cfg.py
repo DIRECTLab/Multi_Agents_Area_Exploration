@@ -25,12 +25,12 @@ class Parameters:
         assert not (self.Debug and self.Use_process), "Can't use process and debug at the same time"
 
         # The length of the map
-        self.map_length_list = [50] #list(range(30,91,30))
+        self.map_length_list = [150] #list(range(30,91,30))
 
         # The number of agents in the experiment
         # self.agent_count_list = list(range(2,10,2))
         # self.agent_count_list = [4,8,12]
-        self.agent_count_list = [8]
+        self.agent_count_list = [4]
         # self.agent_count_list = [12]
         assert np.array(self.agent_count_list).max() <13, "The number of agents should be less than 13"
         
@@ -39,7 +39,7 @@ class Parameters:
         self.iteration_repeat_experiment = [1]
 
         # self.min_rom_size = [4,12,20]
-        self.min_rom_size = [10]
+        self.min_rom_size = [20]
         # self.min_rom_size = [3,6,9,12,30]
 
         self.Method_list = [
@@ -70,24 +70,24 @@ class Parameters:
 
         self.Start_scenario_list = [
             # # Manual_Start,
-            # Rand_Start,
+            Rand_Start,
             # Edge_Start,
-            Top_Left_Start,
+            # Top_Left_Start,
             # Center_Start,
             # Distributed_Start,
             ]
         self.Start_Goal_list= [
             # # Manual_Start,
-            # Rand_Start,
+            Rand_Start,
             # Edge_Start,
             # Top_Left_Start,
             # Center_Start,
-            Distributed_Start,
+            # Distributed_Start,
             ]
         
         self.Robot_Loss = [
-            # Agent,
-            Unrecoverable,
+            Agent,
+            # Unrecoverable,
             # Disrepair,
         ]
 
