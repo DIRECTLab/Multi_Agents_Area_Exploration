@@ -124,6 +124,8 @@ class Experiment:
             'area_percent' : [],
             'update_time' : [],
             'delta_time' : [],
+            'render_time' : [],
+            'scan_time' : [],
             'plan_length' : [],
             'replan_count' : [],
             'logging_time' : [0],
@@ -202,10 +204,10 @@ class Experiment:
             self.bots.append(agent_class(
                         cfg = cfg,
                         id = i,
-                        body_size = 3,
+                        body_size = 20,
                         grid_size = cfg.GRID_SIZE,
                         window_size = cfg.WINDOW_SIZE,
-                        lidar_range = self.ground_truth_map.shape[0]//4,
+                        lidar_range = self.ground_truth_map.shape[0],
                         full_map = self.ground_truth_map,
                         position = start_locations[i],
                         goal_xy = goal_locations[i],
@@ -504,6 +506,8 @@ class Experiment:
         path_length = 0
         replan_count = 0
         total_distance = 0
+        render_time = 0
+        scan_time = 0
         if self.cfg.USE_THREADS:
             self.spawn_update_thread()
             end_time = psutil.Process().cpu_times().user
@@ -516,11 +520,17 @@ class Experiment:
                 path_length += len(bot.plan if bot.plan is not None else [])
                 replan_count += bot.replan_count
                 total_distance += bot.total_dist_traveled
+                scan_time += bot.scan_time
                 if 'Epsilon' in self.search_method and dir(bot).count('epsilon'):
                 
                     self.data['epsilon_'+str(bot.id)].append(bot.epsilon)
 
             end_time = psutil.Process().cpu_times().user
+
+        if self.debug:
+            resnder_start_time = psutil.Process().cpu_times().user
+            self.render()
+            render_time = psutil.Process().cpu_times().user - resnder_start_time
 
         # LOG ALL THE DATA
         logging_time_start = psutil.Process().cpu_times().user
@@ -528,6 +538,8 @@ class Experiment:
         self.data['area_percent'].append(cur_known / self.mutual_data['map'].size)
         self.data['update_time'].append(end_time - start_time)
         self.data['delta_time'].append( psutil.Process().cpu_times().user - self.sim_start_time)
+        self.data["render_time"].append(render_time)
+        self.data["scan_time"].append(scan_time)
         self.data['plan_length'].append(path_length)
         self.data['replan_count'].append(replan_count)
         self.data['frame_count'].append(self.frame_count)
@@ -535,8 +547,7 @@ class Experiment:
         self.data['total_distance_travelled'].append(total_distance)
 
 
-        if self.debug:
-            self.render()
+
         
         self.frame_count += 1
         finished_bots = 0
@@ -588,7 +599,8 @@ class Experiment:
         try:
             self.setup_run_now()
             done = False
-            max_iter = self.cfg.GRID_SIZE**2 
+            # max_iter = self.cfg.GRID_SIZE**2 
+            max_iter = self.mutual_data['map'].size
             p_bar = tqdm.tqdm(total=max_iter, desc=f"{self.experiment_ID} {self.experiment_name}")
             for i in range(max_iter):
                 if func_arr:
@@ -605,14 +617,20 @@ class Experiment:
                     if not os.path.exists(self.folder_name + '/gif'):
                         os.makedirs(self.folder_name + '/gif')
                     self.log_plot_obj.map_fig.savefig(self.folder_name +f'/gif/{self.frame_count}.png', dpi=100)
-
+                
+                if len(self.data["area_percent"]) ==0:
+                    area_progress ='0.0'
+                else:
+                    area_progress = f'{self.data["area_percent"][-1]*100:.2f}'
+                
                 if i%10 == 0:
                     p_bar.update(10)
+                    p_bar.set_description(f"{self.experiment_ID} {self.experiment_name}: area {area_progress}% ")
                     
                 done = self.env_step()
                 if done:
                     # convert p_bar bar color to green
-                    p_bar.set_description(f"✅ \033[92m {self.experiment_ID} {self.experiment_name} \033[0m")
+                    p_bar.set_description(f"✅ \033[92m {self.experiment_ID} {self.experiment_name}: area {area_progress}% \033[0m")
                     p_bar.colour = 'green'
                     p_bar.close()
                     break

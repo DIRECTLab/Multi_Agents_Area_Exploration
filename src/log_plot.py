@@ -56,9 +56,9 @@ class LogPlot:
             if bot.goal_xy is None:
                 bot.goal_xy = bot.grid_position_xy
             self.map_ax.scatter(bot.grid_position_xy[0], bot.grid_position_xy[1],
-                        color='b', s=self.cfg.GRID_THICKNESS*2, marker='s')
+                        color='b', s=bot.body_size*2, marker='s')
             self.map_ax.scatter(bot.goal_xy[0], bot.goal_xy[1],
-                        color='k', s=self.cfg.GRID_THICKNESS*2, marker='s')
+                        color='k', s=bot.body_size*2, marker='s')
 
             self.map_ax.text(bot.grid_position_xy[0], bot.grid_position_xy[1],
                         s=f"{i}",color='r', fontsize=18)                

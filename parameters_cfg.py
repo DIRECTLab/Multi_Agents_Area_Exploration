@@ -25,12 +25,12 @@ class Parameters:
         assert not (self.Debug and self.Use_process), "Can't use process and debug at the same time"
 
         # The length of the map
-        self.map_length_list = [150] #list(range(30,91,30))
+        self.map_length_list = [100] #list(range(30,91,30))
 
         # The number of agents in the experiment
         # self.agent_count_list = list(range(2,10,2))
         # self.agent_count_list = [4,8,12]
-        self.agent_count_list = [4]
+        self.agent_count_list = [1]
         # self.agent_count_list = [12]
         assert np.array(self.agent_count_list).max() <13, "The number of agents should be less than 13"
         
