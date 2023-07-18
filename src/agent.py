@@ -297,7 +297,7 @@ class Agent():
         # check_length_list = []
         scaned_frontier_area_log_list = []
         last_scan_point = None
-        for angle in np.arange(0, 360, 3):
+        for angle in np.arange(0, 360, 2):
             x, y = self.grid_position_xy[0] , self.grid_position_xy[1] 
             end_x = int(x + self.lidarRange * math.cos(math.radians(angle)))
             end_y = int(y + self.lidarRange * math.sin(math.radians(angle)))

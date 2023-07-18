@@ -25,15 +25,14 @@ class Parameters:
         assert not (self.Debug and self.Use_process), "Can't use process and debug at the same time"
 
         # The length of the map
-        self.map_length_list = [50]
+        self.map_length_list = [100]
 
         # The number of agents in the experiment
         self.agent_count_list = [4,8,12]
-        assert np.array(self.agent_count_list).max() <13, "The number of agents should be less than 13"
+        assert np.array(self.agent_count_list).max() < 13, "The number of agents should be less than 13"
         
         # iteration_repeat_experiment will be used to repeat the experiment
-        # self.iteration_repeat_experiment = list(range(0, 5))
-        self.iteration_repeat_experiment = [1]
+        self.iteration_repeat_experiment = list(range(0, 30))
 
         self.min_rom_size = [10,20,30]
 
