@@ -144,10 +144,10 @@ class World:
 
     def draw_grid(self, color=(150, 150, 150)):
         # draw a thin grid 
-        for x in range(0, self.cfg.PYG_SCREEN_WIDTH, 20):
+        for x in range(0, self.cfg.PYG_SCREEN_WIDTH, self.cfg.PYG_GRID_CELL_THICKNESS):
             pygame.draw.line(self.screen, color, (x, 0), (x, self.cfg.PYG_SCREEN_HEIGHT))
 
-        for y in range(0, self.cfg.PYG_SCREEN_HEIGHT, 20):
+        for y in range(0, self.cfg.PYG_SCREEN_HEIGHT, self.cfg.PYG_GRID_CELL_THICKNESS):
             pygame.draw.line(self.screen, color, (0, y), (self.cfg.PYG_SCREEN_WIDTH, y))
 
     def get_map(self, show_grid=False):

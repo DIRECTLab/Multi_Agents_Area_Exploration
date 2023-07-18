@@ -295,8 +295,9 @@ class Agent():
         # either: (obstacle_x, obstacle_y) or (end_x, end_y)
         edge_threshold_scan = 1
         # check_length_list = []
-        last_scan_sample = None
-        for angle in np.arange(0, 360, 0.5):
+        scaned_frontier_area_log_list = []
+        last_scan_point = None
+        for angle in np.arange(0, 360, 3):
             x, y = self.grid_position_xy[0] , self.grid_position_xy[1] 
             end_x = int(x + self.lidarRange * math.cos(math.radians(angle)))
             end_y = int(y + self.lidarRange * math.sin(math.radians(angle)))
@@ -308,34 +309,32 @@ class Agent():
             obstacle_x = obstacles[0][0]
             obstacle_y = obstacles[0][1]
             # check_length_list.append((obstacle_x, obstacle_y))
-            cur_sacn_sample = (obstacle_x, obstacle_y)
+            current_scan_point = (obstacle_x, obstacle_y)
             # if(len(check_length_list) == 2):
-            if(last_scan_sample != None):
+            if(last_scan_point != None):
                 # calculate the distance between the two points
-                dist = np.sqrt((last_scan_sample[0] - cur_sacn_sample[0])**2 + (last_scan_sample[1] - cur_sacn_sample[1])**2)
+                dist = np.sqrt((last_scan_point[0] - current_scan_point[0])**2 + (last_scan_point[1] - current_scan_point[1])**2)
 
                 if dist < edge_threshold_scan:
                     continue
     
-                # print("YIHUUU")
-                frontier_area = bresenham((last_scan_sample[0], last_scan_sample[1]), (cur_sacn_sample[0], cur_sacn_sample[1]))
+                frontier_area = bresenham((last_scan_point[0], last_scan_point[1]), (current_scan_point[0], current_scan_point[1]))
                 if self.cfg.DRAW_PYGAME_SIM:
                     # draw line from last scan to current scan
                     pygame.draw.line(self.screen, (255, 255, 0), 
-                                        (last_scan_sample[0] * self.cfg.PYG_GRID_CELL_THICKNESS, last_scan_sample[1] * self.cfg.PYG_GRID_CELL_THICKNESS), 
-                                        (cur_sacn_sample[0] * self.cfg.PYG_GRID_CELL_THICKNESS, cur_sacn_sample[1] * self.cfg.PYG_GRID_CELL_THICKNESS), 5)
+                                        (last_scan_point[0] * self.cfg.PYG_GRID_CELL_THICKNESS, last_scan_point[1] * self.cfg.PYG_GRID_CELL_THICKNESS), 
+                                        (current_scan_point[0] * self.cfg.PYG_GRID_CELL_THICKNESS, current_scan_point[1] * self.cfg.PYG_GRID_CELL_THICKNESS), 5)
                     # draw a rectangle at 1st
                     pygame.draw.rect(self.screen, (255, 0, 255), 
-                                        (last_scan_sample[0] * self.cfg.PYG_GRID_CELL_THICKNESS - 2, last_scan_sample[1] * self.cfg.PYG_GRID_CELL_THICKNESS-2, 8, 8))
+                                        (last_scan_point[0] * self.cfg.PYG_GRID_CELL_THICKNESS - 2, last_scan_point[1] * self.cfg.PYG_GRID_CELL_THICKNESS-2, 18, 18))
                     
                     # raw a circle at 2nd
-                    pygame.draw.circle(self.screen, (0, 255, 0), (cur_sacn_sample[0] * self.cfg.PYG_GRID_CELL_THICKNESS, cur_sacn_sample[1] * self.cfg.PYG_GRID_CELL_THICKNESS), 5)
-                for fron in frontier_area:
-                    if self.ground_truth_map[fron[1]][fron[0]] != self.cfg.OBSTACLE:
-                        self.agent_map[fron[1]][fron[0]] = self.cfg.FRONTIER
+                    pygame.draw.circle(self.screen, (0, 255, 0), (current_scan_point[0] * self.cfg.PYG_GRID_CELL_THICKNESS, current_scan_point[1] * self.cfg.PYG_GRID_CELL_THICKNESS), 15)
+
+                scaned_frontier_area_log_list.extend(frontier_area)
 
                 # check_length_list.pop(0)
-            last_scan_sample = cur_sacn_sample
+            last_scan_point = current_scan_point
             free_area = bresenham((x, y), (obstacle_x, obstacle_y))
 
             for fa in free_area:
@@ -357,6 +356,12 @@ class Agent():
 
                     continue
 
+        for fa in scaned_frontier_area_log_list:
+            if self.ground_truth_map[fa[1]][fa[0]] != self.cfg.OBSTACLE:
+                self.agent_map[fa[1]][fa[0]] = self.cfg.FRONTIER
+                if self.cfg.DRAW_PYGAME_SIM:
+                    pygame.draw.rect(self.screen, (0, 0, 255), 
+                                        (fa[0] * self.cfg.PYG_GRID_CELL_THICKNESS - 2, fa[1] * self.cfg.PYG_GRID_CELL_THICKNESS-2, 8, 8))
     
     def save_to_mutual_data(self, mutual_data):
         if 'Agent_Data' not in mutual_data:

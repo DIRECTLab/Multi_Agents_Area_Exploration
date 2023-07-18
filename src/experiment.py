@@ -487,7 +487,6 @@ class Experiment:
             # if frame_count % 3 == 0:
                 # map_ax.matshow(mutual_data)
             plt.pause(0.00001)
-                # plt.pause(0.1)
             plt.draw()
 
     def spawn_update_thread(self):
