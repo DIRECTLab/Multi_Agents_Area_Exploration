@@ -33,7 +33,7 @@ def run_heterogenus(start, goal, cfg, experiment_name, return_dict, Method_list,
             method1_couint =  int(cfg.N_BOTS * ratio[0]) # % of the agents
             method2_couint =  int(cfg.N_BOTS * ratio[1])
             cur_experiment_name = experiment_name + f"method1:{method1.__name__}_count:{method1_couint}\nmethod2:{method2.__name__}_count:{method2_couint}/{start.__name__}/{goal.__name__}/" 
-            cur_experiment_name += f'\nnbots:{cfg.N_BOTS}_map_length:{cfg.GRID_SIZE}_seed:{cfg.SEED}'
+            cur_experiment_name += f'\nnbots:{cfg.N_BOTS}_map_length:{cfg.MAP_NP_ROWS}_seed:{cfg.SEED}'
 
             Agent_Class_list = [method1] * method1_couint
             Agent_Class_list += [method2] * method2_couint
@@ -96,23 +96,10 @@ def run_scenario(args):
     [Method, run_type, start, goal,
             map_length,agent_count, experiment_iteration, min_rom_size] = scenario
     
-    cfg = Config()
-    cfg.SEED = int(map_length + experiment_iteration)
-    cfg.N_BOTS = int(agent_count)
-    cfg.ROBOT_LOSS_TYPE = run_type.__name__
+    cfg = Config(scenario, parameters, debug=debug)
 
     random.seed(cfg.SEED)
     np.random.seed(cfg.SEED)
-
-    cfg.GRID_SIZE = int(map_length)
-    # cfg.ROWS = int(map_length)
-    # cfg.SCREEN_WIDTH = int(map_length*cfg.GRID_THICKNESS)
-    # cfg.SCREEN_HEIGHT = int(map_length*cfg.GRID_THICKNESS)
-    cfg.WINDOW_SIZE = int(map_length*cfg.CELL_SIZE)
-    cfg.MIN_ROOM_SIZE = min_rom_size * cfg.GRID_THICKNESS
-    # cfg.MAX_ROOM_SIZE = 20 * cfg.GRID_THICKNESS
-    cfg.CREATE_GIF = parameters.Create_gif
-    cfg.USE_PROCESS = parameters.Use_process
 
     Agent_Class_list = []
 
@@ -122,7 +109,7 @@ def run_scenario(args):
         run_heterogenus(start, goal, cfg, experiment_name, return_dict, parameters.Method_list, prosses_count, debug = parameters.Debug)
         return
 
-    experiment_name = f"{Method.__name__}/{run_type.__name__}/start-{start.__name__}/goal-{goal.__name__}/nbots-{cfg.N_BOTS}_map_length-{cfg.GRID_SIZE}_min_room-{min_rom_size}_seed-{cfg.SEED}"
+    experiment_name = f"{Method.__name__}/{run_type.__name__}/start-{start.__name__}/goal-{goal.__name__}/nbots-{cfg.N_BOTS}_map_length-{cfg.MAP_NP_ROWS}_min_room-{min_rom_size}_seed-{cfg.SEED}"
 
 
     Agent_Class_list = [type(Method.__name__+'_'+run_type.__name__, (Method, run_type,), {})] * cfg.N_BOTS

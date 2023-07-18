@@ -16,9 +16,9 @@ def recursive_look_for_neighbors(point, ground_truth_map, cfg, other_agents_loca
     neighbors = findNeighbors(ground_truth_map, main_point_for_checking, level)
 
     for cur_point in neighbors:
-        if cur_point[0] < 0 or cur_point[0] >= cfg.GRID_SIZE or cur_point[1] < 0 or cur_point[1] >= cfg.GRID_SIZE:
+        if cur_point[0] < 0 or cur_point[0] >= cfg.MAP_NP_ROWS or cur_point[1] < 0 or cur_point[1] >= cfg.MAP_NP_ROWS:
             # shift the point to be in the map
-            cur_point = (max(1, min(cur_point[0], cfg.GRID_SIZE-2)), max(1, min(cur_point[1], cfg.GRID_SIZE-2)))
+            cur_point = (max(1, min(cur_point[0], cfg.MAP_NP_ROWS-2)), max(1, min(cur_point[1], cfg.MAP_NP_ROWS-2)))
 
         # check if the point is not on an obstacle
         if (ground_truth_map[cur_point[1], cur_point[0]] == cfg.OBSTACLE):
@@ -70,22 +70,22 @@ def Rand_Start(cfg, ground_truth_map):
     return locations
 
 def Center_Start(cfg, ground_truth_map):
-    locations= points_over_radious(cfg.GRID_SIZE, cfg.GRID_SIZE, cfg.N_BOTS, 'center')
+    locations= points_over_radious(cfg.MAP_NP_ROWS, cfg.MAP_NP_ROWS, cfg.N_BOTS, 'center')
     locations = check_all_points(locations, ground_truth_map, cfg)
     return locations
 
 def Top_Left_Start(cfg, ground_truth_map):
-    locations = points_over_radious(cfg.GRID_SIZE, cfg.GRID_SIZE, cfg.N_BOTS, 'topleft')
+    locations = points_over_radious(cfg.MAP_NP_ROWS, cfg.MAP_NP_ROWS, cfg.N_BOTS, 'topleft')
     locations = check_all_points(locations, ground_truth_map, cfg)
     return locations
 
 def Edge_Start(cfg, ground_truth_map):
-    locations = points_on_rectangle_edge(cfg.GRID_SIZE, cfg.GRID_SIZE, cfg.N_BOTS, )
+    locations = points_on_rectangle_edge(cfg.MAP_NP_ROWS, cfg.MAP_NP_ROWS, cfg.N_BOTS, )
     locations = check_all_points(locations, ground_truth_map, cfg)
     return locations
 
 def Distributed_Start(cfg, ground_truth_map):
-    locations = dividegrid(cfg.GRID_SIZE, cfg.GRID_SIZE, cfg.N_BOTS)
+    locations = dividegrid(cfg.MAP_NP_ROWS, cfg.MAP_NP_ROWS, cfg.N_BOTS)
     locations = check_all_points(locations, ground_truth_map, cfg)
     return locations
             

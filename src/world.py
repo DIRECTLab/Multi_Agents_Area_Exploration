@@ -19,7 +19,9 @@ class Room:
 class World:
     def __init__(self, cfg) -> None:
         self.cfg = cfg
-        self.screen = pygame.display.set_mode((self.cfg.WINDOW_SIZE+self.cfg.GRID_THICKNESS, self.cfg.WINDOW_SIZE+self.cfg.GRID_THICKNESS))
+        self.screen = pygame.display.set_mode(
+            (self.cfg.PYG_SCREEN_WIDTH+self.cfg.PYG_GRID_CELL_THICKNESS, 
+                self.cfg.PYG_SCREEN_HEIGHT+self.cfg.PYG_GRID_CELL_THICKNESS))
         self.screen.fill(self.cfg.BACKGROUND_COLOR)
         self.walls = []
         self.doors = []
@@ -28,20 +30,20 @@ class World:
         self.room_count = 0
 
         # create col list
-        self.col_list = np.linspace(0, self.cfg.WINDOW_SIZE, self.cfg.WINDOW_SIZE // self.cfg.GRID_THICKNESS + 1)
-        self.row_list = np.linspace(0, self.cfg.WINDOW_SIZE, self.cfg.WINDOW_SIZE // self.cfg.GRID_THICKNESS + 1)
+        self.col_list = np.linspace(0, self.cfg.PYG_SCREEN_WIDTH, self.cfg.PYG_SCREEN_WIDTH // self.cfg.PYG_GRID_CELL_THICKNESS + 1)
+        self.row_list = np.linspace(0, self.cfg.PYG_SCREEN_HEIGHT, self.cfg.PYG_SCREEN_HEIGHT // self.cfg.PYG_GRID_CELL_THICKNESS + 1)
         self.map = None
 
 
     # Define a function to draw a wall
-    def draw_wall(self, x1, y1, x2, y2, thickness=1, color= (0, 0, 0)):
+    def draw_wall(self, x1, y1, x2, y2, thickness=2, color= (0, 0, 0)):
         # convert to integer
         x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
 
         pygame.draw.line(self.screen, color, (x1, y1), (x2, y2), thickness)
         self.walls.append(pygame.Rect(x1, y1, x2 - x1, y2 - y1))
 
-    def draw_door(self, x1, y1, x2, y2, thickness=1, color=(255, 255, 255)):
+    def draw_door(self, x1, y1, x2, y2, thickness=2, color=(255, 255, 255)):
         # square door
         x1, y1, x2, y2 = int(x1), int(y1), int(x2), int(y2)
 
@@ -57,15 +59,17 @@ class World:
             # add doors randomly to the sides of the room
             # the door is a square of WALL_THICKNESS
             # add door on the left side
-            y_range = np.clip(self.row_list, rect.y + self.cfg.GRID_THICKNESS *5, rect.y + rect.h - self.cfg.GRID_THICKNESS *5)
+            y_range = np.clip(self.row_list, rect.y + self.cfg.PYG_GRID_CELL_THICKNESS *5, 
+                                    rect.y + rect.h - self.cfg.PYG_GRID_CELL_THICKNESS *5)
             cur_room.doors.append((rect.x, np.random.choice(y_range)))
 
             # add door on the top side
-            x_range = np.clip(self.col_list, rect.x + self.cfg.GRID_THICKNESS *5, rect.x + rect.w - self.cfg.GRID_THICKNESS *5)
+            x_range = np.clip(self.col_list, rect.x + self.cfg.PYG_GRID_CELL_THICKNESS *5, 
+                                    rect.x + rect.w - self.cfg.PYG_GRID_CELL_THICKNESS *5)
             cur_room.doors.append((np.random.choice(x_range), rect.y))
-            # cur_room.doors.append((rect.x, random.randint(rect.y-self.cfg.GRID_THICKNESS, rect.y + rect.h - self.cfg.GRID_THICKNESS)))
+            # cur_room.doors.append((rect.x, random.randint(rect.y-self.cfg.PYG_GRID_CELL_THICKNESS, rect.y + rect.h - self.cfg.PYG_GRID_CELL_THICKNESS)))
             # add door on the top side
-            # cur_room.doors.append((random.randint(rect.x-self.cfg.GRID_THICKNESS, rect.x + rect.w - self.cfg.GRID_THICKNESS), rect.y))
+            # cur_room.doors.append((random.randint(rect.x-self.cfg.PYG_GRID_CELL_THICKNESS, rect.x + rect.w - self.cfg.PYG_GRID_CELL_THICKNESS), rect.y))
 
             return [cur_room]
 
@@ -90,12 +94,14 @@ class World:
         return rooms
 
     # Define a function to generate a random floor plan
-    def generate_floor_plan(self):
+    def generate_floor_plan(self):        
+        self.draw_grid()
         # Generate the rooms
-        rooms = self.split_rect(pygame.Rect(0, 0, self.cfg.GRID_SIZE, self.cfg.GRID_SIZE), self.cfg.MIN_ROOM_SIZE)
+        rooms = self.split_rect(pygame.Rect(0, 0, self.cfg.PYG_SCREEN_WIDTH, self.cfg.PYG_SCREEN_HEIGHT), self.cfg.PYG_MIN_ROOM_SIZE)
 
         # Draw the walls of the rooms
         for room in rooms:
+            # draw the top, bottom, left, and right walls
             self.draw_wall(room.x, room.y, room.x + room.w, room.y)
             self.draw_wall(room.x + room.w, room.y, room.x + room.w, room.y + room.h)
 
@@ -104,22 +110,14 @@ class World:
                 x, y = door
                 # if vertical door
                 if x == room.x:
-                    self.draw_door(x, y, x, y + self.cfg.GRID_THICKNESS*2)
+                    self.draw_door(x, y, x, y + self.cfg.PYG_GRID_CELL_THICKNESS*2)
                 else:
-                    self.draw_door(x, y, x + self.cfg.GRID_THICKNESS*2, y )
+                    self.draw_door(x, y, x + self.cfg.PYG_GRID_CELL_THICKNESS*2, y )
 
 
         # Generate the walls of the outer boundary of the floor plan
-        # pygame.draw.rect(self.screen, self.cfg.WALL_COLOR, (0, 0, self.cfg.GRID_SIZE, self.cfg.GRID_SIZE), self.cfg.GRID_THICKNESS)
-        self.draw_grid()
+        pygame.draw.rect(self.screen, self.cfg.WALL_COLOR, (0, 0, self.cfg.PYG_SCREEN_WIDTH, self.cfg.PYG_SCREEN_HEIGHT), self.cfg.PYG_GRID_CELL_THICKNESS)
         self.map = self.get_map()
-        for y in range(self.cfg.GRID_SIZE):
-            for x in range(self.cfg.GRID_SIZE):
-                if self.map[y][x] == 0:
-                    obstacle_x = x * self.cfg.CELL_SIZE + self.cfg.CELL_SIZE // 2
-                    obstacle_y = y * self.cfg.CELL_SIZE + self.cfg.CELL_SIZE // 2
-                    pygame.draw.rect(self.screen, (150,150,150), (obstacle_x - self.cfg.CELL_SIZE // 2, obstacle_y - self.cfg.CELL_SIZE // 2, self.cfg.CELL_SIZE, self.cfg.CELL_SIZE))
-
         if self.cfg.ROBOT_LOSS_TYPE != "None":
             self.place_mines()
         return self.map.copy()
@@ -127,7 +125,7 @@ class World:
     def place_mines(self):
         # place mines randomly
         self.mines = []
-        num_mines = self.cfg.MINE_DENSITY * self.cfg.WINDOW_SIZE * self.cfg.WINDOW_SIZE // 1000
+        num_mines = self.cfg.MINE_DENSITY * self.cfg.PYG_SCREEN_WIDTH * self.cfg.PYG_SCREEN_HEIGHT // 1000
         empyty_index = np.where(self.map == self.cfg.EMPTY)
         indices = np.column_stack(empyty_index)
         np.random.shuffle(indices)
@@ -146,21 +144,21 @@ class World:
 
     def draw_grid(self, color=(150, 150, 150)):
         # draw a thin grid 
-        for x in range(0, self.cfg.WINDOW_SIZE, self.cfg.CELL_SIZE):
-            pygame.draw.line(self.screen, color, (x, 0), (x, self.cfg.WINDOW_SIZE))
+        for x in range(0, self.cfg.PYG_SCREEN_WIDTH, 20):
+            pygame.draw.line(self.screen, color, (x, 0), (x, self.cfg.PYG_SCREEN_HEIGHT))
 
-        for y in range(0, self.cfg.WINDOW_SIZE, self.cfg.CELL_SIZE):
-            pygame.draw.line(self.screen, color, (0, y), (self.cfg.WINDOW_SIZE, y))
+        for y in range(0, self.cfg.PYG_SCREEN_HEIGHT, 20):
+            pygame.draw.line(self.screen, color, (0, y), (self.cfg.PYG_SCREEN_WIDTH, y))
 
     def get_map(self, show_grid=False):
         # show the floor plan in matplotlib
-        world_grid = np.zeros((self.cfg.GRID_SIZE, self.cfg.GRID_SIZE))
+        world_grid = np.zeros((self.cfg.PYG_SCREEN_HEIGHT//self.cfg.PYG_GRID_CELL_THICKNESS, self.cfg.PYG_SCREEN_WIDTH//self.cfg.PYG_GRID_CELL_THICKNESS))
         world_grid.fill(self.cfg.EMPTY)
         
         for wall in self.walls:
             x, y = wall.x, wall.y
             w, h = wall.w, wall.h
-            x, y, w, h = x//self.cfg.GRID_THICKNESS, y//self.cfg.GRID_THICKNESS, w//self.cfg.GRID_THICKNESS, h//self.cfg.GRID_THICKNESS
+            x, y, w, h = x//self.cfg.PYG_GRID_CELL_THICKNESS, y//self.cfg.PYG_GRID_CELL_THICKNESS, w//self.cfg.PYG_GRID_CELL_THICKNESS, h//self.cfg.PYG_GRID_CELL_THICKNESS
             if w == 0:
                 w = 1
             if h == 0:
@@ -171,7 +169,7 @@ class World:
             x, y = door.x, door.y
             w, h = door.w, door.h
             # covert to grid size
-            x, y, w, h = x//self.cfg.GRID_THICKNESS, y//self.cfg.GRID_THICKNESS, w//self.cfg.GRID_THICKNESS, h//self.cfg.GRID_THICKNESS
+            x, y, w, h = x//self.cfg.PYG_GRID_CELL_THICKNESS, y//self.cfg.PYG_GRID_CELL_THICKNESS, w//self.cfg.PYG_GRID_CELL_THICKNESS, h//self.cfg.PYG_GRID_CELL_THICKNESS
             if w == 0:
                 w = 1
             if h == 0:

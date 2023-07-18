@@ -37,8 +37,8 @@ def downsampled_empty_point(point, downsampled_map, cfg):
     np.random.shuffle(neighbors)
     for cur_point in neighbors:
         # check if the point is in the map
-        if cur_point[0] < 0 or cur_point[0] >= cfg.GRID_SIZE//2 or \
-            cur_point[1] < 0 or cur_point[1] >= cfg.GRID_SIZE//2:
+        if cur_point[0] < 0 or cur_point[0] >= cfg.MAP_NP_ROWS//2 or \
+            cur_point[1] < 0 or cur_point[1] >= cfg.MAP_NP_ROWS//2:
             continue
         if downsampled_map[cur_point[1], cur_point[0]] == cfg.EMPTY:
             point = cur_point
@@ -57,18 +57,18 @@ def generate_vor_cells_over_world(cfg):
             self.agent_id = None        # which agent is placed on a box
             self.distance_matrix = None
         def calc_distance_matrices(self):
-            x_arr, y_arr = np.mgrid[0:cfg.GRID_SIZE, 0:cfg.GRID_SIZE]
+            x_arr, y_arr = np.mgrid[0:cfg.MAP_NP_ROWS, 0:cfg.MAP_NP_ROWS]
             cell = (self.pos_row, self.pos_column)
             dists = np.sqrt((x_arr - cell[0])**2 + (y_arr - cell[1])**2)
             return dists
-    for row in range(cfg.GRID_SIZE):
+    for row in range(cfg.MAP_NP_ROWS):
         grid.append([])
-        for column in range(cfg.GRID_SIZE):
+        for column in range(cfg.MAP_NP_ROWS):
             grid[row].append(Cell(row, column))
     return grid, matrix_list, agent_locs
 
 #  related to our first voronoi calculation method
-def generate_voronoi_division_grid(grid, bots, matrix_list, agent_locs, log_plot_obj):
+def generate_voronoi_division_grid(grid, bots, matrix_list, agent_locs, log_plot_obj=None):
     for i in range(len(bots)):
         column = bots[i].goal_xy[0]
         row = bots[i].goal_xy[1]
@@ -77,8 +77,9 @@ def generate_voronoi_division_grid(grid, bots, matrix_list, agent_locs, log_plot
         grid[row][column].distance_matrix = grid[row][column].calc_distance_matrices()
         matrix_list.append(grid[row][column].distance_matrix)
         agent_locs.add((row, column))
-        log_plot_obj.map_ax.scatter(x=column, y=row, c='r', s=100)
-        log_plot_obj.map_ax.text(column, row, f"(x:{column},y:{row})", fontsize=10, color='g', ha='center', va='center')
+        if log_plot_obj:
+            log_plot_obj.map_ax.scatter(x=column, y=row, c='r', s=100)
+            log_plot_obj.map_ax.text(column, row, f"(x:{column},y:{row})", fontsize=10, color='g', ha='center', va='center')
     vor_region_over_grid = np.argmin((matrix_list), 0)
     return vor_region_over_grid
 
@@ -102,9 +103,11 @@ class Experiment:
         self.debug = debug
         self.experiment_ID = process_ID
 
-        if cfg.DRAW_SIM:
+        if cfg.DRAW_PYGAME_SIM:
             # Initialize pygame
-            pygame.init()
+            # check if  pygame is already initialized
+            if not pygame.get_init():
+                pygame.init()
         else:
             os.environ["SDL_VIDEODRIVER"] = "dummy"
         
@@ -141,8 +144,8 @@ class Experiment:
                 if 'Epsilon' in agent.__name__:
                     self.data[f'epsilon_{i}'] = []
             
-
-        if cfg.LOG_PLOTS:
+        self.log_plot_obj = None
+        if cfg.GRAPH_LOG_PLOTS:
             # create Log_plot object
             if figs == []:
                 self.log_plot_obj = log_plot.LogPlot(cfg, self.data)
@@ -156,7 +159,7 @@ class Experiment:
         # add non_plot_data to data
         self.data = {**self.data, **non_plot_data}
 
-        if cfg.DRAW_SIM:
+        if cfg.DRAW_PYGAME_SIM:
             row = int(np.sqrt(cfg.N_BOTS))
             col = int(np.ceil(cfg.N_BOTS/row))
             bot_fig, bot_ax = plt.subplots(row, col, )#figsize=(10, 10))
@@ -205,20 +208,18 @@ class Experiment:
                         cfg = cfg,
                         id = i,
                         body_size = 20,
-                        grid_size = cfg.GRID_SIZE,
-                        window_size = cfg.WINDOW_SIZE,
                         lidar_range = self.ground_truth_map.shape[0],
                         full_map = self.ground_truth_map,
                         position = start_locations[i],
                         goal_xy = goal_locations[i],
-                        ax = bot_ax[i] if cfg.DRAW_SIM else None,
-                        screen = self.cur_world.screen if cfg.DRAW_SIM else None,
+                        ax = bot_ax[i] if cfg.DRAW_PYGAME_SIM else None,
+                        screen = self.cur_world.screen if cfg.DRAW_PYGAME_SIM else None,
                         lock= self.lock,
                     )
                 )
             self.ground_truth_map[self.bots[-1].grid_position_xy[1]][self.bots[-1].grid_position_xy[0]] = cfg.AGENT_OBSTACLE
         
-            if cfg.DRAW_SIM:
+            if cfg.DRAW_PYGAME_SIM:
                 bot_ax[i].set_title(f"Bot {i}")
                 bot_ax[i].matshow(self.bots[i].agent_map)
 
@@ -229,7 +230,8 @@ class Experiment:
                     new_bot_list.append(bot)
 
             self.minimum_comparison_table = generate_voronoi_division_grid(grid, new_bot_list, matrix_list, agent_locs, self.log_plot_obj)
-            self.log_plot_obj.map_ax.matshow(self.minimum_comparison_table, alpha=0.6)
+            if cfg.GRAPH_LOG_PLOTS:
+                self.log_plot_obj.map_ax.matshow(self.minimum_comparison_table, alpha=0.6)
             # assign each robot one voronoi region using assigned_points
             for bot_id in range(len(new_bot_list)):
                 assigned_points = np.argwhere(self.minimum_comparison_table == bot_id)
@@ -257,7 +259,7 @@ class Experiment:
             tuple_obst_rc = tuple(map(tuple, obstacle_locations))
 
             # print("here are the obstacles...", tuple_obst)
-            darp_instance = DARP(cfg.GRID_SIZE, cfg.GRID_SIZE, goal_locations_rc, tuple_obst_rc)
+            darp_instance = DARP(cfg.MAP_NP_ROWS, cfg.MAP_NP_ROWS, goal_locations_rc, tuple_obst_rc)
 
             darp_success , iterations = darp_instance.divideRegions()
 
@@ -297,8 +299,8 @@ class Experiment:
             for door in self.cur_world.doors:
                 if door[0] == 0 or door[1] == 0:
                     continue
-                door_x = int((door[0]/cfg.GRID_THICKNESS) //2)
-                door_y = int((door[1]/cfg.GRID_THICKNESS) //2)
+                door_x = int((door[0]/cfg.PYG_SCREEN_WIDTH) //2)
+                door_y = int((door[1]/cfg.PYG_SCREEN_HEIGHT) //2)
                 down_sampled_map[door_y,door_x] = cfg.EMPTY
 
                 # if horizontal door
@@ -335,14 +337,14 @@ class Experiment:
             print("here is the finalized agent locations...", agent_locations_xy)
 
             # print("here are the obstacles...", tuple_obst)
-            darp_instance = DARP(cfg.GRID_SIZE//2, cfg.GRID_SIZE//2, agent_locations_xy, tuple_obst_rc)
+            darp_instance = DARP(cfg.MAP_NP_ROWS//2, cfg.MAP_NP_ROWS//2, agent_locations_xy, tuple_obst_rc)
 
             darp_success , iterations = darp_instance.divideRegions()
 
             end_time = time.time()
             it_took = end_time - start_time
 
-            self.upscaling_down_sampled_map_for_vis = np.zeros((cfg.GRID_SIZE, cfg.GRID_SIZE))
+            self.upscaling_down_sampled_map_for_vis = np.zeros((cfg.MAP_NP_ROWS, cfg.MAP_NP_ROWS))
             for i in range(len(darp_instance.A)):
                 for j in range(len(darp_instance.A[0])):
                     point = darp_instance.A[i][j]
@@ -367,7 +369,7 @@ class Experiment:
         self.mutual_data = {}
         self.mutual_data['map'] = - np.ones((self.ground_truth_map.shape[0], self.ground_truth_map.shape[1])).astype(int)
         self.folder_name =  'data/' + experiment_name+ '/' + time.strftime("%Y-%m-%d_%H-%M-%S")
-        if cfg.LOG_PLOTS:
+        if cfg.GRAPH_LOG_PLOTS:
             os.makedirs(self.folder_name)
 
             # self.log_plot_obj.plot_map(mutual_data, bots, data)
@@ -378,16 +380,16 @@ class Experiment:
                 self.log_plot_obj.map_ax.matshow(self.minimum_comparison_table, alpha=0.3)
             self.log_plot_obj.map_fig.savefig(self.folder_name + '/starting_map.png')
 
-        # if cfg.DRAW_SIM:
+        # if cfg.DRAW_PYGAME_SIM:
         #     bot_fig.savefig(self.folder_name + '/starting_bot.png')
     
     # return [data, bots, ground_truth_map, mutual_data, self.log_plot_obj, self.minimum_comparison_table, cur_world, map_screen, self.folder_name, upscaling_down_sampled_map_for_vis]
     
     def setup_run_now(self):
-        if self.cfg.DRAW_SIM:
+        if self.cfg.DRAW_PYGAME_SIM:
             # Display the floor plan on the screen
             pygame.display.update()
-            FPS = 60
+            FPS = 600
             clock = pygame.time.Clock()
 
         # Wait for the user to close the window
@@ -401,7 +403,7 @@ class Experiment:
         # create expeament folder
         os.makedirs(f"{self.folder_name}", exist_ok=True)
 
-        if self.cfg.LOG_PLOTS:
+        if self.cfg.GRAPH_LOG_PLOTS:
             # update the ground_truth_map and plt
             self.log_plot_obj.plot_map(self.mutual_data['map'], self.bots, self.data)
             self.log_plot_obj.map_ax.set_title(f"Max Known Area {self.ground_truth_map.size}")
@@ -410,7 +412,7 @@ class Experiment:
 
             self.log_plot_obj.map_fig.savefig(f"{self.folder_name}/map_fig.png")
 
-        if self.cfg.DRAW_SIM:
+        if self.cfg.DRAW_PYGAME_SIM:
             # save the screen
             pygame.image.save(self.cur_world.screen, f"{self.folder_name}/screen.png")
             pygame.quit()
@@ -424,16 +426,16 @@ class Experiment:
         df = pd.DataFrame(self.data)
         # add the config to the data frame
         df['SEED'.lower()] = self.cfg.SEED 
-        df['DRAW_SIM'.lower()] = self.cfg.DRAW_SIM
-        df['LOG_PLOTS'.lower()] = self.cfg.LOG_PLOTS
+        df['DRAW_PYGAME_SIM'.lower()] = self.cfg.DRAW_PYGAME_SIM
+        df['GRAPH_LOG_PLOTS'.lower()] = self.cfg.GRAPH_LOG_PLOTS
         df['USE_THREADS'.lower()] = self.cfg.USE_THREADS
         df['N_BOTS'.lower()] = self.cfg.N_BOTS
-        df['GRID_THICKNESS'.lower()] = self.cfg.GRID_THICKNESS
+        df['PYG_GRID_CELL_THICKNESS'.lower()] = self.cfg.PYG_GRID_CELL_THICKNESS
         # df['COLS'.lower()] = self.cfg.COLS
-        df['GRID_SIZE'.lower()] = self.cfg.GRID_SIZE
-        df['ROOM_AREA'.lower()] = self.cfg.GRID_SIZE * self.cfg.GRID_SIZE
-        df['MIN_ROOM_SIZE'.lower()] = self.cfg.MIN_ROOM_SIZE / self.cfg.GRID_THICKNESS
-        # df['MAX_ROOM_SIZE'.lower()] = self.cfg.MAX_ROOM_SIZE / self.cfg.GRID_THICKNESS
+        # df['MAP_NP_ROWS'.lower()] = self.cfg.MAP_NP_ROWS
+        df['ROOM_AREA'.lower()] = self.cfg.PYG_SCREEN_WIDTH * self.cfg.PYG_SCREEN_HEIGHT
+        df['PYG_MIN_ROOM_SIZE'.lower()] = self.cfg.PYG_MIN_ROOM_SIZE / self.cfg.PYG_GRID_CELL_THICKNESS
+        # df['MAX_ROOM_SIZE'.lower()] = self.cfg.MAX_ROOM_SIZE / self.cfg.PYG_GRID_CELL_THICKNESS
         # area densely
         df['wall_ratio'] = np.sum(self.ground_truth_map == 0) / self.ground_truth_map.size
         df['method'] = self.experiment_name.split('/')[0]
@@ -455,7 +457,7 @@ class Experiment:
 
 
     def render(self):
-        if self.cfg.DRAW_SIM:
+        if self.cfg.DRAW_PYGAME_SIM:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     pygame.quit()
@@ -466,7 +468,7 @@ class Experiment:
             self.cur_world.screen.blit(self.map_screen, (0, 0))
             # print("clock.get_fps()",self.clock.get_fps(), end='\r')
 
-        if self.cfg.LOG_PLOTS:
+        if self.cfg.GRAPH_LOG_PLOTS:
             # update the ground_truth_map and plt
             self.log_plot_obj.plot_map(self.mutual_data['map'], self.bots, self.data)
 
@@ -479,7 +481,7 @@ class Experiment:
                 self.log_plot_obj.map_ax.matshow(self.upscaling_down_sampled_map_for_vis, alpha=0.3)
 
 
-        if self.cfg.DRAW_SIM or self.cfg.LOG_PLOTS:
+        if self.cfg.DRAW_PYGAME_SIM or self.cfg.GRAPH_LOG_PLOTS:
             # update the ground_truth_map but continue 
             # wait to update plt at FPS of 10
             # if frame_count % 3 == 0:
@@ -494,7 +496,7 @@ class Experiment:
         pool = ThreadPool(processes=len(self.bots))
         for i, bot in enumerate(self.bots):
             # place each bot in a different thread
-            t = pool.apply_async(bot.update, (self.mutual_data,self.cfg.DRAW_SIM ))
+            t = pool.apply_async(bot.update, (self.mutual_data,self.cfg.DRAW_PYGAME_SIM ))
             threads.append(t)
         for i, (t, bot)  in enumerate(zip(threads,self.bots)):
             [length, dist] = t.get()
@@ -515,7 +517,7 @@ class Experiment:
             # time the bot update
             start_time = psutil.Process().cpu_times().user
             for i, bot in enumerate(self.bots):
-                bot.update(self.mutual_data, draw=self.cfg.DRAW_SIM)
+                bot.update(self.mutual_data, draw=self.cfg.DRAW_PYGAME_SIM)
                 bot.frame_count =self.frame_count
                 path_length += len(bot.plan if bot.plan is not None else [])
                 replan_count += bot.replan_count
@@ -599,7 +601,6 @@ class Experiment:
         try:
             self.setup_run_now()
             done = False
-            # max_iter = self.cfg.GRID_SIZE**2 
             max_iter = self.mutual_data['map'].size
             p_bar = tqdm.tqdm(total=max_iter, desc=f"{self.experiment_ID} {self.experiment_name}")
             for i in range(max_iter):
@@ -612,7 +613,7 @@ class Experiment:
 
                 # Save the Figure
                 if self.cfg.CREATE_GIF:
-                    assert self.cfg.LOG_PLOTS, "Must log plots to create gif"
+                    assert self.cfg.GRAPH_LOG_PLOTS, "Must log plots to create gif"
                     # check if the folder exists
                     if not os.path.exists(self.folder_name + '/gif'):
                         os.makedirs(self.folder_name + '/gif')

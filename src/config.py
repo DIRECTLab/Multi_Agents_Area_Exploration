@@ -1,30 +1,26 @@
+import pygame
+import numpy as np
 class Config:
-    def __init__(self):
-        self.DRAW_SIM = True
-        self.LOG_PLOTS = True
-        self.USE_THREADS = False
-        self.CREATE_GIF = False
-        self.USE_PROCESS = False
-        
-        self.SEED = None
-        self.N_BOTS = 7
-        self.START_LOC_LIST_XY = None
-        self.START_CENTROID_LIST_XY = None 
-        
-        # Define the size of the walls
-        # Define the size of the screen
-        # self.COLS = 50
-        # self.ROWS = 50
-        self.GRID_SIZE = 50
-        self.CELL_SIZE = 10
-        self.GRID_THICKNESS = 1
-        self.WINDOW_SIZE = self.GRID_SIZE * self.CELL_SIZE
+    def __init__(self, scenario, parameters, debug):
+        [Method, run_type, start, goal,
+                map_length,agent_count, experiment_iteration, min_rom_size] = scenario
+        if debug:
+            self.DRAW_PYGAME_SIM = True
+            self.GRAPH_LOG_PLOTS = True
+        else:
+            self.DRAW_PYGAME_SIM = False
+            self.GRAPH_LOG_PLOTS = False
 
-        # self.SCREEN_WIDTH = self.COLS * self.GRID_THICKNESS
-        # self.SCREEN_HEIGHT = self.ROWS * self.GRID_THICKNESS
-        # Define the minimum and maximum sizes for the rooms
-        self.MIN_ROOM_SIZE = self.CELL_SIZE
-        # self.MAX_ROOM_SIZE = 20 * self.CELL_SIZE
+        self.USE_THREADS = False
+        self.CREATE_GIF = parameters.Create_gif
+        self.USE_PROCESS = parameters.Use_process
+        
+        self.SEED = int(map_length + experiment_iteration)
+        self.N_BOTS = int(agent_count)
+        
+        # Define the size of the screen
+        self.MAP_NP_COLS = map_length
+        self.MAP_NP_ROWS = map_length
 
         # The Ground truth map is a 2D array of booleans
         self.AGENT_OBSTACLE = 3.0
@@ -39,8 +35,27 @@ class Config:
         self.FRONTIER = 2
 
         # Types of robot loss
-        self.ROBOT_LOSS_TYPE = None
+        self.ROBOT_LOSS_TYPE = run_type.__name__
         self.MINE_DENSITY = .1
+
+        ## PYGAME CONFIGs 🐍
+        # Define the size of the walls, this is only for looks/ZOOM
+        # get monitor size
+        if self.DRAW_PYGAME_SIM:
+            pygame.init()
+
+            monitor_size = (int(pygame.display.Info().current_w), int(pygame.display.Info().current_h))
+            monitor_size = np.min(monitor_size)
+            # scale the grid cell thickness to the monitor size
+            self.PYG_GRID_CELL_THICKNESS = int(monitor_size / self.MAP_NP_COLS)
+        else:
+            self.PYG_GRID_CELL_THICKNESS = 1
+
+        self.PYG_SCREEN_WIDTH = self.MAP_NP_COLS * self.PYG_GRID_CELL_THICKNESS
+        self.PYG_SCREEN_HEIGHT = self.MAP_NP_ROWS * self.PYG_GRID_CELL_THICKNESS
+        
+        # Define the minimum and maximum sizes for the rooms
+        self.PYG_MIN_ROOM_SIZE = min_rom_size * self.PYG_GRID_CELL_THICKNESS
 
         # Define the colors to be used in the drawing
         self.BACKGROUND_COLOR = (78, 157, 157)

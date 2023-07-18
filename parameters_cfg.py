@@ -1,5 +1,4 @@
 import numpy as np
-from src.config import Config
 
 # Robot Loss
 from src.agent import Agent
@@ -19,18 +18,19 @@ from src.replan.game_theory import *
 class Parameters:
     def __init__(self):
 
-        self.Debug = True
-        self.Use_process = False
+        self.Debug = False
         self.Create_gif = False
+        self.Use_process = not self.Debug
+
         assert not (self.Debug and self.Use_process), "Can't use process and debug at the same time"
 
         # The length of the map
-        self.map_length_list = [100] #list(range(30,91,30))
+        self.map_length_list = [50] #list(range(30,91,30))
 
         # The number of agents in the experiment
         # self.agent_count_list = list(range(2,10,2))
         # self.agent_count_list = [4,8,12]
-        self.agent_count_list = [1]
+        self.agent_count_list = [4]
         # self.agent_count_list = [12]
         assert np.array(self.agent_count_list).max() <13, "The number of agents should be less than 13"
         
@@ -39,26 +39,26 @@ class Parameters:
         self.iteration_repeat_experiment = [1]
 
         # self.min_rom_size = [4,12,20]
-        self.min_rom_size = [20]
+        self.min_rom_size = [10]
         # self.min_rom_size = [3,6,9,12,30]
 
         self.Method_list = [
             # Frontier_Random,
             Frontier_Closest,
-            # Unknown_Random,
-            # Unknown_Closest,
+            Unknown_Random,
+            Unknown_Closest,
 
-            # # @@@@@@@@ Voronoi_Frontier_Random,
-            # # @@@@@@@@ Voronoi_Frontier_Closest,
-            # Voronoi_Frontier_Help_Closest,
-            # Voronoi_Frontier_Help_Random,
+            # @@@@@@@@ Voronoi_Frontier_Random,
+            # @@@@@@@@ Voronoi_Frontier_Closest,
+            Voronoi_Frontier_Help_Closest,
+            Voronoi_Frontier_Help_Random,
             
-            # Decision_Frontier_Closest,
-            # Decay_Epsilon_Greedy_Unknown,
-            # Decay_Epsilon_Greedy_Frontier,
-            # # Epsilon_Greedy_Unknown,
-            # # Epsilon_Greedy_Frontier,
-            # GameTheory,
+            Decision_Frontier_Closest,
+            Decay_Epsilon_Greedy_Unknown,
+            Decay_Epsilon_Greedy_Frontier,
+            # Epsilon_Greedy_Unknown,
+            # Epsilon_Greedy_Frontier,
+            GameTheory,
 
             # DarpVorOnly,
             # DarpMST,
