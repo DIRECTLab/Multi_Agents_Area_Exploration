@@ -18,32 +18,27 @@ from src.replan.game_theory import *
 class Parameters:
     def __init__(self):
 
-        self.Debug = True
+        self.Debug = False
         self.Create_gif = False
         self.Use_process = not self.Debug
 
         assert not (self.Debug and self.Use_process), "Can't use process and debug at the same time"
 
         # The length of the map
-        self.map_length_list = [100] #list(range(30,91,30))
+        self.map_length_list = [50]
 
         # The number of agents in the experiment
-        # self.agent_count_list = list(range(2,10,2))
-        # self.agent_count_list = [4,8,12]
-        self.agent_count_list = [4]
-        # self.agent_count_list = [12]
+        self.agent_count_list = [4,8,12]
         assert np.array(self.agent_count_list).max() <13, "The number of agents should be less than 13"
         
         # iteration_repeat_experiment will be used to repeat the experiment
         # self.iteration_repeat_experiment = list(range(0, 5))
         self.iteration_repeat_experiment = [1]
 
-        # self.min_rom_size = [10,20,30]
-        self.min_rom_size = [10]
-        # self.min_rom_size = [3,6,9,12,30]
+        self.min_rom_size = [10,20,30]
 
         self.Method_list = [
-            # Frontier_Random,
+            Frontier_Random,
             Frontier_Closest,
             Unknown_Random,
             Unknown_Closest,
@@ -71,24 +66,24 @@ class Parameters:
         self.Start_scenario_list = [
             # # Manual_Start,
             Rand_Start,
-            # Edge_Start,
-            # Top_Left_Start,
-            # Center_Start,
-            # Distributed_Start,
+            Edge_Start,
+            Top_Left_Start,
+            Center_Start,
+            Distributed_Start,
             ]
         self.Start_Goal_list= [
             # # Manual_Start,
             Rand_Start,
-            # Edge_Start,
-            # Top_Left_Start,
-            # Center_Start,
-            # Distributed_Start,
+            Edge_Start,
+            Top_Left_Start,
+            Center_Start,
+            Distributed_Start,
             ]
         
         self.Robot_Loss = [
             Agent,
-            # Unrecoverable,
-            # Disrepair,
+            Unrecoverable,
+            Disrepair,
         ]
 
 
