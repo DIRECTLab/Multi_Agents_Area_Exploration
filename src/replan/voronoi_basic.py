@@ -89,20 +89,6 @@ class Voronoi_Frontier_Help_Random(Voronoi_Frontier_Help_Closest):
         point = tuple(done_search_points[idx])
         # return in X, Y format
         return (point[1], point[0])
-
-
-class DarpVorOnly(Voronoi_Frontier_Help_Closest):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.random_frontier = False
-
-class DarpMST(Voronoi_Frontier_Help_Closest):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.random_frontier = False
-
-    def check_should_replan(self, mutual_data):
-        return False
     
 
 class Voronoi_Unkown_Closest(Voronoi):

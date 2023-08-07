@@ -10,7 +10,6 @@ from src.replan.frontier import *
 from src.replan.voronoi_basic import *
 from src.starting_scenario.starting_methods import *
 from src.replan.decision import *
-from src.darp.darp import *
 from src.replan.epsilon_greedy import *
 from src.replan.game_theory import *
 
@@ -24,7 +23,7 @@ class Parameters:
         assert not (self.Debug and self.Use_process), "Can't use process and debug at the same time"
 
         # The length of the map
-        self.map_length_list = [100] #list(range(30,91,30))
+        self.map_length_list = [50] #list(range(30,91,30))
 
         # The number of agents in the experiment
         self.agent_count_list = [4,8,12]
@@ -34,7 +33,7 @@ class Parameters:
         # iteration_repeat_experiment will be used to repeat the experiment
         self.iteration_repeat_experiment = list(range(0, 30))
 
-        self.min_rom_size = [10,20,30]
+        self.min_rom_size = [4,12,20]
 
         self.Method_list = [
             Frontier_Random,

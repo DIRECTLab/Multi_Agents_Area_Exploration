@@ -15,7 +15,6 @@ import tqdm
 import src.world as world
 import src.agent as agent
 import src.log_plot as log_plot
-from src.darp.darp import *
 from src.starting_scenario.starting_methods import *
 import traceback
 import sys
@@ -239,132 +238,7 @@ class Experiment:
                 assigned_points = [tuple(point) for point in assigned_points]
                 new_bot_list[bot_id].assigned_points = assigned_points
                 assert len(assigned_points) > 0, "No points assigned to bot"
-
-        elif 'DarpVorOnly' in search_method:
-            start_time = time.time()
-            # agent_locations_rc = []
-            goal_locations_rc = []
-            for i in range(len(self.bots)):
-                # agent_locations_rc.append((bots[i].grid_position_xy[0], bots[i].grid_position_xy[1]))
-                goal_locations_rc.append((self.bots[i].goal_xy[1], self.bots[i].goal_xy[0]))
-            # print("here is the agent locations...", agent_locations_rc)
-            print("here is the goal locations1...", goal_locations_rc)
-
-
-            # fig, ax = plt.subplots()
-            # ax.matshow(ground_truth_map)
-            # obstacle_locations = np.argwhere(down_sampled_map == False)
-
-            obstacle_locations = np.argwhere(self.ground_truth_map == False)
-            tuple_obst_rc = tuple(map(tuple, obstacle_locations))
-
-            # print("here are the obstacles...", tuple_obst)
-            darp_instance = DARP(cfg.MAP_NP_ROWS, cfg.MAP_NP_ROWS, goal_locations_rc, tuple_obst_rc)
-
-            darp_success , iterations = darp_instance.divideRegions()
-
-            end_time = time.time()
-            it_took = end_time - start_time
-            print("total time it take to divide the map using darp:", it_took, "this many iterations:", iterations)
-
-            for bot in self.bots:
-                assigned_points = np.argwhere(darp_instance.A == bot.id)
-                # convert list of list into list of tuples
-                assigned_points = [tuple(point) for point in assigned_points]
-                # new_four_points = []
-                # for point in assigned_points:
-                #     new_four_points.extend(((point[0]*2, point[1]*2), (point[0]*2, point[1]*2+1), (point[0]*2+1, point[1]*2), (point[0]*2+1, point[1]*2+1)))
-                # bot.assigned_points = new_four_points
-                bot.assigned_points = assigned_points
-                assert len(assigned_points) > 0, "No points assigned to bot"
-            
-            self.upscaling_down_sampled_map_for_vis = darp_instance.A
-
-        
-        elif 'DarpMST' in search_method:
-            start_time = time.time()
-            
-            # create a low resolution map by halving the size of the map
-            # side a convolutional over the map and if any of the 4 pixels are occupied then the new pixel is occupied
-            down_sampled_map = np.ones((self.ground_truth_map.shape[0]//2, self.ground_truth_map.shape[1]//2))
-            for i in range(self.ground_truth_map.shape[0]//2):
-                for j in range(self.ground_truth_map.shape[1]//2):
-                    convolution = self.ground_truth_map[2*i:2*i+2, 2*j:2*j+2]
-                    for cell in convolution:
-                        if cfg.OBSTACLE in cell:
-                            down_sampled_map[i][j] = cfg.OBSTACLE
-                            break
-
-            # add the doors back in to the down sampled map
-            for door in self.cur_world.doors:
-                if door[0] == 0 or door[1] == 0:
-                    continue
-                door_x = int((door[0]/cfg.PYG_SCREEN_WIDTH) //2)
-                door_y = int((door[1]/cfg.PYG_SCREEN_HEIGHT) //2)
-                down_sampled_map[door_y,door_x] = cfg.EMPTY
-
-                # if horizontal door
-                if door[2] > 0:
-                    down_sampled_map[door_y,door_x+1] = cfg.EMPTY
-                # if vertical door
-                else:
-                    down_sampled_map[door_y+1,door_x] = cfg.EMPTY
-
-            # fig, ax = plt.subplots()
-            # ax.matshow(down_sampled_map)
-            obstacle_locations = np.argwhere(down_sampled_map == False)
-
-            # obstacle_locations = np.argwhere(ground_truth_map == False)
-            tuple_obst_rc = tuple(map(tuple, obstacle_locations))
-            
-
-            agent_locations_xy = []
-            plt.matshow(down_sampled_map)
-            for i in range(len(self.bots)):
-                if (self.bots[i].grid_position_xy[1]//2, self.bots[i].grid_position_xy[0]//2) not in tuple_obst_rc:
-                    # print("heyy")
-                    agent_locations_xy.append((self.bots[i].grid_position_xy[1]//2, self.bots[i].grid_position_xy[0]//2))
-                else:
-                    # print("**********",self.bots[i].grid_position_xy[0]//2, self.bots[i].grid_position_xy[1]//2)
-                    new_point = downsampled_empty_point((self.bots[i].grid_position_xy[1]//2, self.bots[i].grid_position_xy[0]//2), down_sampled_map, cfg)
-                    # print("*****new point", new_point)
-                    agent_locations_xy.append(new_point)
-                self.log_plot_obj.draw_bots(self.bots)
-                plt.scatter(agent_locations_xy[i][1], agent_locations_xy[i][0], c='r')
-            
-                
-
-            print("here is the finalized agent locations...", agent_locations_xy)
-
-            # print("here are the obstacles...", tuple_obst)
-            darp_instance = DARP(cfg.MAP_NP_ROWS//2, cfg.MAP_NP_ROWS//2, agent_locations_xy, tuple_obst_rc)
-
-            darp_success , iterations = darp_instance.divideRegions()
-
-            end_time = time.time()
-            it_took = end_time - start_time
-
-            self.upscaling_down_sampled_map_for_vis = np.zeros((cfg.MAP_NP_ROWS, cfg.MAP_NP_ROWS))
-            for i in range(len(darp_instance.A)):
-                for j in range(len(darp_instance.A[0])):
-                    point = darp_instance.A[i][j]
-                    self.upscaling_down_sampled_map_for_vis[i*2, j*2] = point
-                    self.upscaling_down_sampled_map_for_vis[i*2, j*2+1] = point
-                    self.upscaling_down_sampled_map_for_vis[i*2+1, j*2] = point
-                    self.upscaling_down_sampled_map_for_vis[i*2+1, j*2+1] = point
-
-            if darp_success:
-                try:
-                    run_mst(iterations, self.bots, darp_instance)
-                except Exception as e:
-                    print("Exception in MST", e)
-                    return False
-            else:
-                print("DARP failed to find a solution")
-                sys.exit()
-
-                
-            
+           
         self.frame_count = 0
         self.mutual_data = {}
         self.mutual_data['map'] = - np.ones((self.ground_truth_map.shape[0], self.ground_truth_map.shape[1])).astype(int)
@@ -476,9 +350,6 @@ class Experiment:
             self.log_plot_obj.map_ax.set_title(tittle)
             if 'Voronoi' in self.search_method :
                 self.log_plot_obj.map_ax.matshow(self.minimum_comparison_table, alpha=0.3)
-
-            if "Darp" in self.search_method: #or "DarpVorOnly" in search_method:
-                self.log_plot_obj.map_ax.matshow(self.upscaling_down_sampled_map_for_vis, alpha=0.3)
 
 
         if self.cfg.DRAW_PYGAME_SIM or self.cfg.GRAPH_LOG_PLOTS:
