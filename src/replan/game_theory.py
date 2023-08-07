@@ -2,7 +2,7 @@ import numpy as np
 from src.agent import Agent
 from src.replan.frontier import *
 
-class GameTheory(Frontier_Closest):
+class AntiMajority(Frontier_Closest):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.choose_random = False

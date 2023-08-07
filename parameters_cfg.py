@@ -23,17 +23,20 @@ class Parameters:
         assert not (self.Debug and self.Use_process), "Can't use process and debug at the same time"
 
         # The length of the map
-        self.map_length_list = [50] #list(range(30,91,30))
+        self.map_length_list = [50] 
 
         # The number of agents in the experiment
-        self.agent_count_list = [4,8,12]
-        # self.agent_count_list = [12]
+        # self.agent_count_list = [4,8,12]
+        self.agent_count_list = [8]
         assert np.array(self.agent_count_list).max() <13, "The number of agents should be less than 13"
         
         # iteration_repeat_experiment will be used to repeat the experiment
-        self.iteration_repeat_experiment = list(range(0, 30))
+        # self.iteration_repeat_experiment = list(range(0, 30))        
+        self.iteration_repeat_experiment = list([1])
 
-        self.min_rom_size = [4,12,20]
+
+        # self.min_rom_size = [4,12,20]
+        self.min_rom_size = [12]
 
         self.Method_list = [
             Frontier_Random,
@@ -53,7 +56,7 @@ class Parameters:
             Decay_Epsilon_Greedy_Frontier,
             # Epsilon_Greedy_Unknown,
             # Epsilon_Greedy_Frontier,
-            GameTheory,
+            AntiMajority,
             ]
         # make sure the list is dose not contain duplicates
         self.Method_list = list(set(self.Method_list))

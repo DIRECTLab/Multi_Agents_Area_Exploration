@@ -73,4 +73,4 @@ If you would like to change the simulation parameters, you can do so by changing
 | `Decay_Epsilon_Greedy_Frontier` | Each agent is assigned to either random or closest exploration of an unknown area based on an epsilon value. As the simulation progresses the epsilon value decays resulting in less exploration as the map is explored more.||
 | `Epsilon_Greedy_Unknown` | Each agent is assigned to either random or closest exploration of an unknown area based on a constant epsilon value.||
 | `Epsilon_Greedy_Frontier` | Each agent is assigned to either random or closest exploration of a frontier based on a constant epsilon value.||
-| `GameTheory` | Allowing each agent to choose the anti-majority of search methods chosen by the other agents. The two options are random or closest.||
+| `AntiMajority` | Allowing each agent to choose the anti-majority of search methods chosen by the other agents. The two options are random or closest.||
