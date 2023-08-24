@@ -413,13 +413,17 @@ class Experiment:
         df['loss_type'] = self.cfg.ROBOT_LOSS_TYPE
 
         search_data = {}
-        search_data['map_complexity'] = np.sum(self.ground_truth_map == 0) / self.ground_truth_map.size
-        search_data['total_searched_area'] = [self.mutual_data['total_explored_area'][-1]]
-        for bot in self.bots:
-            search_data['bot_searched_area_' + str(bot.id)] = self.mutual_data['Agent_Data'][bot.id]['personal_explored_area'][-1]
-
+        individual_explored = []
+        total_explored = []
+        for i in range(len(self.mutual_data['Agent_Data']['total_explored_at_point'])):
+            individual_explored.append(self.mutual_data['Agent_Data']['total_explored_at_point'][i][0])
+            total_explored.append(self.mutual_data['Agent_Data']['total_explored_at_point'][i][1])
+        search_data['map_complexity'] = [np.sum(self.ground_truth_map == 0) / self.ground_truth_map.size] * len(individual_explored)
+        search_data['individual_explored'] = individual_explored
+        search_data['total_explored'] = total_explored
+        
         searched_df = pd.DataFrame(search_data)
-        folder = f"multiple_method_search_data/goal_scenario_{self.experiment_name.split('/')[3]}/bots-{len(self.bots)}_min-room-size{self.cfg.MIN_ROOM_SIZE / self.cfg.GRID_THICKNESS}"
+        folder = f"new_data/multiple_method_search_data/goal_scenario_{self.experiment_name.split('/')[3]}/bots-{len(self.bots)}_min-room-size{self.cfg.MIN_ROOM_SIZE / self.cfg.GRID_THICKNESS}"
         
         os.makedirs(folder, exist_ok=True)
 

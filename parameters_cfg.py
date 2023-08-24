@@ -29,14 +29,14 @@ class Parameters:
         self.map_length_list = [50] #list(range(30,91,30))
 
         # The number of agents in the experiment
-        self.agent_count_list = list(range(4,18,2))
+        self.agent_count_list = list(range(2,18,2))
 
         # iteration_repeat_experiment will be used to repeat the experiment
-        self.iteration_repeat_experiment = list(range(0, 10))
+        self.iteration_repeat_experiment = list(range(0, 50))
 
         self.min_rom_size = [3,6,9,12,15,18,21,24,27,30]
 
-        self.required_exploration_ratio = list(range(30,100,1))
+        self.required_exploration_ratio = [100]
 
         self.Method_list = [
             # Frontier_Random,
