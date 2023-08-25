@@ -19,14 +19,15 @@ class Frontier_Closest(Agent):
             self.area_completed = True
             return self.grid_position_xy
         
-        if unknown_point[0] == 0:
-            unknown_point = (1, unknown_point[1])
-        if unknown_point[0] == len(self.agent_map) - 1:
-            unknown_point = (unknown_point[0] - 1, unknown_point[1])
-        if unknown_point[1] == 0:
-            unknown_point = (unknown_point[0], 1)
-        if unknown_point[1] == len(self.agent_map[0]) - 1:
-            unknown_point = (unknown_point[0], unknown_point[1] - 1)
+        if(self.frame_count < 10):
+            if unknown_point[0] == 0:
+                unknown_point = (1, unknown_point[1])
+            if unknown_point[0] == len(self.agent_map) - 1:
+                unknown_point = (unknown_point[0] - 1, unknown_point[1])
+            if unknown_point[1] == 0:
+                unknown_point = (unknown_point[0], 1)
+            if unknown_point[1] == len(self.agent_map[0]) - 1:
+                unknown_point = (unknown_point[0], unknown_point[1] - 1)
         
         return unknown_point
 
