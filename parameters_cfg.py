@@ -25,8 +25,9 @@ class Parameters:
         self.Create_gif = False
         assert not (self.Debug and self.Use_process), "Can't use process and debug at the same time"
 
+        
         # The length of the map    
-        self.map_length_list = [50] #list(range(30,91,30))
+        self.map_length_list = [100, 150, 200] #list(range(30,91,30))
 
         # The number of agents in the experiment
         self.agent_count_list = list(range(2,18,2))
@@ -34,7 +35,7 @@ class Parameters:
         # iteration_repeat_experiment will be used to repeat the experiment
         self.iteration_repeat_experiment = list(range(0, 50))
 
-        self.min_rom_size = [3,6,9,12,15,18,21,24,27,30]
+        self.min_rom_size = [3,6,9,12,15,18,27,35,50,65,80,100]
 
         self.required_exploration_ratio = [100]
 
@@ -62,9 +63,9 @@ class Parameters:
 
         self.Start_scenario_list = [
             # # Manual_Start,
-            # Rand_Start_Position,
-            Edge_Start_Position, # does not work with Voronoi methods Currently
-            # Top_Left_Start_Position,
+            Rand_Start_Position,
+            # Edge_Start_Position, # does not work with Voronoi methods Currently
+            Top_Left_Start_Position,
             # Center_Start_Position, 
             ]
         self.Start_Goal_list= [

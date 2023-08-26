@@ -415,15 +415,18 @@ class Experiment:
         search_data = {}
         individual_explored = []
         total_explored = []
+        required_steps = []
         for i in range(len(self.mutual_data['Agent_Data']['total_explored_at_point'])):
             individual_explored.append(self.mutual_data['Agent_Data']['total_explored_at_point'][i][0])
             total_explored.append(self.mutual_data['Agent_Data']['total_explored_at_point'][i][1])
+            required_steps.append(self.mutual_data['Agent_Data']['required_environment_steps'][i])
         search_data['map_complexity'] = [np.sum(self.ground_truth_map == 0) / self.ground_truth_map.size] * len(individual_explored)
         search_data['individual_explored'] = individual_explored
         search_data['total_explored'] = total_explored
+        search_data['required_steps'] = required_steps
         
         searched_df = pd.DataFrame(search_data)
-        folder = f"new_data/multiple_method_search_data/goal_scenario_{self.experiment_name.split('/')[3]}/bots-{len(self.bots)}_min-room-size{self.cfg.MIN_ROOM_SIZE / self.cfg.GRID_THICKNESS}"
+        folder = f"new_data{self.cfg.ROWS}/multiple_method_search_data/start_scenario_{self.experiment_name.split('/')[2]}/goal_scenario_{self.experiment_name.split('/')[3]}/bots-{len(self.bots)}_min-room-size{self.cfg.MIN_ROOM_SIZE / self.cfg.GRID_THICKNESS}"
         
         os.makedirs(folder, exist_ok=True)
 
