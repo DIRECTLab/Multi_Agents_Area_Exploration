@@ -356,7 +356,7 @@ class Agent(Point_Finding):
                     mutual_data['Agent_Data']['group_exploration_stop'] = exploration_stop + .01
                     if 'total_explored_at_point' not in mutual_data['Agent_Data']:
                         mutual_data['Agent_Data']['total_explored_at_point'] = []
-                    mutual_data['Agent_Data']['total_explored_at_point'].append({exploration_stop, mutual_data['total_explored_area'][-1]})
+                        mutual_data['Agent_Data']['total_explored_at_point'].append([exploration_stop, mutual_data['total_explored_area'][-1]])
 
         self.share_map(mutual_data['map'])
 
