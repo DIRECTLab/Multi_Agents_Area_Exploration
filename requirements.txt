@@ -13,7 +13,7 @@ opencv-contrib-python==4.6.0.66
 opencv-python==4.6.0.66
 packaging==23.1
 pandas==2.0.3
-Pillow==9.2.0
+Pillow==10.0.1
 platformdirs==3.10.0
 psutil==5.9.5
 pygame==2.3.0
