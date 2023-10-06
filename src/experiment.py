@@ -426,7 +426,7 @@ class Experiment:
         search_data['required_steps'] = required_steps
         
         searched_df = pd.DataFrame(search_data)
-        folder = f"new_data{self.cfg.ROWS}/multiple_method_search_data/start_scenario_{self.experiment_name.split('/')[2]}/goal_scenario_{self.experiment_name.split('/')[3]}/bots-{len(self.bots)}_min-room-size{self.cfg.MIN_ROOM_SIZE / self.cfg.GRID_THICKNESS}"
+        folder = f"required_steps{self.cfg.ROWS}/multiple_method_search_data/start_scenario_{self.experiment_name.split('/')[2]}/goal_scenario_{self.experiment_name.split('/')[3]}/bots-{len(self.bots)}_min-room-size{self.cfg.MIN_ROOM_SIZE / self.cfg.GRID_THICKNESS}"
         
         os.makedirs(folder, exist_ok=True)
 

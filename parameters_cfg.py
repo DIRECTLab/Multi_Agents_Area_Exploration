@@ -16,7 +16,6 @@ from src.darp.darp import *
 from src.replan.epsilon_greedy import *
 from src.replan.game_theory import *
 
-
 class Parameters:
     def __init__(self):
 
@@ -27,15 +26,15 @@ class Parameters:
 
         
         # The length of the map    
-        self.map_length_list = [100, 150, 200] #list(range(30,91,30))
+        self.map_length_list = [50] #list(range(30,91,30))
 
         # The number of agents in the experiment
         self.agent_count_list = list(range(2,18,2))
 
         # iteration_repeat_experiment will be used to repeat the experiment
-        self.iteration_repeat_experiment = list(range(0, 50))
+        self.iteration_repeat_experiment = list(range(1, 50))
 
-        self.min_rom_size = [3,6,9,12,15,18,27,35,50,65,80,100]
+        self.min_rom_size = [3,6,9,12,15,27]
 
         self.required_exploration_ratio = [100]
 
@@ -64,7 +63,7 @@ class Parameters:
         self.Start_scenario_list = [
             # # Manual_Start,
             Rand_Start_Position,
-            # Edge_Start_Position, # does not work with Voronoi methods Currently
+            Edge_Start_Position, # does not work with Voronoi methods Currently
             Top_Left_Start_Position,
             # Center_Start_Position, 
             ]

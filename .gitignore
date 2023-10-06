@@ -165,3 +165,15 @@ cython_debug/
 /data_save
 /multiple_method_search_data
 /new_data
+/new_data100
+/new_data150
+/new_data25
+/new_data50
+/new_data_frames50
+/new_data_graphs_100
+/new_data_graphs_25
+/new_data_graphs_50
+/new_data_limited
+/required_steps50
+save_CSV_mt.py
+*.png

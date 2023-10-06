@@ -320,6 +320,8 @@ class Agent(Point_Finding):
             mutual_data['Agent_Data'][self.id]['personal_explored_area'] = []
         if 'total_explored_area' not in mutual_data:
             mutual_data['total_explored_area'] = []
+        if 'frame_count' not in mutual_data:
+            mutual_data['frame_count'] = []
         
         mutual_data['Agent_Data'][self.id]['plan'] = self.plan
         mutual_data['Agent_Data'][self.id]['goal_xy'] = self.goal_xy
@@ -332,6 +334,7 @@ class Agent(Point_Finding):
         if self.id == 0:
             total_explored_area = (np.sum(mutual_data['map'] == self.cfg.KNOWN_EMPTY) + np.sum(mutual_data['map'] == self.cfg.KNOWN_WALL)) / mutual_data['map'].size
             mutual_data['total_explored_area'].append(total_explored_area)
+            mutual_data['frame_count'].append(self.frame_count)
 
             if 'group_exploration_stop' not in mutual_data['Agent_Data']:
                 mutual_data['Agent_Data']['group_exploration_stop'] = .01
@@ -424,8 +427,8 @@ class Agent(Point_Finding):
         self.save_to_mutual_data(mutual_data)
         # Update the agent's map
         # self.agent_map = mutual_data['map'].copy()
-        if(not self.should_continue_searching(mutual_data)):
-            return 0, self.total_dist_traveled
+        # if(not self.should_continue_searching(mutual_data)):
+        #     return 0, self.total_dist_traveled
 
         if self.check_should_replan(mutual_data):
             self.replan(mutual_data)
