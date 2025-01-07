@@ -9,7 +9,7 @@ kiwisolver==1.4.4
 matplotlib==3.7.2
 nest-asyncio==1.5.7
 numpy==1.23.3
-opencv-contrib-python==4.6.0.66
+opencv-contrib-python==4.8.1.78
 opencv-python==4.8.1.78
 packaging==23.1
 pandas==2.0.3
