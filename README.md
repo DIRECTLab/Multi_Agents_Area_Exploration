@@ -8,10 +8,30 @@ Furthermore, we also examined how agent loss would affect the overall performanc
 
 ## Installation of the Environment:
 
-```
+```bash
 git clone https://github.com/DIRECTLab/Multi_Agents_Area_Exploration.git
 cd Multi_Agents_Area_Exploration/
 conda create -y --name multiagent python==3.9.2
+```
+if this does not work for your system, you can try the following:
+```bash
+conda create -y --name multiagent python=3.9.2 -c conda-forge
+```
+
+Run the following command to activate the environment and install the required packages:
+```bash
+conda activate multiagent
+pip install -r requirements.txt
+```
+
+To run the simulation, run the following command:
+```bash
+python main.py
+```
+
+
+if for any reason the you have pip version problems here is the configuration that was tested, you can try the following:
+```bash
 conda activate multiagent
 pip install \
 	numpy==1.23.3 \
